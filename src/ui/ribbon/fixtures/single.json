@@ -1,0 +1,1 @@
+{"version":"ribbon.v1","kind":"ribbon","ribbons":[{"id":"single","path":{"points":[[10,50],[100,50]]},"style":{"stroke":"#111111","width":2},"animation":{"duration_ms":800,"easing":"linear","loop":false}}]}

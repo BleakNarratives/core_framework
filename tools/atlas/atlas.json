@@ -1,0 +1,804 @@
+{
+  "seed": 42,
+  "root": "/home/bleaknarratives",
+  "generated_at": "2026-09-11T03:21:45.897188+00:00",
+  "void_order": [
+    "distribution",
+    "monetization",
+    "trust",
+    "retention",
+    "scale",
+    "discoverability",
+    "cruelty"
+  ],
+  "void_labels": {
+    "distribution": "Distribution \u2014 can a human RUN it?",
+    "monetization": "Monetization \u2014 can a human PAY for it?",
+    "trust": "Trust \u2014 can a skeptic BELIEVE it?",
+    "retention": "Retention \u2014 will a human COME BACK?",
+    "scale": "Scale \u2014 does it survive 10\u2192100?",
+    "discoverability": "Discoverability \u2014 can a human FIND it?",
+    "cruelty": "Cruelty \u2014 does it ship without deleting?"
+  },
+  "market_weights": {
+    "distribution": 1.4,
+    "monetization": 1.6,
+    "trust": 1.2,
+    "retention": 1.3,
+    "scale": 1.5,
+    "discoverability": 1.1,
+    "cruelty": 0.9
+  },
+  "items": [
+    {
+      "project": "/home/bleaknarratives/Code-City-Apocalypse",
+      "name": "Code-City-Apocalypse",
+      "py": 120,
+      "entry": 44,
+      "cr": 3.8,
+      "market": {
+        "tam": 10,
+        "pain": 8,
+        "reach": 6,
+        "index": 8.3
+      },
+      "voids": {
+        "distribution": 2,
+        "monetization": 5,
+        "trust": 5,
+        "retention": 4,
+        "scale": 3,
+        "discoverability": 5,
+        "cruelty": 2
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": true,
+        "has_tests": true,
+        "has_readme": true,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/RootBase",
+      "name": "RootBase",
+      "py": 120,
+      "entry": 47,
+      "cr": 3.8,
+      "market": {
+        "tam": 10,
+        "pain": 6,
+        "reach": 8,
+        "index": 7.8
+      },
+      "voids": {
+        "distribution": 2,
+        "monetization": 8,
+        "trust": 5,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 2,
+        "cruelty": 2
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": true,
+        "has_tests": true,
+        "has_readme": true,
+        "has_curator": true,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/NAT-Recovery-Kernel",
+      "name": "NAT-Recovery-Kernel",
+      "py": 120,
+      "entry": 45,
+      "cr": 4.3,
+      "market": {
+        "tam": 10,
+        "pain": 7,
+        "reach": 6,
+        "index": 7.8
+      },
+      "voids": {
+        "distribution": 5,
+        "monetization": 5,
+        "trust": 5,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 5,
+        "cruelty": 4
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": false,
+        "has_tests": true,
+        "has_readme": true,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/theHarvester",
+      "name": "theHarvester",
+      "py": 120,
+      "entry": 21,
+      "cr": 4.8,
+      "market": {
+        "tam": 10,
+        "pain": 7,
+        "reach": 5,
+        "index": 7.6
+      },
+      "voids": {
+        "distribution": 3,
+        "monetization": 8,
+        "trust": 5,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 5,
+        "cruelty": 7
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": false,
+        "has_tests": true,
+        "has_readme": true,
+        "has_curator": false,
+        "has_docker": true,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/recovery_staged",
+      "name": "recovery_staged",
+      "py": 120,
+      "entry": 42,
+      "cr": 5.1,
+      "market": {
+        "tam": 10,
+        "pain": 4,
+        "reach": 5,
+        "index": 6.2
+      },
+      "voids": {
+        "distribution": 4,
+        "monetization": 7,
+        "trust": 8,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 5,
+        "cruelty": 6
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": false,
+        "has_tests": false,
+        "has_readme": true,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/Pytch",
+      "name": "Pytch",
+      "py": 99,
+      "entry": 27,
+      "cr": 5.0,
+      "market": {
+        "tam": 10,
+        "pain": 5,
+        "reach": 6,
+        "index": 6.9
+      },
+      "voids": {
+        "distribution": 2,
+        "monetization": 8,
+        "trust": 8,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 5,
+        "cruelty": 7
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": true,
+        "has_tests": false,
+        "has_readme": true,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/OutClaw",
+      "name": "OutClaw",
+      "py": 97,
+      "entry": 44,
+      "cr": 4.5,
+      "market": {
+        "tam": 10,
+        "pain": 6,
+        "reach": 6,
+        "index": 7.4
+      },
+      "voids": {
+        "distribution": 3,
+        "monetization": 7,
+        "trust": 5,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 5,
+        "cruelty": 6
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": false,
+        "has_tests": true,
+        "has_readme": true,
+        "has_curator": false,
+        "has_docker": true,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/The-Werkz",
+      "name": "The-Werkz",
+      "py": 120,
+      "entry": 41,
+      "cr": 3.5,
+      "market": {
+        "tam": 10,
+        "pain": 4,
+        "reach": 5,
+        "index": 6.2
+      },
+      "voids": {
+        "distribution": 2,
+        "monetization": 2,
+        "trust": 8,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 5,
+        "cruelty": 2
+      },
+      "loot_void": "trust",
+      "loot": "Add `python3 -m py_compile` gate + 1 test that names its receipt (STANK/JANUS)",
+      "evidence": {
+        "has_api": true,
+        "has_health": true,
+        "has_tests": false,
+        "has_readme": true,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/llama_native",
+      "name": "llama_native",
+      "py": 98,
+      "entry": 33,
+      "cr": 4.5,
+      "market": {
+        "tam": 10,
+        "pain": 6,
+        "reach": 6,
+        "index": 7.4
+      },
+      "voids": {
+        "distribution": 2,
+        "monetization": 7,
+        "trust": 5,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 5,
+        "cruelty": 7
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": true,
+        "has_tests": true,
+        "has_readme": true,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/SCOUT_CONTAINER",
+      "name": "SCOUT_CONTAINER",
+      "py": 110,
+      "entry": 24,
+      "cr": 5.4,
+      "market": {
+        "tam": 10,
+        "pain": 4,
+        "reach": 5,
+        "index": 6.2
+      },
+      "voids": {
+        "distribution": 6,
+        "monetization": 8,
+        "trust": 8,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 7,
+        "cruelty": 2
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": false,
+        "has_tests": false,
+        "has_readme": false,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/p_recovery",
+      "name": "p_recovery",
+      "py": 120,
+      "entry": 29,
+      "cr": 6.0,
+      "market": {
+        "tam": 10,
+        "pain": 7,
+        "reach": 4,
+        "index": 7.4
+      },
+      "voids": {
+        "distribution": 6,
+        "monetization": 8,
+        "trust": 8,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 8,
+        "cruelty": 7
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": false,
+        "has_tests": false,
+        "has_readme": false,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/iWarship",
+      "name": "iWarship",
+      "py": 120,
+      "entry": 21,
+      "cr": 4.4,
+      "market": {
+        "tam": 10,
+        "pain": 5,
+        "reach": 4,
+        "index": 6.5
+      },
+      "voids": {
+        "distribution": 5,
+        "monetization": 7,
+        "trust": 5,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 5,
+        "cruelty": 2
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": false,
+        "has_health": true,
+        "has_tests": true,
+        "has_readme": true,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/ClawTeam",
+      "name": "ClawTeam",
+      "py": 120,
+      "entry": 5,
+      "cr": 4.8,
+      "market": {
+        "tam": 10,
+        "pain": 6,
+        "reach": 4,
+        "index": 6.9
+      },
+      "voids": {
+        "distribution": 5,
+        "monetization": 7,
+        "trust": 5,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 5,
+        "cruelty": 6
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": false,
+        "has_health": false,
+        "has_tests": true,
+        "has_readme": true,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/ScholarScout",
+      "name": "ScholarScout",
+      "py": 77,
+      "entry": 27,
+      "cr": 4.8,
+      "market": {
+        "tam": 10,
+        "pain": 4,
+        "reach": 6,
+        "index": 6.5
+      },
+      "voids": {
+        "distribution": 5,
+        "monetization": 9,
+        "trust": 5,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 5,
+        "cruelty": 2
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": false,
+        "has_tests": true,
+        "has_readme": true,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/Implore",
+      "name": "Implore",
+      "py": 67,
+      "entry": 24,
+      "cr": 5.2,
+      "market": {
+        "tam": 10,
+        "pain": 7,
+        "reach": 5,
+        "index": 7.6
+      },
+      "voids": {
+        "distribution": 2,
+        "monetization": 8,
+        "trust": 8,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 7,
+        "cruelty": 6
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": true,
+        "has_tests": false,
+        "has_readme": false,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/n_recovery",
+      "name": "n_recovery",
+      "py": 64,
+      "entry": 27,
+      "cr": 6.2,
+      "market": {
+        "tam": 10,
+        "pain": 5,
+        "reach": 4,
+        "index": 6.5
+      },
+      "voids": {
+        "distribution": 6,
+        "monetization": 9,
+        "trust": 8,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 8,
+        "cruelty": 7
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": false,
+        "has_tests": false,
+        "has_readme": false,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/The-Werkz/Official-Vertical-AI-Boardroom",
+      "name": "Official-Vertical-AI-Boardroom",
+      "py": 50,
+      "entry": 35,
+      "cr": 3.4,
+      "market": {
+        "tam": 10,
+        "pain": 8,
+        "reach": 8,
+        "index": 8.7
+      },
+      "voids": {
+        "distribution": 2,
+        "monetization": 6,
+        "trust": 5,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 2,
+        "cruelty": 2
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": true,
+        "has_tests": true,
+        "has_readme": true,
+        "has_curator": true,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/Official-Vertical-AI-Boardroom",
+      "name": "Official-Vertical-AI-Boardroom",
+      "py": 50,
+      "entry": 35,
+      "cr": 3.4,
+      "market": {
+        "tam": 10,
+        "pain": 8,
+        "reach": 8,
+        "index": 8.7
+      },
+      "voids": {
+        "distribution": 2,
+        "monetization": 6,
+        "trust": 5,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 2,
+        "cruelty": 2
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": true,
+        "has_tests": true,
+        "has_readme": true,
+        "has_curator": true,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/tools/extraction",
+      "name": "extraction",
+      "py": 7,
+      "entry": 6,
+      "cr": 6.6,
+      "market": {
+        "tam": 4,
+        "pain": 6,
+        "reach": 4,
+        "index": 4.9
+      },
+      "voids": {
+        "distribution": 6,
+        "monetization": 9,
+        "trust": 7,
+        "retention": 7,
+        "scale": 5,
+        "discoverability": 6,
+        "cruelty": 6
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": false,
+        "has_health": false,
+        "has_tests": false,
+        "has_readme": false,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": false,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/tools/coding",
+      "name": "coding",
+      "py": 7,
+      "entry": 2,
+      "cr": 6.7,
+      "market": {
+        "tam": 6,
+        "pain": 6,
+        "reach": 4,
+        "index": 5.6
+      },
+      "voids": {
+        "distribution": 6,
+        "monetization": 9,
+        "trust": 5,
+        "retention": 7,
+        "scale": 5,
+        "discoverability": 8,
+        "cruelty": 7
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": true,
+        "has_health": false,
+        "has_tests": false,
+        "has_readme": false,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": false,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/tools/provenance",
+      "name": "provenance",
+      "py": 7,
+      "entry": 6,
+      "cr": 5.5,
+      "market": {
+        "tam": 4,
+        "pain": 5,
+        "reach": 5,
+        "index": 4.7
+      },
+      "voids": {
+        "distribution": 6,
+        "monetization": 8,
+        "trust": 6,
+        "retention": 3,
+        "scale": 3,
+        "discoverability": 6,
+        "cruelty": 7
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": false,
+        "has_health": false,
+        "has_tests": false,
+        "has_readme": false,
+        "has_curator": false,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": true
+      },
+      "seed": 42
+    },
+    {
+      "project": "/home/bleaknarratives/tools/introspection",
+      "name": "introspection",
+      "py": 4,
+      "entry": 3,
+      "cr": 6.4,
+      "market": {
+        "tam": 3,
+        "pain": 4,
+        "reach": 5,
+        "index": 3.9
+      },
+      "voids": {
+        "distribution": 6,
+        "monetization": 9,
+        "trust": 7,
+        "retention": 8,
+        "scale": 6,
+        "discoverability": 5,
+        "cruelty": 2
+      },
+      "loot_void": "monetization",
+      "loot": "Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo",
+      "evidence": {
+        "has_api": false,
+        "has_health": false,
+        "has_tests": false,
+        "has_readme": false,
+        "has_curator": true,
+        "has_docker": false,
+        "has_queue": true,
+        "has_guard": false
+      },
+      "seed": 42
+    }
+  ]
+}

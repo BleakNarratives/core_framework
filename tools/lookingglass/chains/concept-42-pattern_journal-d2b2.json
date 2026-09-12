@@ -1,0 +1,658 @@
+{
+  "seed": 81,
+  "root": "/home/bleaknarratives/p_recovery/pattern_journal",
+  "rel": "~/p_recovery/pattern_journal",
+  "created": "2026-09-11T04:05:47.333774+00:00",
+  "depth": 2,
+  "branch": 2,
+  "nodes": [
+    {
+      "id": "root",
+      "depth": 0,
+      "branch": 0,
+      "parent": null,
+      "thesis": "Should we park KYC and add gift path behind guard in pattern_journal? (seed 81, CR 6.3 MKT 4.1) \u2014 board, then eventuality, then mirror.",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "no-go",
+        "constraint": "1 broken files block shipping before any monetization",
+        "wedge": "Fix one broken file in ~/p_recovery/pattern_journal and gate with py_compile",
+        "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+        "evidence_used": [
+          "E3",
+          "E5",
+          "E4",
+          "E1",
+          "E8"
+        ],
+        "session": "devbr_9b9fc2da3e",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.7,
+            "p10_hours": 4.3,
+            "p90_hours": 5.2,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.8,
+            "p10_hours": 2.5,
+            "p90_hours": 3.3,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.9,
+            "p10_hours": 1.7,
+            "p90_hours": 2.1,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E5",
+          "E8",
+          "E1",
+          "E1",
+          "E3",
+          "E4"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.87,
+          "delta": 0.43,
+          "mkt": 4.1,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "eventuality",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "base": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.66,
+          "delta": 0.64,
+          "mkt": 4.1,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "eventuality",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "upside": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.25,
+          "delta": 1.05,
+          "mkt": 4.1,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "eventuality",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        }
+      },
+      "diff": "# root mirror \u2014 seed 81 \u2014 pattern_journal CR6.3 \u2192 gift path\n# board no-go \u2014 1 broken files block shipping before any monetization\n"
+    },
+    {
+      "id": "n01-d1b0",
+      "depth": 1,
+      "branch": 0,
+      "parent": "root",
+      "thesis": "Assume we park KYC and add gift path behind guard in pattern_journal (seed 81). The board said [SYSTEMS_CARTOGRAPHER] saw monetization. Mirror it: what would future-you thank you for?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "no-go",
+        "constraint": "1 broken files block shipping before any monetization",
+        "wedge": "Fix one broken file in ~/p_recovery/pattern_journal and gate with py_compile",
+        "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+        "evidence_used": [
+          "E5",
+          "E3",
+          "E2",
+          "E4",
+          "E1"
+        ],
+        "session": "devbr_c144a9648b",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.6,
+            "p10_hours": 4.1,
+            "p90_hours": 5.3,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.8,
+            "p10_hours": 2.6,
+            "p90_hours": 3.2,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.9,
+            "p10_hours": 1.7,
+            "p90_hours": 2.1,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E3",
+          "E4",
+          "E1",
+          "E4",
+          "E2",
+          "E5"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.87,
+          "delta": 0.43,
+          "mkt": 4.1,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "90 days",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "base": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.66,
+          "delta": 0.64,
+          "mkt": 4.1,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "90 days",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "upside": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.25,
+          "delta": 1.05,
+          "mkt": 4.1,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "90 days",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n01-d1b0 \u2014 seed 81 depth 1\n# if_this: monetization 7/10 @ pattern_journal \u2192 then_that: park KYC and add gift path behind guard\n# board: no-go cites ['E5', 'E3', 'E2', 'E4', 'E1'] \n# eventuality base: CR 5.66 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n02-d2b0",
+      "depth": 2,
+      "branch": 0,
+      "parent": "n01-d1b0",
+      "thesis": "Close monetization in pattern_journal \u2192 Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo. Then what? Sim the next fork: distribution or trust? Be kind to the branch you don't take.",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "no-go",
+        "constraint": "1 broken files block shipping before any monetization",
+        "wedge": "Fix one broken file in ~/p_recovery/pattern_journal and gate with py_compile",
+        "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+        "evidence_used": [
+          "E5",
+          "E3",
+          "E6",
+          "E2",
+          "E9",
+          "E4"
+        ],
+        "session": "devbr_d2c8545a8e",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.7,
+            "p10_hours": 4.1,
+            "p90_hours": 5.1,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.9,
+            "p10_hours": 2.6,
+            "p90_hours": 3.3,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.9,
+            "p10_hours": 1.7,
+            "p90_hours": 2.1,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E4",
+          "E5",
+          "E9",
+          "E2",
+          "E5",
+          "E2"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.87,
+          "delta": 0.43,
+          "mkt": 4.1,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "30 days",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "base": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.66,
+          "delta": 0.64,
+          "mkt": 4.1,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "30 days",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "upside": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.25,
+          "delta": 1.05,
+          "mkt": 4.1,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "30 days",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n02-d2b0 \u2014 seed 81 depth 2\n# if_this: monetization 7/10 @ pattern_journal \u2192 then_that: park KYC and add gift path behind guard\n# board: no-go cites ['E5', 'E3', 'E6', 'E2', 'E9', 'E4'] \n# eventuality base: CR 5.66 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n03-d2b1",
+      "depth": 2,
+      "branch": 1,
+      "parent": "n01-d1b0",
+      "thesis": "Close monetization in pattern_journal \u2192 Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo. Then what? Sim the next fork: distribution or trust? Be kind to the branch you don't take.",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "no-go",
+        "constraint": "1 broken files block shipping before any monetization",
+        "wedge": "Fix one broken file in ~/p_recovery/pattern_journal and gate with py_compile",
+        "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+        "evidence_used": [
+          "E3",
+          "E5",
+          "E2",
+          "E4",
+          "E1",
+          "E8"
+        ],
+        "session": "devbr_e46e607535",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.6,
+            "p10_hours": 4.1,
+            "p90_hours": 5.2,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.9,
+            "p10_hours": 2.6,
+            "p90_hours": 3.2,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.9,
+            "p10_hours": 1.7,
+            "p90_hours": 2.1,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E2",
+          "E1",
+          "E5",
+          "E8",
+          "E3",
+          "E4"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.87,
+          "delta": 0.43,
+          "mkt": 4.1,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "90 days",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "base": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.66,
+          "delta": 0.64,
+          "mkt": 4.1,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "90 days",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "upside": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.25,
+          "delta": 1.05,
+          "mkt": 4.1,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "90 days",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n03-d2b1 \u2014 seed 81 depth 2\n# if_this: monetization 7/10 @ pattern_journal \u2192 then_that: park KYC and add gift path behind guard\n# board: no-go cites ['E3', 'E5', 'E2', 'E4', 'E1', 'E8'] \n# eventuality base: CR 5.66 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n04-d1b1",
+      "depth": 1,
+      "branch": 1,
+      "parent": "root",
+      "thesis": "If this holds (monetization=7/10 at pattern_journal), then that follows: Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo \u2014 but what does eventuality look like if we park KYC and add gift path behind guard for mirror year?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "no-go",
+        "constraint": "1 broken files block shipping before any monetization",
+        "wedge": "Fix one broken file in ~/p_recovery/pattern_journal and gate with py_compile",
+        "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+        "evidence_used": [
+          "E5",
+          "E2",
+          "E9",
+          "E4",
+          "E8"
+        ],
+        "session": "devbr_6e3ac685ff",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.6,
+            "p10_hours": 4.1,
+            "p90_hours": 5.2,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.9,
+            "p10_hours": 2.7,
+            "p90_hours": 3.3,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.9,
+            "p10_hours": 1.6,
+            "p90_hours": 2.1,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E4",
+          "E9",
+          "E5",
+          "E2",
+          "E4",
+          "E4"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.87,
+          "delta": 0.43,
+          "mkt": 4.1,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "mirror year",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "base": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.66,
+          "delta": 0.64,
+          "mkt": 4.1,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "mirror year",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "upside": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.25,
+          "delta": 1.05,
+          "mkt": 4.1,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "mirror year",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n04-d1b1 \u2014 seed 81 depth 1\n# if_this: monetization 7/10 @ pattern_journal \u2192 then_that: park KYC and add gift path behind guard\n# board: no-go cites ['E5', 'E2', 'E9', 'E4', 'E8'] \n# eventuality base: CR 5.66 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n05-d2b0",
+      "depth": 2,
+      "branch": 0,
+      "parent": "n04-d1b1",
+      "thesis": "Assume we park KYC and add gift path behind guard in pattern_journal (seed 81). The board said [EVIDENCE_AUDITOR] saw monetization. Mirror it: what would future-you thank you for?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "no-go",
+        "constraint": "1 broken files block shipping before any monetization",
+        "wedge": "Fix one broken file in ~/p_recovery/pattern_journal and gate with py_compile",
+        "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+        "evidence_used": [
+          "E3",
+          "E5",
+          "E6",
+          "E2",
+          "E4",
+          "E1"
+        ],
+        "session": "devbr_8cb950ad55",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.7,
+            "p10_hours": 4.1,
+            "p90_hours": 5.1,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.9,
+            "p10_hours": 2.6,
+            "p90_hours": 3.3,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.9,
+            "p10_hours": 1.7,
+            "p90_hours": 2.1,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E2",
+          "E5",
+          "E1",
+          "E4",
+          "E4",
+          "E2"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.87,
+          "delta": 0.43,
+          "mkt": 4.1,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "eventuality (1 year)",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "base": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.66,
+          "delta": 0.64,
+          "mkt": 4.1,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "eventuality (1 year)",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "upside": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.25,
+          "delta": 1.05,
+          "mkt": 4.1,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "eventuality (1 year)",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n05-d2b0 \u2014 seed 81 depth 2\n# if_this: monetization 7/10 @ pattern_journal \u2192 then_that: park KYC and add gift path behind guard\n# board: no-go cites ['E3', 'E5', 'E6', 'E2', 'E4', 'E1'] \n# eventuality base: CR 5.66 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n06-d2b1",
+      "depth": 2,
+      "branch": 1,
+      "parent": "n04-d1b1",
+      "thesis": "Given monetization gap 7 and MKT 4.1, pay one small price now (Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo) \u2014 what eventuality does that buy in mirror year?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "no-go",
+        "constraint": "1 broken files block shipping before any monetization",
+        "wedge": "Fix one broken file in ~/p_recovery/pattern_journal and gate with py_compile",
+        "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+        "evidence_used": [
+          "E3",
+          "E5",
+          "E6",
+          "E4",
+          "E8"
+        ],
+        "session": "devbr_aebbd7debf",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.6,
+            "p10_hours": 4.1,
+            "p90_hours": 5.2,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.9,
+            "p10_hours": 2.6,
+            "p90_hours": 3.2,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.9,
+            "p10_hours": 1.7,
+            "p90_hours": 2.1,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E5",
+          "E8",
+          "E5",
+          "E5",
+          "E3",
+          "E4"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.87,
+          "delta": 0.43,
+          "mkt": 4.1,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "mirror year",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "base": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.66,
+          "delta": 0.64,
+          "mkt": 4.1,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "mirror year",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "upside": {
+          "cr_now": 6.3,
+          "cr_eventual": 5.25,
+          "delta": 1.05,
+          "mkt": 4.1,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "mirror year",
+          "if_this": "monetization 7/10",
+          "then_that": "park KYC and add gift path behind guard"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n06-d2b1 \u2014 seed 81 depth 2\n# if_this: monetization 7/10 @ pattern_journal \u2192 then_that: park KYC and add gift path behind guard\n# board: no-go cites ['E3', 'E5', 'E6', 'E4', 'E8'] \n# eventuality base: CR 5.66 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    }
+  ],
+  "monitor": {
+    "max_depth": 5,
+    "max_branch": 3,
+    "max_parallel": 2,
+    "max_chains": 9,
+    "budget_tokens": 8000,
+    "forbidden": [
+      "rm -rf",
+      "shred ",
+      "DROP ",
+      "DELETE FROM",
+      "push --force"
+    ],
+    "require_humane": true,
+    "require_citation": true
+  },
+  "stats": {
+    "nodes": 7,
+    "throttled": 0,
+    "depth": 2,
+    "branch": 2
+  }
+}

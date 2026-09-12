@@ -1,0 +1,245 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gap Atlas — seed 42</title><style>
+body{margin:0;background:#0f0f0f;color:#e9e6de;font:13px/1.5 ui-monospace,monospace;padding:18px}
+.wrap{max-width:1120px;margin:0 auto}
+h1{font-size:18px;letter-spacing:.08em;margin:0 0 6px} small{opacity:.6}
+.grid{display:grid;grid-template-columns:220px 1fr;gap:12px;margin-top:12px}
+.card{background:#1c1c1c;border:1px solid #2a2a2a;border-radius:10px;padding:10px}
+.heat{border-collapse:collapse;width:100%;font-size:11px}
+.heat th,.heat td{border:1px solid #222;padding:5px 6px;text-align:center}
+.heat th{position:sticky;top:0;background:#1c1c1c}
+.v0{background:#142a18;color:#7ee89a}.v3{background:#2a3414;color:#d7e68a}.v6{background:#3a2814;color:#ffb86a}.v8{background:#3a1818;color:#ff8a8a}
+.badge{display:inline-block;padding:2px 7px;border-radius:999px;background:#2a2110;border:1px solid #5c3a18;font-size:11px}
+.btn{padding:6px 10px;border-radius:8px;border:1px solid #444;background:#222;color:#e9e6de;font-weight:800;cursor:pointer}
+.deck{display:flex;gap:10px;flex-wrap:wrap}
+.monster{width:220px;background:linear-gradient(#2a2110,#1a1200);border:1px solid #5c3a18;border-radius:10px;padding:10px}
+.monster h3{margin:0 0 4px;font-size:12px} .cr{float:right;background:#3a1818;color:#ff8a8a;padding:2px 6px;border-radius:999px;font-size:11px}
+</style><div class="wrap"><h1>Gap Atlas — seed 42 <small>/ market+scale first / reproducible deck / 7 affordance voids</small></h1><div class="small" style="opacity:.6">CR = market-weighted voids (10=gap). Loot = one close that moves market most. Boss = highest CR. Spelling lol fuck it — scaleablity is the spirit.</div>
+<div class="grid"><div class="card"><h3>Legend</h3>
+<div>🚚 <b>distribution</b> — Distribution — can a human RUN it? <span style="opacity:.5">(w 1.4)</span></div>
+<div>💰 <b>monetization</b> — Monetization — can a human PAY for it? <span style="opacity:.5">(w 1.6)</span></div>
+<div>🧪 <b>trust</b> — Trust — can a skeptic BELIEVE it? <span style="opacity:.5">(w 1.2)</span></div>
+<div>🔁 <b>retention</b> — Retention — will a human COME BACK? <span style="opacity:.5">(w 1.3)</span></div>
+<div>📈 <b>scale</b> — Scale — does it survive 10→100? <span style="opacity:.5">(w 1.5)</span></div>
+<div>🗺️ <b>discoverability</b> — Discoverability — can a human FIND it? <span style="opacity:.5">(w 1.1)</span></div>
+<div>💀 <b>cruelty</b> — Cruelty — does it ship without deleting? <span style="opacity:.5">(w 0.9)</span></div>
+<div style="margin-top:10px"><span class="badge">Reproducible: seed 42</span> <span class="badge">MRD.tct logged</span></div>
+<div style="margin-top:10px"><button class="btn" onclick="window.print()">print / save PDF</button></div></div>
+<div class="card"><h3>Heat Map — CR sorted (market-weighted)</h3><table class="heat"><thead><tr><th>project</th><th>CR</th><th>MKT</th>
+<th title="Distribution — can a human RUN it?">🚚<br><span style="font-size:9px">dist</span></th>
+<th title="Monetization — can a human PAY for it?">💰<br><span style="font-size:9px">mone</span></th>
+<th title="Trust — can a skeptic BELIEVE it?">🧪<br><span style="font-size:9px">trus</span></th>
+<th title="Retention — will a human COME BACK?">🔁<br><span style="font-size:9px">rete</span></th>
+<th title="Scale — does it survive 10→100?">📈<br><span style="font-size:9px">scal</span></th>
+<th title="Discoverability — can a human FIND it?">🗺️<br><span style="font-size:9px">disc</span></th>
+<th title="Cruelty — does it ship without deleting?">💀<br><span style="font-size:9px">crue</span></th>
+<th>loot</th></tr></thead><tbody>
+<tr><td style="text-align:left"><b>coding</b> <span style="opacity:.5">(7py)</span></td><td class="v6">6.7</td><td>5.6</td>
+<td class="v6">6</td>
+<td class="v8">9</td>
+<td class="v3">5</td>
+<td class="v6">7</td>
+<td class="v3">5</td>
+<td class="v8">8</td>
+<td class="v6">7</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>extraction</b> <span style="opacity:.5">(7py)</span></td><td class="v6">6.6</td><td>4.9</td>
+<td class="v6">6</td>
+<td class="v8">9</td>
+<td class="v6">7</td>
+<td class="v6">7</td>
+<td class="v3">5</td>
+<td class="v6">6</td>
+<td class="v6">6</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>introspection</b> <span style="opacity:.5">(4py)</span></td><td class="v6">6.4</td><td>3.9</td>
+<td class="v6">6</td>
+<td class="v8">9</td>
+<td class="v6">7</td>
+<td class="v8">8</td>
+<td class="v6">6</td>
+<td class="v3">5</td>
+<td class="v0">2</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>n_recovery</b> <span style="opacity:.5">(64py)</span></td><td class="v6">6.2</td><td>6.5</td>
+<td class="v6">6</td>
+<td class="v8">9</td>
+<td class="v8">8</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v8">8</td>
+<td class="v6">7</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>p_recovery</b> <span style="opacity:.5">(120py)</span></td><td class="v6">6.0</td><td>7.4</td>
+<td class="v6">6</td>
+<td class="v8">8</td>
+<td class="v8">8</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v8">8</td>
+<td class="v6">7</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>provenance</b> <span style="opacity:.5">(7py)</span></td><td class="v6">5.5</td><td>4.7</td>
+<td class="v6">6</td>
+<td class="v8">8</td>
+<td class="v6">6</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v6">6</td>
+<td class="v6">7</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>SCOUT_CONTAINER</b> <span style="opacity:.5">(110py)</span></td><td class="v6">5.4</td><td>6.2</td>
+<td class="v6">6</td>
+<td class="v8">8</td>
+<td class="v8">8</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v6">7</td>
+<td class="v0">2</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>Implore</b> <span style="opacity:.5">(67py)</span></td><td class="v6">5.2</td><td>7.6</td>
+<td class="v0">2</td>
+<td class="v8">8</td>
+<td class="v8">8</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v6">7</td>
+<td class="v6">6</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>recovery_staged</b> <span style="opacity:.5">(120py)</span></td><td class="v6">5.1</td><td>6.2</td>
+<td class="v3">4</td>
+<td class="v6">7</td>
+<td class="v8">8</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v3">5</td>
+<td class="v6">6</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>Pytch</b> <span style="opacity:.5">(99py)</span></td><td class="v3">5.0</td><td>6.9</td>
+<td class="v0">2</td>
+<td class="v8">8</td>
+<td class="v8">8</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v3">5</td>
+<td class="v6">7</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>theHarvester</b> <span style="opacity:.5">(120py)</span></td><td class="v3">4.8</td><td>7.6</td>
+<td class="v3">3</td>
+<td class="v8">8</td>
+<td class="v3">5</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v3">5</td>
+<td class="v6">7</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>ClawTeam</b> <span style="opacity:.5">(120py)</span></td><td class="v3">4.8</td><td>6.9</td>
+<td class="v3">5</td>
+<td class="v6">7</td>
+<td class="v3">5</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v3">5</td>
+<td class="v6">6</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>ScholarScout</b> <span style="opacity:.5">(77py)</span></td><td class="v3">4.8</td><td>6.5</td>
+<td class="v3">5</td>
+<td class="v8">9</td>
+<td class="v3">5</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v3">5</td>
+<td class="v0">2</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>OutClaw</b> <span style="opacity:.5">(97py)</span></td><td class="v3">4.5</td><td>7.4</td>
+<td class="v3">3</td>
+<td class="v6">7</td>
+<td class="v3">5</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v3">5</td>
+<td class="v6">6</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>llama_native</b> <span style="opacity:.5">(98py)</span></td><td class="v3">4.5</td><td>7.4</td>
+<td class="v0">2</td>
+<td class="v6">7</td>
+<td class="v3">5</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v3">5</td>
+<td class="v6">7</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>iWarship</b> <span style="opacity:.5">(120py)</span></td><td class="v3">4.4</td><td>6.5</td>
+<td class="v3">5</td>
+<td class="v6">7</td>
+<td class="v3">5</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v3">5</td>
+<td class="v0">2</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>NAT-Recovery-Kernel</b> <span style="opacity:.5">(120py)</span></td><td class="v3">4.3</td><td>7.8</td>
+<td class="v3">5</td>
+<td class="v3">5</td>
+<td class="v3">5</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v3">5</td>
+<td class="v3">4</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>Code-City-Apocalypse</b> <span style="opacity:.5">(120py)</span></td><td class="v3">3.8</td><td>8.3</td>
+<td class="v0">2</td>
+<td class="v3">5</td>
+<td class="v3">5</td>
+<td class="v3">4</td>
+<td class="v3">3</td>
+<td class="v3">5</td>
+<td class="v0">2</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>RootBase</b> <span style="opacity:.5">(120py)</span></td><td class="v3">3.8</td><td>7.8</td>
+<td class="v0">2</td>
+<td class="v8">8</td>
+<td class="v3">5</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v0">2</td>
+<td class="v0">2</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>The-Werkz</b> <span style="opacity:.5">(120py)</span></td><td class="v3">3.5</td><td>6.2</td>
+<td class="v0">2</td>
+<td class="v0">2</td>
+<td class="v8">8</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v3">5</td>
+<td class="v0">2</td>
+<td style="text-align:left;font-size:10px">🧪 Add `python3 -m py_compile` gate + 1 test that names its</td></tr>
+<tr><td style="text-align:left"><b>Official-Vertical-AI-Boardroom</b> <span style="opacity:.5">(50py)</span></td><td class="v3">3.4</td><td>8.7</td>
+<td class="v0">2</td>
+<td class="v6">6</td>
+<td class="v3">5</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v0">2</td>
+<td class="v0">2</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+<tr><td style="text-align:left"><b>Official-Vertical-AI-Boardroom</b> <span style="opacity:.5">(50py)</span></td><td class="v3">3.4</td><td>8.7</td>
+<td class="v0">2</td>
+<td class="v6">6</td>
+<td class="v3">5</td>
+<td class="v3">3</td>
+<td class="v3">3</td>
+<td class="v0">2</td>
+<td class="v0">2</td>
+<td style="text-align:left;font-size:10px">💰 Park/strip KYC: tip jar + gift path (no Stripe) — wire `</td></tr>
+</tbody></table></div></div>
+<div class="card" style="margin-top:12px"><h3>Deck — Monster Cards (boss first)</h3><div class="deck">
+<div class="monster"><span class="cr">CR 6.7</span><h3>coding</h3><div style="opacity:.7;font-size:10px">7py · 2 entry · MKT 5.6 (TAM6 P6 R4)</div><div style="font-size:10px;margin:6px 0">🚚6 💰9 🧪5 🔁7 📈5 🗺️8 💀7</div><div style="font-size:11px"><b>Loot:</b> Park/strip KYC: tip jar + gift path (no Stripe) — wire `/webhooks/gift` behind guard_judo</div><div style="font-size:10px;opacity:.6;margin-top:4px">Evid: has_api,has_guard</div></div>
+<div class="monster"><span class="cr">CR 6.6</span><h3>extraction</h3><div style="opacity:.7;font-size:10px">7py · 6 entry · MKT 4.9 (TAM4 P6 R4)</div><div style="font-size:10px;margin:6px 0">🚚6 💰9 🧪7 🔁7 📈5 🗺️6 💀6</div><div style="font-size:11px"><b>Loot:</b> Park/strip KYC: tip jar + gift path (no Stripe) — wire `/webhooks/gift` behind guard_judo</div><div style="font-size:10px;opacity:.6;margin-top:4px">Evid: has_guard</div></div>
+<div class="monster"><span class="cr">CR 6.4</span><h3>introspection</h3><div style="opacity:.7;font-size:10px">4py · 3 entry · MKT 3.9 (TAM3 P4 R5)</div><div style="font-size:10px;margin:6px 0">🚚6 💰9 🧪7 🔁8 📈6 🗺️5 💀2</div><div style="font-size:11px"><b>Loot:</b> Park/strip KYC: tip jar + gift path (no Stripe) — wire `/webhooks/gift` behind guard_judo</div><div style="font-size:10px;opacity:.6;margin-top:4px">Evid: has_curator,has_queue</div></div>
+<div class="monster"><span class="cr">CR 6.2</span><h3>n_recovery</h3><div style="opacity:.7;font-size:10px">64py · 27 entry · MKT 6.5 (TAM10 P5 R4)</div><div style="font-size:10px;margin:6px 0">🚚6 💰9 🧪8 🔁3 📈3 🗺️8 💀7</div><div style="font-size:11px"><b>Loot:</b> Park/strip KYC: tip jar + gift path (no Stripe) — wire `/webhooks/gift` behind guard_judo</div><div style="font-size:10px;opacity:.6;margin-top:4px">Evid: has_api,has_queue,has_guard</div></div>
+<div class="monster"><span class="cr">CR 6.0</span><h3>p_recovery</h3><div style="opacity:.7;font-size:10px">120py · 29 entry · MKT 7.4 (TAM10 P7 R4)</div><div style="font-size:10px;margin:6px 0">🚚6 💰8 🧪8 🔁3 📈3 🗺️8 💀7</div><div style="font-size:11px"><b>Loot:</b> Park/strip KYC: tip jar + gift path (no Stripe) — wire `/webhooks/gift` behind guard_judo</div><div style="font-size:10px;opacity:.6;margin-top:4px">Evid: has_api,has_queue,has_guard</div></div>
+<div class="monster"><span class="cr">CR 5.5</span><h3>provenance</h3><div style="opacity:.7;font-size:10px">7py · 6 entry · MKT 4.7 (TAM4 P5 R5)</div><div style="font-size:10px;margin:6px 0">🚚6 💰8 🧪6 🔁3 📈3 🗺️6 💀7</div><div style="font-size:11px"><b>Loot:</b> Park/strip KYC: tip jar + gift path (no Stripe) — wire `/webhooks/gift` behind guard_judo</div><div style="font-size:10px;opacity:.6;margin-top:4px">Evid: has_queue,has_guard</div></div>
+<div class="monster"><span class="cr">CR 5.4</span><h3>SCOUT_CONTAINER</h3><div style="opacity:.7;font-size:10px">110py · 24 entry · MKT 6.2 (TAM10 P4 R5)</div><div style="font-size:10px;margin:6px 0">🚚6 💰8 🧪8 🔁3 📈3 🗺️7 💀2</div><div style="font-size:11px"><b>Loot:</b> Park/strip KYC: tip jar + gift path (no Stripe) — wire `/webhooks/gift` behind guard_judo</div><div style="font-size:10px;opacity:.6;margin-top:4px">Evid: has_api,has_queue,has_guard</div></div>
+<div class="monster"><span class="cr">CR 5.2</span><h3>Implore</h3><div style="opacity:.7;font-size:10px">67py · 24 entry · MKT 7.6 (TAM10 P7 R5)</div><div style="font-size:10px;margin:6px 0">🚚2 💰8 🧪8 🔁3 📈3 🗺️7 💀6</div><div style="font-size:11px"><b>Loot:</b> Park/strip KYC: tip jar + gift path (no Stripe) — wire `/webhooks/gift` behind guard_judo</div><div style="font-size:10px;opacity:.6;margin-top:4px">Evid: has_api,has_health,has_queue,has_guard</div></div>
+</div></div>
+<div style="opacity:.5;margin-top:12px;font-size:11px">Generated 2026-09-11T03:21:45.897188+00:00 — atlas --seed 42 — MRD.tct forward log + pooper quest hooked. Not medical. Not bank. Just a lens.</div></div>

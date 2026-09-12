@@ -1,0 +1,205 @@
+
+# [DNA_TAG]
+# ORIGIN: A9
+# PILLAR: swarm-coordination
+# DEPS: fcntl,hashlib,json,pathlib
+# ROLE: Stigmergic task-claim ledger with decay-based self-healing
+# AUTHOR: Bleak
+# SESSION: 2026-09-08
+# TIER: 2
+# [/DNA_TAG]
+
+"""
+pheromone_store.py
+
+Implements pheromone_schema.md. Zero external dependencies — no Redis,
+no MCP SDK required to get real value tonight. If you want a proper MCP
+server wrapping this later, this module is the state layer underneath
+it; the MCP transport is a thin layer you add on top, not a rewrite.
+
+Three things live here:
+  1. PheromoneStore — append/read the shared jsonl log, with decay-aware queries.
+  2. claim_task() / release_task() — the actual fix for two agents doing the same work.
+  3. DirectoryWatcher — polls a directory tree, emits FILE_MUTATION-shaped
+     pheromones on change. Polling, not inotify — works identically on
+     Termux/SD-card/FUSE mounts where inotify is unreliable anyway.
+"""
+
+import hashlib
+import json
+import os
+import time
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+STORE_PATH = "pheromones.jsonl"
+
+
+class PheromoneStore:
+    def __init__(self, store_path: str = STORE_PATH):
+        self.store_path = store_path
+
+    def emit(
+        self,
+        type_: str,
+        source: str,
+        path: str = "",
+        strength: float = 1.0,
+        decay_rate: float = 0.0,
+        payload: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        event = {
+            "id": f"phm_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}",
+            "type": type_,
+            "source": source,
+            "path": path,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "strength": strength,
+            "decay_rate": decay_rate,
+            "payload": payload or {},
+        }
+        with open(self.store_path, "a") as f:
+            f.write(json.dumps(event) + "\n")
+        return event
+
+    def read_all(self) -> List[Dict[str, Any]]:
+        if not os.path.exists(self.store_path):
+            return []
+        events = []
+        with open(self.store_path, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        events.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        continue
+        return events
+
+    def current_strength(self, event: Dict[str, Any]) -> float:
+        """Decay-adjusted strength right now. decay_rate=0.0 means never decays."""
+        if event.get("decay_rate", 0.0) <= 0.0:
+            return event.get("strength", 1.0)
+        ts = datetime.fromisoformat(event["timestamp"])
+        hours_elapsed = (datetime.now(timezone.utc) - ts).total_seconds() / 3600
+        remaining = event.get("strength", 1.0) - (event["decay_rate"] * hours_elapsed)
+        return max(0.0, remaining)
+
+    def active_by_type(self, type_: str, min_strength: float = 0.05) -> List[Dict[str, Any]]:
+        """Events of a type that haven't decayed below threshold. This is
+        how you check 'is this task actually still claimed' without any
+        manual cleanup step."""
+        return [
+            e for e in self.read_all()
+            if e["type"] == type_ and self.current_strength(e) >= min_strength
+        ]
+
+    def regenerate_stank_md(self, out_path: str = "STANK.md"):
+        """View-generates STANK.md from VALIDATION_FAIL events, so anything
+        still reading that file directly keeps working."""
+        fails = [e for e in self.read_all() if e["type"] == "VALIDATION_FAIL"]
+        with open(out_path, "w") as f:
+            for e in fails:
+                reason = e.get("payload", {}).get("reason", "unspecified")
+                f.write(f"- [DEAD LIMB] {e['path']} flagged: {reason}\n")
+
+    def regenerate_who_did_what(self, out_path: str = "WHO_DID_WHAT.md"):
+        """Same idea for contribution history."""
+        contribs = [e for e in self.read_all() if e["type"] == "CONTRIBUTION"]
+        with open(out_path, "w") as f:
+            for e in contribs:
+                date = e["timestamp"][:10]
+                desc = e.get("payload", {}).get("description", "")
+                f.write(f"{date}: {desc}\n")
+
+
+# --- Task claiming: the actual fix for agents overworking each other ---
+
+def claim_task(store: PheromoneStore, agent_id: str, path: str, ttl_hours: float = 1.0) -> bool:
+    """Returns True if the claim succeeded, False if someone else already
+    holds an undecayed claim on this path. Check this before starting work,
+    every time, every agent."""
+    existing = [
+        e for e in store.active_by_type("TASK_CLAIM")
+        if e["path"] == path and e["source"] != agent_id
+    ]
+    if existing:
+        return False
+    decay_rate = 1.0 / ttl_hours  # fully decays after ttl_hours of no reinforcement
+    store.emit("TASK_CLAIM", source=agent_id, path=path, decay_rate=decay_rate)
+    return True
+
+
+def release_task(store: PheromoneStore, agent_id: str, path: str):
+    store.emit("TASK_RELEASE", source=agent_id, path=path, decay_rate=0.0)
+
+
+# --- Directory watcher: polling-based, safe on FUSE/SD-card mounts ---
+
+class DirectoryWatcher:
+    """Polls a directory tree for file changes and emits pheromones.
+    Polling instead of inotify on purpose — inotify is unreliable on
+    FUSE-mounted SD card paths, which is most of your storage tonight."""
+
+    def __init__(self, root_dir: str, store: PheromoneStore, source: str = "DirectoryWatcher"):
+        self.root_dir = root_dir
+        self.store = store
+        self.source = source
+        self._known: Dict[str, str] = {}
+
+    def _hash_file(self, path: str) -> Optional[str]:
+        try:
+            with open(path, "rb") as f:
+                return hashlib.sha256(f.read()).hexdigest()[:16]
+        except (OSError, PermissionError):
+            return None
+
+    def scan_once(self):
+        """Single pass: compare current file hashes to last known state,
+        emit a FILE_MUTATION pheromone for anything new or changed."""
+        current: Dict[str, str] = {}
+        for dirpath, dirnames, filenames in os.walk(self.root_dir):
+            dirnames[:] = [d for d in dirnames if d not in {".git", "__pycache__", "node_modules"}]
+            for fname in filenames:
+                if fname.endswith(".py"):
+                    fpath = os.path.join(dirpath, fname)
+                    h = self._hash_file(fpath)
+                    if h:
+                        current[fpath] = h
+
+        for fpath, h in current.items():
+            if fpath not in self._known:
+                self.store.emit("FILE_MUTATION", source=self.source, path=fpath,
+                                 payload={"kind": "created", "hash": h})
+            elif self._known[fpath] != h:
+                self.store.emit("FILE_MUTATION", source=self.source, path=fpath,
+                                 payload={"kind": "modified", "hash": h})
+
+        for fpath in self._known:
+            if fpath not in current:
+                self.store.emit("FILE_MUTATION", source=self.source, path=fpath,
+                                 payload={"kind": "deleted"})
+
+        self._known = current
+
+    def run(self, interval_seconds: int = 30):
+        """Blocking loop. Ctrl+C to stop. Run this in its own tab if you
+        want live directory-state pheromones while agents work."""
+        print(f"Watching {self.root_dir}, polling every {interval_seconds}s. Ctrl+C to stop.")
+        try:
+            while True:
+                self.scan_once()
+                time.sleep(interval_seconds)
+        except KeyboardInterrupt:
+            print("Watcher stopped.")
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) != 2:
+        print("Usage: python3 pheromone_store.py /path/to/watch")
+        sys.exit(1)
+    store = PheromoneStore()
+    watcher = DirectoryWatcher(sys.argv[1], store)
+    watcher.run()

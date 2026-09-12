@@ -1,0 +1,659 @@
+{
+  "seed": 185,
+  "root": "/home/bleaknarratives/p_recovery/projects",
+  "rel": "~/p_recovery/projects",
+  "created": "2026-09-11T04:05:51.362369+00:00",
+  "depth": 2,
+  "branch": 2,
+  "nodes": [
+    {
+      "id": "root",
+      "depth": 0,
+      "branch": 0,
+      "parent": null,
+      "thesis": "Should we add py_compile gate + one receipt test in projects? (seed 185, CR 4.4 MKT 6.9) \u2014 board, then eventuality, then mirror.",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "no-go",
+        "constraint": "4 broken files block shipping before any monetization",
+        "wedge": "Fix one broken file in ~/p_recovery/projects and gate with py_compile",
+        "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+        "evidence_used": [
+          "E10",
+          "E11",
+          "E3",
+          "E2",
+          "E9",
+          "E4"
+        ],
+        "session": "devbr_c06843733d",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 109.3,
+            "p10_hours": 95.5,
+            "p90_hours": 122.9,
+            "ship_prob": 0.28,
+            "ending_orpphans": 51
+          },
+          "base": {
+            "hours_to_shippable": 65.6,
+            "p10_hours": 59.9,
+            "p90_hours": 75.8,
+            "ship_prob": 0.58,
+            "ending_orpphans": 49
+          },
+          "upside": {
+            "hours_to_shippable": 44.6,
+            "p10_hours": 39.5,
+            "p90_hours": 49.5,
+            "ship_prob": 0.82,
+            "ending_orpphans": 49
+          }
+        },
+        "citations": [
+          "E2",
+          "E4",
+          "E1",
+          "E2",
+          "E11",
+          "E3"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 4.4,
+          "cr_eventual": 4.12,
+          "delta": 0.28,
+          "mkt": 6.9,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "eventuality",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        },
+        "base": {
+          "cr_now": 4.4,
+          "cr_eventual": 3.88,
+          "delta": 0.52,
+          "mkt": 6.9,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "eventuality",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        },
+        "upside": {
+          "cr_now": 4.4,
+          "cr_eventual": 3.53,
+          "delta": 0.87,
+          "mkt": 6.9,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "eventuality",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        }
+      },
+      "diff": "# root mirror \u2014 seed 185 \u2014 projects CR4.4 \u2192 gift path\n# board no-go \u2014 4 broken files block shipping before any monetization\n"
+    },
+    {
+      "id": "n01-d1b0",
+      "depth": 1,
+      "branch": 0,
+      "parent": "root",
+      "thesis": "If this holds (trust=8/10 at projects), then that follows: Add `python3 -m py_compile` gate + 1 test that names its receipt (STANK/JANUS) \u2014 but what does eventuality look like if we add py_compile gate + one receipt test for mirror year?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "no-go",
+        "constraint": "4 broken files block shipping before any monetization",
+        "wedge": "Fix one broken file in ~/p_recovery/projects and gate with py_compile",
+        "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+        "evidence_used": [
+          "E10",
+          "E12",
+          "E3",
+          "E13",
+          "E9",
+          "E1"
+        ],
+        "session": "devbr_bbac9ca994",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 107.6,
+            "p10_hours": 99.0,
+            "p90_hours": 122.2,
+            "ship_prob": 0.28,
+            "ending_orpphans": 51
+          },
+          "base": {
+            "hours_to_shippable": 67.4,
+            "p10_hours": 60.7,
+            "p90_hours": 72.6,
+            "ship_prob": 0.58,
+            "ending_orpphans": 49
+          },
+          "upside": {
+            "hours_to_shippable": 44.4,
+            "p10_hours": 39.9,
+            "p90_hours": 48.9,
+            "ship_prob": 0.82,
+            "ending_orpphans": 49
+          }
+        },
+        "citations": [
+          "E1",
+          "E9",
+          "E12",
+          "E9",
+          "E1",
+          "E12"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 4.4,
+          "cr_eventual": 4.12,
+          "delta": 0.28,
+          "mkt": 6.9,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "mirror year",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        },
+        "base": {
+          "cr_now": 4.4,
+          "cr_eventual": 3.88,
+          "delta": 0.52,
+          "mkt": 6.9,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "mirror year",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        },
+        "upside": {
+          "cr_now": 4.4,
+          "cr_eventual": 3.53,
+          "delta": 0.87,
+          "mkt": 6.9,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "mirror year",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n01-d1b0 \u2014 seed 185 depth 1\n# if_this: trust 8/10 @ projects \u2192 then_that: add py_compile gate + one receipt test\n# board: no-go cites ['E10', 'E12', 'E3', 'E13', 'E9', 'E1'] \n# eventuality base: CR 3.88 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n02-d2b0",
+      "depth": 2,
+      "branch": 0,
+      "parent": "n01-d1b0",
+      "thesis": "Assume we add py_compile gate + one receipt test in projects (seed 185). The board said [SYSTEMS_CARTOGRAPHER] saw trust. Mirror it: what would future-you thank you for?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "no-go",
+        "constraint": "4 broken files block shipping before any monetization",
+        "wedge": "Fix one broken file in ~/p_recovery/projects and gate with py_compile",
+        "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+        "evidence_used": [
+          "E4",
+          "E3",
+          "E1",
+          "E8"
+        ],
+        "session": "devbr_30130610b2",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 111.4,
+            "p10_hours": 101.7,
+            "p90_hours": 120.5,
+            "ship_prob": 0.28,
+            "ending_orpphans": 51
+          },
+          "base": {
+            "hours_to_shippable": 69.5,
+            "p10_hours": 60.2,
+            "p90_hours": 77.6,
+            "ship_prob": 0.58,
+            "ending_orpphans": 49
+          },
+          "upside": {
+            "hours_to_shippable": 43.6,
+            "p10_hours": 39.5,
+            "p90_hours": 49.5,
+            "ship_prob": 0.82,
+            "ending_orpphans": 49
+          }
+        },
+        "citations": [
+          "E1",
+          "E3",
+          "E1",
+          "E3",
+          "E1",
+          "E8"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 4.4,
+          "cr_eventual": 4.12,
+          "delta": 0.28,
+          "mkt": 6.9,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "90 days",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        },
+        "base": {
+          "cr_now": 4.4,
+          "cr_eventual": 3.88,
+          "delta": 0.52,
+          "mkt": 6.9,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "90 days",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        },
+        "upside": {
+          "cr_now": 4.4,
+          "cr_eventual": 3.53,
+          "delta": 0.87,
+          "mkt": 6.9,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "90 days",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n02-d2b0 \u2014 seed 185 depth 2\n# if_this: trust 8/10 @ projects \u2192 then_that: add py_compile gate + one receipt test\n# board: no-go cites ['E4', 'E3', 'E1', 'E8'] \n# eventuality base: CR 3.88 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n03-d2b1",
+      "depth": 2,
+      "branch": 1,
+      "parent": "n01-d1b0",
+      "thesis": "Close trust in projects \u2192 Add `python3 -m py_compile` gate + 1 test that names its receipt (STANK/JANUS). Then what? Sim the next fork: distribution or trust? Be kind to the branch you don't take.",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "no-go",
+        "constraint": "4 broken files block shipping before any monetization",
+        "wedge": "Fix one broken file in ~/p_recovery/projects and gate with py_compile",
+        "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+        "evidence_used": [
+          "E10",
+          "E11",
+          "E3",
+          "E13",
+          "E9",
+          "E4"
+        ],
+        "session": "devbr_0c26458107",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 105.2,
+            "p10_hours": 96.7,
+            "p90_hours": 119.7,
+            "ship_prob": 0.28,
+            "ending_orpphans": 51
+          },
+          "base": {
+            "hours_to_shippable": 69.5,
+            "p10_hours": 60.3,
+            "p90_hours": 77.5,
+            "ship_prob": 0.58,
+            "ending_orpphans": 49
+          },
+          "upside": {
+            "hours_to_shippable": 43.4,
+            "p10_hours": 38.3,
+            "p90_hours": 50.3,
+            "ship_prob": 0.82,
+            "ending_orpphans": 49
+          }
+        },
+        "citations": [
+          "E1",
+          "E9",
+          "E11",
+          "E13",
+          "E3",
+          "E9"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 4.4,
+          "cr_eventual": 4.12,
+          "delta": 0.28,
+          "mkt": 6.9,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "eventuality (1 year)",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        },
+        "base": {
+          "cr_now": 4.4,
+          "cr_eventual": 3.88,
+          "delta": 0.52,
+          "mkt": 6.9,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "eventuality (1 year)",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        },
+        "upside": {
+          "cr_now": 4.4,
+          "cr_eventual": 3.53,
+          "delta": 0.87,
+          "mkt": 6.9,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "eventuality (1 year)",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n03-d2b1 \u2014 seed 185 depth 2\n# if_this: trust 8/10 @ projects \u2192 then_that: add py_compile gate + one receipt test\n# board: no-go cites ['E10', 'E11', 'E3', 'E13', 'E9', 'E4'] \n# eventuality base: CR 3.88 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n04-d1b1",
+      "depth": 1,
+      "branch": 1,
+      "parent": "root",
+      "thesis": "Assume we add py_compile gate + one receipt test in projects (seed 185). The board said [EVIDENCE_AUDITOR] saw trust. Mirror it: what would future-you thank you for?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "no-go",
+        "constraint": "4 broken files block shipping before any monetization",
+        "wedge": "Fix one broken file in ~/p_recovery/projects and gate with py_compile",
+        "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+        "evidence_used": [
+          "E10",
+          "E3",
+          "E13",
+          "E9",
+          "E4",
+          "E1"
+        ],
+        "session": "devbr_a432773dcc",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 111.1,
+            "p10_hours": 100.4,
+            "p90_hours": 123.9,
+            "ship_prob": 0.28,
+            "ending_orpphans": 51
+          },
+          "base": {
+            "hours_to_shippable": 68.5,
+            "p10_hours": 61.2,
+            "p90_hours": 75.9,
+            "ship_prob": 0.58,
+            "ending_orpphans": 49
+          },
+          "upside": {
+            "hours_to_shippable": 44.9,
+            "p10_hours": 39.1,
+            "p90_hours": 49.1,
+            "ship_prob": 0.82,
+            "ending_orpphans": 49
+          }
+        },
+        "citations": [
+          "E1",
+          "E3",
+          "E13",
+          "E3",
+          "E8",
+          "E9"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 4.4,
+          "cr_eventual": 4.12,
+          "delta": 0.28,
+          "mkt": 6.9,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "eventuality (1 year)",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        },
+        "base": {
+          "cr_now": 4.4,
+          "cr_eventual": 3.88,
+          "delta": 0.52,
+          "mkt": 6.9,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "eventuality (1 year)",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        },
+        "upside": {
+          "cr_now": 4.4,
+          "cr_eventual": 3.53,
+          "delta": 0.87,
+          "mkt": 6.9,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "eventuality (1 year)",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n04-d1b1 \u2014 seed 185 depth 1\n# if_this: trust 8/10 @ projects \u2192 then_that: add py_compile gate + one receipt test\n# board: no-go cites ['E10', 'E3', 'E13', 'E9', 'E4', 'E1'] \n# eventuality base: CR 3.88 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n05-d2b0",
+      "depth": 2,
+      "branch": 0,
+      "parent": "n04-d1b1",
+      "thesis": "Assume we add py_compile gate + one receipt test in projects (seed 185). The board said [EVIDENCE_AUDITOR] saw trust. Mirror it: what would future-you thank you for?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "no-go",
+        "constraint": "4 broken files block shipping before any monetization",
+        "wedge": "Fix one broken file in ~/p_recovery/projects and gate with py_compile",
+        "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+        "evidence_used": [
+          "E3",
+          "E13",
+          "E9",
+          "E4",
+          "E1",
+          "E8"
+        ],
+        "session": "devbr_59f90aec8b",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 111.4,
+            "p10_hours": 101.7,
+            "p90_hours": 120.5,
+            "ship_prob": 0.28,
+            "ending_orpphans": 51
+          },
+          "base": {
+            "hours_to_shippable": 69.5,
+            "p10_hours": 60.2,
+            "p90_hours": 77.6,
+            "ship_prob": 0.58,
+            "ending_orpphans": 49
+          },
+          "upside": {
+            "hours_to_shippable": 43.6,
+            "p10_hours": 39.5,
+            "p90_hours": 49.5,
+            "ship_prob": 0.82,
+            "ending_orpphans": 49
+          }
+        },
+        "citations": [
+          "E1",
+          "E8",
+          "E13",
+          "E8",
+          "E1",
+          "E8"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 4.4,
+          "cr_eventual": 4.12,
+          "delta": 0.28,
+          "mkt": 6.9,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "eventuality (1 year)",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        },
+        "base": {
+          "cr_now": 4.4,
+          "cr_eventual": 3.88,
+          "delta": 0.52,
+          "mkt": 6.9,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "eventuality (1 year)",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        },
+        "upside": {
+          "cr_now": 4.4,
+          "cr_eventual": 3.53,
+          "delta": 0.87,
+          "mkt": 6.9,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "eventuality (1 year)",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n05-d2b0 \u2014 seed 185 depth 2\n# if_this: trust 8/10 @ projects \u2192 then_that: add py_compile gate + one receipt test\n# board: no-go cites ['E3', 'E13', 'E9', 'E4', 'E1', 'E8'] \n# eventuality base: CR 3.88 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n06-d2b1",
+      "depth": 2,
+      "branch": 1,
+      "parent": "n04-d1b1",
+      "thesis": "Assume we add py_compile gate + one receipt test in projects (seed 185). The board said [TIME_ALCHEMIST] saw trust. Mirror it: what would future-you thank you for?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "no-go",
+        "constraint": "4 broken files block shipping before any monetization",
+        "wedge": "Fix one broken file in ~/p_recovery/projects and gate with py_compile",
+        "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+        "evidence_used": [
+          "E3",
+          "E9",
+          "E4",
+          "E1",
+          "E8"
+        ],
+        "session": "devbr_010ef3c464",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 105.2,
+            "p10_hours": 96.7,
+            "p90_hours": 119.7,
+            "ship_prob": 0.28,
+            "ending_orpphans": 51
+          },
+          "base": {
+            "hours_to_shippable": 69.5,
+            "p10_hours": 60.3,
+            "p90_hours": 77.5,
+            "ship_prob": 0.58,
+            "ending_orpphans": 49
+          },
+          "upside": {
+            "hours_to_shippable": 43.4,
+            "p10_hours": 38.3,
+            "p90_hours": 50.3,
+            "ship_prob": 0.82,
+            "ending_orpphans": 49
+          }
+        },
+        "citations": [
+          "E8",
+          "E1",
+          "E8",
+          "E3",
+          "E8",
+          "E9"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 4.4,
+          "cr_eventual": 4.12,
+          "delta": 0.28,
+          "mkt": 6.9,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "90 days",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        },
+        "base": {
+          "cr_now": 4.4,
+          "cr_eventual": 3.88,
+          "delta": 0.52,
+          "mkt": 6.9,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "90 days",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        },
+        "upside": {
+          "cr_now": 4.4,
+          "cr_eventual": 3.53,
+          "delta": 0.87,
+          "mkt": 6.9,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "90 days",
+          "if_this": "trust 8/10",
+          "then_that": "add py_compile gate + one receipt test"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n06-d2b1 \u2014 seed 185 depth 2\n# if_this: trust 8/10 @ projects \u2192 then_that: add py_compile gate + one receipt test\n# board: no-go cites ['E3', 'E9', 'E4', 'E1', 'E8'] \n# eventuality base: CR 3.88 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    }
+  ],
+  "monitor": {
+    "max_depth": 5,
+    "max_branch": 3,
+    "max_parallel": 2,
+    "max_chains": 9,
+    "budget_tokens": 8000,
+    "forbidden": [
+      "rm -rf",
+      "shred ",
+      "DROP ",
+      "DELETE FROM",
+      "push --force"
+    ],
+    "require_humane": true,
+    "require_citation": true
+  },
+  "stats": {
+    "nodes": 7,
+    "throttled": 0,
+    "depth": 2,
+    "branch": 2
+  }
+}

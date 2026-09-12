@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@openai/codex": "^0.151.0",
+    "codex-agent": "^1.0.0",
+    "htop": "^1.0.1",
+    "vibe-cli": "^0.12.4"
+  }
+}

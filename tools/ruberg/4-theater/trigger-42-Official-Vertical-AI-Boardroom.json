@@ -1,0 +1,28 @@
+{
+  "seed": 42,
+  "root": "/home/bleaknarratives/The-Werkz/Official-Vertical-AI-Boardroom",
+  "rel": "~/The-Werkz/Official-Vertical-AI-Boardroom",
+  "wedge": "Humane graft 'vertical_ai': vertical_ai.py wins, vertical_ai_v2.py, vertical_ai_v3.py archived + grafted as __from_* \u2014 py_compile gate, ship one slice",
+  "void": "monetization",
+  "cr": 3.4,
+  "mkt": 8.7,
+  "evidence": [
+    "E10",
+    "E3",
+    "E1",
+    "E4",
+    "E7",
+    "E6"
+  ],
+  "constraint": "Dupe stem 'vertical_ai' with 3 versions \u2014 fragmentation dwarfs leverage",
+  "kill": "Run humane_cannibal --dry-run then --execute on 'vertical_ai' group; if winner py_compiles and tests still pass within 48h, go else conditional",
+  "chains": [
+    "/home/bleaknarratives/tools/ruberg/1-spark/seed-42-Official-Vertical-AI-Boardroom.md",
+    "/home/bleaknarratives/tools/ruberg/2-spec/spec-42-Official-Vertical-AI-Boardroom.md",
+    "/home/bleaknarratives/tools/ruberg/3-patch/patch-42-Official-Vertical-AI-Boardroom.diff"
+  ],
+  "mode": "zen",
+  "ts": "2026-09-11T05:27:28.261005+00:00",
+  "humane": "archive not delete \u2014 losers intact",
+  "next": "open theater: lookingglass --theater \u2192 flip \u262f metal \u2192 \ud83d\udd25 BLEGH"
+}

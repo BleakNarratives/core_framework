@@ -1,0 +1,1219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Jerry's Ears — Vintage Hearing Bench (mic→EQ→earbuds)</title>
+<style>
+  :root{
+    --wood1:#5c3a18; --wood2:#8a5a22; --wood3:#3b2210;
+    --panel:#2f2f2f; --panel2:#3a3a3a; --edge:#1a1a1a; --hi:#565656;
+    --alu:#c9c9c9; --led:#2aff6a; --led2:#ff3b2f; --vu1:#ffd54a; --vu2:#ff6a2b; --txt:#e9e6de;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0; background:radial-gradient(1200px 700px at 40% 0%, #2a2a2a, #111); color:var(--txt); font:13px/1.35 ui-monospace, "JetBrains Mono", Menlo, monospace; letter-spacing:0.02em}
+  .wrap{max-width:1120px; margin:18px auto; padding:14px}
+  .bench{
+    background: linear-gradient(#2e2e2e,#222);
+    border:1px solid var(--edge);
+    border-radius:18px; overflow:hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6), inset 0 1px 0 var(--hi);
+    display:grid; grid-template-columns: 18px 1fr 18px; 
+  }
+  .cheek{background: linear-gradient(90deg, var(--wood3), var(--wood2) 45%, var(--wood1) 70%, var(--wood3)); box-shadow: inset 0 0 12px rgba(0,0,0,.6)}
+  .mid{padding:14px 14px 10px}
+  .topbar{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; background: linear-gradient(#3b3b3b,#2b2b2b); border:1px solid #111; border-radius:12px; box-shadow: inset 0 1px 0 rgba(255,255,255,.08)}
+  .brand{font-weight:800; letter-spacing:.14em; font-size:12px}
+  .brand b{color:#ffdf85}
+  .brand small{opacity:.7; font-weight:600; letter-spacing:.08em}
+  .meters{display:flex; gap:10px; align-items:center}
+  .vu{width:160px; height:52px; background: radial-gradient(180px 60px at 20% 0%, #4a4a4a, #1e1e1e); border:1px solid #000; border-radius:8px; position:relative; overflow:hidden; box-shadow: inset 0 8px 14px rgba(0,0,0,.6)}
+  .vu canvas{width:100%; height:100%; display:block}
+  .vu label{position:absolute; left:8px; top:4px; font-size:9px; opacity:.7; letter-spacing:.12em}
+  .led{width:10px; height:10px; border-radius:50%; background:#222; box-shadow: inset 0 1px 4px #000, 0 0 0 1px #111; position:relative}
+  .led.on{background:var(--led); box-shadow: 0 0 10px rgba(42,255,106,.8), inset 0 1px 2px rgba(255,255,255,.6)}
+  .led.warn.on{background:var(--led2); box-shadow: 0 0 10px rgba(255,59,47,.9)}
+  .tabs{display:flex; gap:8px; margin:12px 0 0}
+  .tab{flex:1; padding:10px 12px; border-radius:10px; border:1px solid #111; cursor:pointer; font-weight:800; letter-spacing:.08em; background: linear-gradient(#4a4a4a,#333); color:#ddd; text-align:center; box-shadow: inset 0 1px 0 rgba(255,255,255,.08)}
+  .tab.active{background: linear-gradient(#ffeaa0,#d7b24a); color:#1a1200; border-color:#8a6b1a; box-shadow: 0 6px 14px rgba(255,223,133,.25), inset 0 1px 0 rgba(255,255,255,.7)}
+  .tab small{display:block; opacity:.7; font-weight:600; letter-spacing:.06em; font-size:10px}
+  .grid{display:grid; grid-template-columns: 340px 1fr; gap:12px; margin-top:12px}
+  @media (max-width:980px){ .grid{grid-template-columns:1fr} .meters{display:none} }
+  .card{background: linear-gradient(#3a3a3a,#2c2c2c); border:1px solid #111; border-radius:12px; padding:12px; box-shadow: inset 0 1px 0 rgba(255,255,255,.06)}
+  .card h3{margin:0 0 8px; font-size:11px; letter-spacing:.12em; opacity:.9}
+  .knobrow{display:flex; gap:10px; flex-wrap:wrap}
+  .knob{width:78px; text-align:center}
+  .dial{width:64px; height:64px; border-radius:50%; margin:0 auto 6px; background:
+    radial-gradient(22px 22px at 30% 28%, #eee, #a8a8a8 60%, #5a5a5a),
+    radial-gradient(64px 64px at 50% 0%, #6a6a6a,#2a2a2a);
+    border:2px solid #111; position:relative; box-shadow: 0 8px 16px rgba(0,0,0,.5), inset 0 2px 0 rgba(255,255,255,.3); cursor:grab;
+    touch-action:none;
+  }
+  .dial::after{content:""; position:absolute; left:50%; top:8px; width:3px; height:14px; background:#1a1a1a; border-radius:3px; transform-origin:50% 24px; box-shadow:0 1px 0 rgba(255,255,255,.3)}
+  .dial .dot{position:absolute; left:50%; top:50%; width:8px; height:8px; margin:-4px 0 0 -4px; border-radius:50%; background:#1a1a1a; box-shadow: inset 0 1px 2px rgba(255,255,255,.25)}
+  .knob label{font-size:10px; letter-spacing:.08em; opacity:.8; display:block}
+  .knob .val{font-size:11px; font-weight:800; color:#ffe9a0; margin-top:2px}
+  .btn{appearance:none; border:1px solid #111; background: linear-gradient(#4e4e4e,#2f2f2f); color:#eee; padding:8px 10px; border-radius:9px; font-weight:800; letter-spacing:.06em; cursor:pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 6px 12px rgba(0,0,0,.3)}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background: linear-gradient(#ffeaa0,#d7b24a); color:#1c1200; border-color:#7a5f0f}
+  .btn.danger{background: linear-gradient(#ff6a55,#b81f10); color:#fff; border-color:#6b0f07}
+  .btn.ghost{background: linear-gradient(#3a3a3a,#2a2a2a)}
+  .tog{display:inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:800; letter-spacing:.06em; cursor:pointer; user-select:none}
+  .tog i{width:36px; height:20px; background:#111; border:1px solid #000; border-radius:999px; position:relative; display:inline-block; box-shadow: inset 0 3px 8px rgba(0,0,0,.8)}
+  .tog i::after{content:""; position:absolute; left:2px; top:2px; width:14px; height:14px; border-radius:50%; background:linear-gradient(#eee,#999); transition:.18s; box-shadow:0 2px 6px rgba(0,0,0,.6)}
+  .tog.on i{background:#2e3316; border-color:#3a4a0a}
+  .tog.on i::after{left:18px; background: linear-gradient(#eaff7a,#8fbf00)}
+  .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .sep{height:1px; background:linear-gradient(90deg, transparent, #ffffff14, transparent); margin:10px 0}
+  .freqs{display:flex; gap:6px; flex-wrap:wrap}
+  .chip{padding:6px 8px; border-radius:999px; border:1px solid #111; background: linear-gradient(#4a4a4a,#333); font-weight:800; font-size:11px; cursor:pointer; letter-spacing:.06em}
+  .chip.active{background: linear-gradient(#ffeaa0,#d7b24a); color:#1a1200; border-color:#8a6b1a}
+  .meterline{height:7px; background:#111; border-radius:999px; overflow:hidden; border:1px solid #000; box-shadow: inset 0 2px 6px rgba(0,0,0,.8)}
+  .fill{height:100%; width:0%; background: linear-gradient(90deg, #2aff6a 0 60%, #ffd54a 60% 85%, #ff3b2f 85% 100%); transition: width .08s linear}
+  canvas.audiogram{width:100%; height:180px; background: #101010; border:1px solid #000; border-radius:10px; display:block}
+  .small{font-size:10px; opacity:.72; line-height:1.4}
+  .warnbox{background: linear-gradient(#3a2f14,#2a2110); border:1px solid #6b4d0a; color:#ffe9a0; padding:8px 10px; border-radius:10px; font-size:11px; line-height:1.45}
+  .mono{font-variant-ligatures:none}
+  .presets{display:flex; gap:6px; flex-wrap:wrap}
+  .kbd{padding:2px 6px; border:1px solid #444; border-bottom-width:2px; background:#222; border-radius:6px; font-size:10px; font-weight:800; letter-spacing:.06em}
+  input[type="range"]{width:100%; accent-color:#d7b24a}
+  select, input[type="text"]{background:#1a1a1a; color:#eee; border:1px solid #000; border-radius:8px; padding:7px 8px; font-weight:700}
+
+  /* Lone Ranger stage — minimal for Jerry, big for heart */
+  .jerry-stage{ background: linear-gradient(#faf6e8 0%, #f5e6b8 55%, #e8d9a8 100%); border:2px solid #8a6b1a; border-radius:14px; overflow:hidden; box-shadow: 0 12px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.7); }
+  .jerry-stage canvas{ width:100%; height:320px; display:block; background: transparent; }
+  .jerry-big{ width:100%; padding:18px 14px; font-size:28px; font-weight:900; letter-spacing:.06em; border-radius:16px; border:2px solid #3b2210; background: linear-gradient(#ffdf85,#d7b24a); color:#1a1200; box-shadow: 0 10px 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.7); cursor:pointer; }
+  .jerry-big:active{ transform: translateY(1px) scale(0.99); }
+  .jerry-big small{ display:block; font-size:12px; opacity:.7; letter-spacing:.08em; margin-top:4px; }
+  .prairie-bar{ display:flex; gap:8px; align-items:center; justify-content:space-between; padding:8px 10px; background:#1a1200; color:#ffdf85; border-radius:10px; border:1px solid #5c3a18; font-weight:800; letter-spacing:.06em; font-size:11px; }
+  .badge{ padding:4px 8px; border-radius:999px; background:#2a2110; border:1px solid #5c3a18; }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bench">
+    <div class="cheek"></div>
+    <div class="mid">
+      <div class="topbar">
+        <div class="brand">JERRY'S EARS <b>VINTAGE BENCH</b> <small>/ MIC → EQ → LIMITER → EARBUDS / 1958-2004 SOUL</small></div>
+        <div class="meters">
+          <div class="vu"><label>LEFT / INPUT</label><canvas id="vuL" width="320" height="104"></canvas></div>
+          <div class="vu"><label>RIGHT / OUTPUT</label><canvas id="vuR" width="320" height="104"></canvas></div>
+          <div style="display:grid; gap:6px; justify-items:center">
+            <div class="led" id="ledLive" title="live"></div><div style="font-size:9px; opacity:.6">LIVE</div>
+            <div class="led" id="ledLim" title="limiter"></div><div style="font-size:9px; opacity:.6">LIMIT</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="warnbox" id="safety" style="margin-top:10px">
+        <b>🎧 Safety — start quiet, go slow.</b> This is <u>not medical</u> — just a vintage lens to understand where he drops off. Hard limiter at ~85 dB is on, plus <b>MUTE</b> + <b>BYPASS</b>. If anything feels worse for him, hit BYPASS and stop. Keep earbuds low first 30 seconds.
+        <span style="float:right"><span class="kbd">MUTE</span> <span class="kbd">BYPASS</span> <span class="kbd">LIMIT</span></span>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="test">HEARING TEST <small>beeps → audiogram → see where speech drops</small></div>
+        <div class="tab" data-tab="live">LIVE ASSIST / TUNER <small>mic → EQ → earbuds • vintage speech dial</small></div>
+        <div class="tab" data-tab="jerry">🤠 JERRY'S VIEW <small>big button • horse runs • catch outlaws</small></div>
+      </div>
+      <div class="row" style="margin-top:6px; justify-content:flex-end"><button class="btn ghost" id="btnPopOut">⧉ pop Jerry's View to new window</button><span class="small" style="opacity:.6">turn laptop toward him — bench stays here</span></div>
+
+      <div class="grid">
+        <!-- LEFT: TEST or LIVE -->
+        <div class="card" id="panelTest">
+          <h3>① HEARING TEST — "help me test my music thing?" (surprise-friendly)</h3>
+          <div class="small" style="margin-bottom:8px">Play ONE pure tone at a time. Raise level until Jerry raises hand / taps <span class="kbd">SPACE</span>. Then <b>SAVE threshold</b>. Works without mic — just earbuds.</div>
+          <div class="freqs" id="freqBtns"></div>
+          <div class="row" style="margin:10px 0 8px">
+            <button class="btn primary" id="btnBeep">▶ PLAY TONE</button>
+            <button class="btn ghost" id="btnStop">■ STOP</button>
+            <span class="small" style="margin-left:6px">Hold <span class="kbd">SPACE</span> = hearing it</span>
+            <span id="hearingDot" class="led" style="display:inline-block; vertical-align:middle; margin-left:8px"></span>
+          </div>
+          <div class="row"><label class="small" style="width:92px">Level</label><input id="toneGain" type="range" min="-48" max="0" value="-28" step="1"/><span class="mono small" id="toneGainVal">-28 dB</span></div>
+          <div class="row"><label class="small" style="width:92px">Duration</label><select id="toneDur"><option value="0">continuous</option><option value="1500" selected>1.5s beep</option><option value="800">0.8s</option></select><span class="tog" id="togWarble" style="margin-left:8px"><i></i> warble</span></div>
+          <div class="sep"></div>
+          <canvas class="audiogram" id="audioGram" width="980" height="360"></canvas>
+          <div class="row" style="margin-top:8px">
+            <button class="btn" id="btnSaveThresh">💾 SAVE threshold for <span id="saveFreqLabel">1000Hz</span></button>
+            <button class="btn ghost" id="btnClearThresh">clear</button>
+            <button class="btn ghost" id="btnExport">export CSV</button>
+            <select id="presetEar"><option value="L">Left ear</option><option value="R" selected>Right ear</option><option value="both">Both</option></select>
+          </div>
+          <div class="small" style="margin-top:8px">
+            Speech lives ~500–4000 Hz. Classic age drop is 2–4 kHz. The dots you save become the <b>speech EQ</b> on the right.
+            <br/>Tip: test <b>1000 Hz</b> first (easy anchor), then 2000 → 4000 → 800 → 500 → 6000 → 8000 → 250 Hz.
+          </div>
+        </div>
+
+        <div class="card" id="panelLive" style="display:none">
+          <h3>① LIVE ASSIST — mic → your hands → his ears</h3>
+          <div class="warnbox" id="liveWarn">Need mic + earbuds on same device. Chrome will ask for mic. Route to <b>wired earbuds</b> for lowest delay (Bluetooth adds ~150ms). Keep <b>LIMIT ON</b>.</div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn primary" id="btnMic">🎙 START MIC</button>
+            <button class="btn ghost" id="btnBy">BYPASS EQ</button>
+            <button class="btn ghost" id="btnMute">MUTE</button>
+            <span class="tog on" id="togLimit"><i></i> LIMITER ON</span>
+            <span class="tog" id="togMonitor" title="hear yourself"><i></i> monitor</span>
+          </div>
+          <div class="row" style="margin-top:8px; gap:10px">
+            <label class="small" style="min-width:70px">Input</label><select id="selInput" style="flex:1"><option>default</option></select>
+            <label class="small">Earbuds vol</label><input id="outGain" type="range" min="-30" max="6" value="-8" style="width:140px"/>
+            <span class="small mono" id="outGainVal">-8 dB</span>
+          </div>
+          <div class="sep"></div>
+          <div class="knobrow" id="eqKnobs"></div>
+          <div class="row" style="margin-top:8px">
+            <label class="small" style="min-width:110px">Fletcher-Munson</label><input id="loudness" type="range" min="0" max="100" value="22" style="flex:1"/>
+            <span class="small mono" id="loudVal">22 — gentle</span>
+            <button class="btn ghost" id="btnFlat">♭ flat</button>
+          </div>
+          <div class="small">Loudness knob = equal-loudness contour. Low = no compensation (truth). High = boosts bass+treble so quiet speech feels fuller — don't overdo for Jerry, speech clarity > boom.</div>
+          <div class="sep"></div>
+          <div class="row">
+            <label class="small" style="min-width:110px">Mic level</label><div class="meterline" style="flex:1"><div class="fill" id="micFill"></div></div><span class="small mono" id="micDb">-∞</span>
+          </div>
+          <div class="row">
+            <label class="small" style="min-width:110px">Out level</label><div class="meterline" style="flex:1"><div class="fill" id="outFill"></div></div><span class="small mono" id="outDb">-∞</span>
+          </div>
+          <div class="presets" style="margin-top:10px">
+            <button class="btn" data-preset="speech">🗣 SPEECH +3dB (1–4k)</button>
+            <button class="btn" data-preset="jerry">⭐ JERRY'S SAVE</button>
+            <button class="btn ghost" data-preset="soft">soft room</button>
+            <button class="btn ghost" data-preset="clear">clear</button>
+            <button class="btn ghost" id="btnApplyAudiogram">← apply test dots → EQ</button>
+          </div>
+          <div class="row" style="margin-top:8px; gap:6px">
+            <input id="saveName" type="text" placeholder="Jerry-Speech-1" value="Jerry-Speech-1" style="flex:1"/>
+            <button class="btn" id="btnSavePreset">💾 SAVE preset</button>
+            <button class="btn ghost" id="btnLoadPreset">load</button>
+          </div>
+          <div class="small" style="margin-top:6px">Saving writes to this Chromebook only (<span class="mono">localStorage jerry/presets + thresholds</span>), never to cloud. Surprise tip: "Hey Jerry, help me test if this old radio sounds clearer?"</div>
+        </div>
+
+        <div class="card jerry-stage" id="panelJerry" style="display:none">
+          <h3 style="color:#1a1200; margin:0 0 6px">🤠 JERRY'S VIEW — minimal, big, prairie show</h3>
+          <div class="small" style="color:#3b2210; opacity:.85; margin-bottom:8px">He sees THIS only — big button, horse runs when you talk, catch outlaws when he hears beeps. You keep BENCH. <span class="kbd">SPACE</span> also works.</div>
+          <canvas id="jerryCanvas" width="920" height="360"></canvas>
+          <div class="prairie-bar" style="margin-top:8px">
+            <span>🏜️ OUTLAWS CAUGHT: <b id="jerryScore" style="color:#ffdf85">0</b> <span style="opacity:.6">/ variable reward — every 3rd wheelie!</span></span>
+            <span class="badge">🐴 Silver: <span id="jerryHorseState">walking</span></span>
+            <span class="badge">🔊 <span id="jerryFreqLabel">—</span></span>
+          </div>
+          <button class="jerry-big" id="btnJerryHeard" style="margin-top:10px">I HEARD IT! <small>tap when you hear the beep — Lone Ranger tips his hat</small></button>
+          <div class="small" style="color:#3b2210; margin-top:8px; text-align:center">Hi-Yo Silver! — <span style="opacity:.6">hold still, earbuds in, listen for the whistle — train / rattlesnake / wind</span></div>
+        </div>
+
+        <!-- RIGHT: VISUAL + EQ CURVE + NOTES -->
+        <div class="card">
+          <h3>EQ CURVE + SPEECH ZONE</h3>
+          <canvas id="eqCurve" width="960" height="220" style="width:100%; height:160px; background:#101010; border:1px solid #000; border-radius:10px; display:block"></canvas>
+          <div class="row" style="margin-top:8px">
+            <span class="small">Curve: 20Hz → 16kHz. Gold = your EQ. Teal = speech band (500–4k). Red dashes = Jerry's thresholds (saved dots).</span>
+            <span id="curveDb" class="small mono" style="margin-left:auto">0.0 dB avg</span>
+          </div>
+          <div class="sep"></div>
+          <h3>AUDIOBENCH — like Vegas 5 / Audition 1.5 met at Jerry's</h3>
+          <div class="small" style="margin-bottom:8px">Bypass = raw mic (hear what hearing aids send). EQ = your tuning. Limit = ceiling so no spike hurts him. Meter = keep output in gold, not red.</div>
+          <div class="knobrow" id="knobsSummary"></div>
+          <div class="sep"></div>
+          <h3>HOW TO SURPRISE HIM (2-minute script)</h3>
+          <div class="small" style="background:#191919; border:1px solid #111; border-radius:10px; padding:10px; line-height:1.5">
+            <b>1)</b> Plug wired earbuds into Chromebook, keep volume 1/4.<br/>
+            <b>2)</b> Say: "Built this goofy vintage radio — can you tell me when you hear the beep?" → <b>HEARING TEST</b> @ 1000, 2000, 4000 Hz.<br/>
+            <b>3)</b> Hit <b>apply test dots → EQ</b> → switch to <b>LIVE ASSIST</b> → start mic → talk normally, let him say "a little brighter / lower". Nudge 2–4k, not bass.<br/>
+            <b>4)</b> When he says "that's it" → <b>SAVE preset</b>. Done. Dog-approved. 🐶<br/>
+            <span style="opacity:.6">If Bluetooth: expect delay — use wired if you have it.</span>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn" id="btnShare">copy share text</button>
+            <span class="small" style="opacity:.6">Nothing leaves this file unless you copy it.</span>
+          </div>
+          <div class="small" style="margin-top:10px; opacity:.55">Not medical advice. If pain/pressure/ringing → stop, bypass, seek free screening (Costco often free). Wax? try gentle warm, not picks.</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h3>NOTES — JERRY</h3>
+        <textarea id="notes" rows="3" placeholder="Jerry builds? TV vol? which ear better? hearing aids — recharge? fit? wax? daughter schedule? dogs' names..." style="width:100%; background:#111; color:#eee; border:1px solid #000; border-radius:10px; padding:10px; font:12px/1.45 ui-monospace, monospace"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn ghost" id="btnNotesSave">save notes (local)</button>
+          <button class="btn ghost" id="btnNotesExport">export .md</button>
+          <span class="small" style="margin-left:8px">Saved to <span class="mono">localStorage jerry/notes</span> + this bench never calls internet.</span>
+        </div>
+      </div>
+
+      <div style="text-align:center; opacity:.5; font-size:10px; letter-spacing:.08em; margin:12px 0 4px">BUILT WITH HUMANE JUDO — READY NOT HUNTING • MIC STAYS LOCAL • BYPASS IS ALWAYS PRETTY • JERRY'S EARS © 2026 BLEAKNARRATIVES</div>
+    </div>
+    <div class="cheek"></div>
+  </div>
+</div>
+
+<script>
+(()=>{ // Jerry's Ears — single-file vintage bench
+  const $ = (s, r=document)=>r.querySelector(s);
+  const $$ = (s, r=document)=>[...r.querySelectorAll(s)];
+  const FREQS = [250,500,1000,2000,4000,6000,8000];
+  const SPEECH_BAND = [500,4000];
+  let selectedFreq = 1000;
+  let audiogram = { L:{}, R:{}, both:{} }; // ear -> freq -> dB threshold (negative = gain needed)
+  let ear = 'R';
+  // load persisted
+  try{
+    const j = JSON.parse(localStorage.getItem('jerry/audiogram')||'null');
+    if(j) audiogram = j;
+    const n = localStorage.getItem('jerry/notes'); if(n) $('#notes').value = n;
+    ear = localStorage.getItem('jerry/ear') || 'R';
+    $('#presetEar').value = ear;
+    selectedFreq = parseInt(localStorage.getItem('jerry/freq')||'1000');
+  }catch{}
+
+  // --- Audio core ---
+  let ctx = null;
+  let micStream = null, micSrc = null, analyserIn=null, analyserOut=null;
+  let filters = []; // 5 bands
+  let masterGain=null, limiter=null, bypass=false;
+  let osc=null, oscGain=null, isBeeping=false;
+  let loudnessNode = null;
+
+  function ensureCtx(){
+    if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)({latencyHint:'interactive'});
+    if(ctx.state==='suspended') ctx.resume();
+  }
+  function ensureChain(){
+    ensureCtx();
+    if(masterGain) return;
+    // EQ: 5 bands — mimics Vegas 5 EQ
+    const bands = [
+      {type:'lowshelf',  freq:120,  q:0.9, label:'60 + LOW',  knob:'low'},
+      {type:'peaking',   freq:500,  q:0.8, label:'500 LO-MID',knob:'loMid'},
+      {type:'peaking',   freq:1500, q:0.9, label:'1.5k MID',  knob:'mid'},
+      {type:'peaking',   freq:3500, q:0.9, label:'3.5k HI-MID',knob:'hiMid'},
+      {type:'highshelf', freq:7000, q:0.7, label:'AIR 8k',   knob:'high'},
+    ];
+    filters = bands.map(b=>{
+      const f = ctx.createBiquadFilter(); f.type=b.type; f.frequency.value=b.freq; f.Q.value=b.q; f.gain.value=0; f._label=b.label; return f;
+    });
+    // loudness contour = lowshelf+highshelf shaper driven by knob
+    loudnessNode = ctx.createBiquadFilter(); loudnessNode.type='lowshelf'; loudnessNode.frequency.value=180; loudnessNode.gain.value=0;
+    const loudHigh = ctx.createBiquadFilter(); loudHigh.type='highshelf'; loudHigh.frequency.value=6500; loudHigh.gain.value=0;
+    loudHigh._isLoudHigh = true;
+    filters.loudLow = loudnessNode; filters.loudHigh = loudHigh;
+
+    masterGain = ctx.createGain(); masterGain.gain.value = 0.35; // -9dB-ish
+    limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -20; // ~85 dB SPL-ish headroom on earbuds (conservative)
+    limiter.knee.value = 6;
+    limiter.ratio.value = 20;
+    limiter.attack.value = 0.003;
+    limiter.release.value = 0.18;
+
+    analyserIn = ctx.createAnalyser(); analyserIn.fftSize=1024;
+    analyserOut = ctx.createAnalyser(); analyserOut.fftSize=1024;
+
+    // chain builder: micSrc -> filters -> loud -> high -> limiter -> master -> destination
+    // we keep array order: 0:low 1:500 2:1.5k 3:3.5k 4:high 5:loudLow 6:loudHigh 7:limiter 8:master
+    // will connect lazily when mic starts
+  }
+
+  function connectMicChain(srcNode){
+    // disconnect old chain tail
+    try{ srcNode.disconnect(); }catch{}
+    let tail = srcNode;
+    // through 5 bands
+    for(const f of filters.slice(0,5)){
+      tail.connect(f); tail=f;
+    }
+    // loudness pair
+    tail.connect(filters.loudLow); tail=filters.loudLow;
+    tail.connect(filters.loudHigh); tail=filters.loudHigh;
+    // analyser in taps after EQ but before limiter
+    tail.connect(analyserIn);
+    tail.connect(limiter);
+    limiter.connect(masterGain);
+    masterGain.connect(analyserOut);
+    // monitor switch controls routing to destination
+    if($('#togMonitor').classList.contains('on')){
+      masterGain.connect(ctx.destination);
+    } else {
+      // still connect but muted? Actually for Jerry we ALWAYS want output to his earbuds (destination)
+      // monitor is about hearing yourself; we always route to destination when live, but gain-duck if not monitor
+      // For now: always route, but leave analyser tap for meter
+      masterGain.connect(ctx.destination);
+    }
+  }
+
+  // --- knobs ---
+  const EQ_DEFS = [
+    {id:'low',   idx:0, label:'LOW',  min:-12, max:12, val:0},
+    {id:'loMid', idx:1, label:'500',  min:-12, max:12, val:0},
+    {id:'mid',   idx:2, label:'1.5K', min:-12, max:12, val:0},
+    {id:'hiMid', idx:3, label:'3.5K', min:-12, max:12, val:1.5},
+    {id:'high',  idx:4, label:'AIR',  min:-12, max:12, val:0},
+  ];
+  function renderKnobs(){
+    const box = $('#eqKnobs'); box.innerHTML='';
+    for(const d of EQ_DEFS){
+      const v = loadPresetVal(d.id, d.val);
+      const el = document.createElement('div'); el.className='knob'; el.dataset.id=d.id; el.dataset.idx=d.idx;
+      el.innerHTML = `<div class="dial" data-val="${v}"><div class="dot"></div></div><label>${d.label}</label><div class="val mono">${fmtDb(v)}</div>`;
+      box.appendChild(el);
+      paintDial(el.querySelector('.dial'), v, d.min, d.max);
+    }
+    // also summary row
+    const sum = $('#knobsSummary'); if(sum){ sum.innerHTML = EQ_DEFS.map(d=>`<span class="small mono" style="background:#111;border:1px solid #000;border-radius:999px;padding:4px 8px">${d.label} ${fmtDb(loadPresetVal(d.id, d.val))}</span>`).join(' '); }
+    bindKnobs();
+  }
+  function fmtDb(v){ return (v>0?'+':'') + v.toFixed(1) + ' dB'; }
+  function loadPresetVal(id, fallback){
+    try{ const p = JSON.parse(localStorage.getItem('jerry/eq')||'null'); if(p && p[id]!=null) return parseFloat(p[id]); }catch{}
+    return fallback;
+  }
+  function saveEq(){
+    const o={}; for(const d of EQ_DEFS){ o[d.id]= parseFloat(document.querySelector(`.knob[data-id="${d.id}"] .dial`).dataset.val || '0'); }
+    localStorage.setItem('jerry/eq', JSON.stringify(o));
+  }
+  function paintDial(dial, val, min, max){
+    const t = (val - min)/(max - min); // 0..1
+    const deg = -135 + t*270; // -135..+135
+    dial.style.transform = `rotate(${deg}deg)`;
+    dial.dataset.val = String(val);
+  }
+  function bindKnobs(){
+    for(const knob of $$('.knob')){
+      const dial = knob.querySelector('.dial');
+      const id = knob.dataset.id, idx=parseInt(knob.dataset.idx);
+      const def = EQ_DEFS.find(d=>d.id===id);
+      let startY=0, startVal=parseFloat(dial.dataset.val);
+      let active=false;
+      const onMove = (e)=>{
+        if(!active) return;
+        const y = (e.touches? e.touches[0].clientY : e.clientY);
+        const dy = startY - y; // up = up
+        const range = def.max - def.min;
+        let v = startVal + (dy/120)*range; // 120px = full range
+        v = Math.max(def.min, Math.min(def.max, Math.round(v*2)/2)); // 0.5 dB steps
+        dial.dataset.val = String(v);
+        knob.querySelector('.val').textContent = fmtDb(v);
+        paintDial(dial, v, def.min, def.max);
+        ensureChain(); ensureCtx();
+        const f = filters[idx]; if(f) f.gain.value = bypass?0:v;
+        saveEq(); drawEqCurve(); updateSummary();
+      };
+      const onUp = ()=>{ active=false; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp); dial.style.cursor='grab'; };
+      dial.addEventListener('mousedown', e=>{ active=true; startY=e.clientY; startVal=parseFloat(dial.dataset.val); window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp); dial.style.cursor='grabbing'; e.preventDefault(); });
+      dial.addEventListener('touchstart', e=>{ active=true; startY=e.touches[0].clientY; startVal=parseFloat(dial.dataset.val); window.addEventListener('touchmove', onMove, {passive:false}); window.addEventListener('touchend', onUp); e.preventDefault(); }, {passive:false});
+      // click to reset
+      dial.addEventListener('dblclick', ()=>{
+        const v=0; dial.dataset.val=String(v); knob.querySelector('.val').textContent=fmtDb(v); paintDial(dial,v,def.min,def.max);
+        ensureChain(); const f=filters[idx]; if(f) f.gain.value= bypass?0:0; saveEq(); drawEqCurve();
+      });
+    }
+  }
+
+  // loudness
+  function applyLoudness(v){ // 0..100
+    ensureChain();
+    // Fletcher-Munson: at quiet, ear is less sensitive to bass+treble → add gentle shelf
+    // keep speech band mostly untouched
+    const t = v/100; // 0..1
+    const lowGain = t*6;  // up to +6 bass
+    const highGain = t*4; // up to +4 air
+    if(filters.loudLow) filters.loudLow.gain.value = bypass?0:lowGain;
+    if(filters.loudHigh) filters.loudHigh.gain.value = bypass?0:highGain;
+    const label = v<18 ? 'flat' : v<45 ? 'gentle' : v<75 ? 'warm' : 'heavy';
+    $('#loudVal').textContent = `${v} — ${label}`;
+    localStorage.setItem('jerry/loud', String(v));
+    drawEqCurve();
+  }
+
+  // --- tone ---
+  let toneTimer=null;
+  function playTone(freq, durMs, warble){
+    ensureCtx();
+    stopTone();
+    selectedFreq = freq;
+    localStorage.setItem('jerry/freq', String(freq));
+    $('#saveFreqLabel').textContent = freq+'Hz';
+    // highlight chip
+    $$('.chip').forEach(c=> c.classList.toggle('active', parseInt(c.dataset.f)===freq));
+    // build osc
+    osc = ctx.createOscillator(); osc.type='sine'; osc.frequency.value = freq;
+    oscGain = ctx.createGain(); oscGain.gain.value = 0;
+    // warble: LFO 5Hz ±6% via detune
+    let lfo=null, lfoGain=null;
+    if(warble){
+      lfo = ctx.createOscillator(); lfo.frequency.value = 5;
+      lfoGain = ctx.createGain(); lfoGain.gain.value = 12; // cents-ish via detune
+      // detune param not on osc.frequency; use frequency modulation via detune on osc
+      // simpler: modulate frequency value via setInterval
+    }
+    osc.connect(oscGain);
+    // route tone through master+limiter? For safety, same limiter path but bypass EQ
+    // create limiter tap if exists, else direct
+    ensureChain();
+    // tone → limiter → master → analyserOut → destination
+    oscGain.connect(limiter||ctx.destination);
+    if(!limiter) oscGain.connect(analyserOut);
+    // connect destination already via master
+    // else limiter chain already to master to destination when mic live; for tone we need master
+    try{ limiter.connect(masterGain); }catch{}
+    try{ masterGain.connect(ctx.destination); }catch{}
+    try{ masterGain.connect(analyserOut); }catch{}
+    osc.start();
+    // envelope
+    const db = parseFloat($('#toneGain').value); // -48..0
+    const lin = Math.pow(10, db/20); // 0..1
+    // attack 12ms, release 30ms
+    const now = ctx.currentTime;
+    oscGain.gain.cancelScheduledValues(now);
+    oscGain.gain.setValueAtTime(0, now);
+    oscGain.gain.linearRampToValueAtTime(lin*0.55, now+0.012);
+    isBeeping=true; $('#ledLive').classList.add('on'); updateVuLive(true);
+    if(warble){
+      let t0=now; const mod = setInterval(()=>{
+        if(!osc) { clearInterval(mod); return; }
+        const wob = 1 + Math.sin((ctx.currentTime - t0)*2*Math.PI*5)*0.025;
+        try{ osc.frequency.value = freq * wob; }catch{}
+      }, 16);
+      osc._mod = mod;
+    }
+    if(durMs>0){
+      toneTimer = setTimeout(()=>{
+        // release
+        const n2 = ctx.currentTime;
+        try{ oscGain.gain.linearRampToValueAtTime(0, n2+0.03); }catch{}
+        setTimeout(stopTone, 50);
+      }, durMs);
+    }
+    drawEqCurve(); // highlight freq
+  }
+  function stopTone(){
+    if(toneTimer){ clearTimeout(toneTimer); toneTimer=null; }
+    if(osc && osc._mod) clearInterval(osc._mod);
+    try{ if(oscGain){ const n=ctx.currentTime; oscGain.gain.cancelScheduledValues(n); oscGain.gain.linearRampToValueAtTime(0, n+0.02);} }catch{}
+    setTimeout(()=>{
+      try{ if(osc){ osc.stop(); osc.disconnect(); } }catch{}
+      try{ if(oscGain) oscGain.disconnect(); }catch{}
+      osc=null; oscGain=null; isBeeping=false; $('#ledLive').classList.remove('on');
+    }, 30);
+  }
+
+  // --- hearing test UI ---
+  function renderFreqBtns(){
+    const box=$('#freqBtns'); box.innerHTML='';
+    for(const f of FREQS){
+      const b=document.createElement('button'); b.className='chip'+(f===selectedFreq?' active':''); b.dataset.f=f; b.textContent=f+' Hz';
+      b.addEventListener('click', ()=>{
+        $$('.chip', box).forEach(c=>c.classList.remove('active')); b.classList.add('active');
+        selectedFreq=f; $('#saveFreqLabel').textContent=f+'Hz'; localStorage.setItem('jerry/freq', String(f));
+        drawAudioGram(); drawEqCurve();
+      });
+      box.appendChild(b);
+    }
+  }
+
+  function saveThreshold(){
+    const db = parseFloat($('#toneGain').value); // negative = threshold? store as level where heard
+    // store as "hearing loss offset" — lower db means worse hearing? For EQ we want boost = -db offset from norm
+    // simpler: threshold level (e.g., -22 dB heard) → interpret as loss = (-10) - db? but we just store and later auto-boost that freq
+    audiogram[ear][selectedFreq] = db;
+    localStorage.setItem('jerry/audiogram', JSON.stringify(audiogram));
+    localStorage.setItem('jerry/ear', ear);
+    drawAudioGram();
+    drawEqCurve();
+    // flash
+    const btn=$('#btnSaveThresh'); const orig=btn.textContent; btn.textContent='✓ saved '+selectedFreq+'Hz @ '+db+'dB'; setTimeout(()=> btn.textContent=orig, 1400);
+  }
+
+  function drawAudioGram(){
+    const c = $('#audioGram'); const dpr = Math.min(2, window.devicePixelRatio||1);
+    const W=c.width, H=c.height;
+    const ctx2 = c.getContext('2d');
+    // css size already 980x360, canvas backing is W/H
+    ctx2.setTransform(dpr,0,0,dpr,0,0);
+    const w = W/dpr, h=H/dpr;
+    ctx2.clearRect(0,0,w,h);
+    // bg
+    ctx2.fillStyle='#0d0d0d'; ctx2.fillRect(0,0,w,h);
+    // grid
+    ctx2.strokeStyle='#1e1e1e'; ctx2.lineWidth=1;
+    for(let i=0;i<=5;i++){ const y=18 + i*((h-36)/5); ctx2.beginPath(); ctx2.moveTo(44,y); ctx2.lineTo(w-12,y); ctx2.stroke(); }
+    for(let i=0;i<FREQS.length;i++){ const x = 44 + (w-56)*(i/(FREQS.length-1)); ctx2.beginPath(); ctx2.moveTo(x,18); ctx2.lineTo(x,h-18); ctx2.stroke(); }
+    // y labels: 0 top = 0dB (loud), -48 bottom = quiet → hearing worse = higher dots?
+    // Actually toneGain -48 quiet .. 0 loud. Threshold -10 soft hearing => worse ear = needs louder = higher (-10). Better ear = -40 heard soft.
+    // Draw y: -0 at top, -48 at bottom
+    ctx2.fillStyle='#a0967a'; ctx2.font='10px ui-monospace, monospace'; ctx2.textAlign='right';
+    for(let i=0;i<=6;i++){ const db = 0 - i*8; const y=18 + ( ( -db)/48)*(h-36); ctx2.fillText(db+' dB', 40, y+3); }
+    ctx2.textAlign='center'; ctx2.fillStyle='#6e6a5f';
+    for(let i=0;i<FREQS.length;i++){ const x=44 + (w-56)*(i/(FREQS.length-1)); ctx2.fillText(FREQS[i]+'Hz', x, h-4); }
+    // speech band vertical
+    const xForFreq = f=> 44 + (w-56) * (FREQS.indexOf(f)/(FREQS.length - 1));
+    // approximate speech zone between 500 and 4000 (log-ish but linear for now)
+    const i500 = FREQS.indexOf(500), i4000=FREQS.indexOf(4000);
+    const x500 = 44 + (w-56)*(i500/(FREQS.length-1)), x4000=44 + (w-56)*(i4000/(FREQS.length-1));
+    ctx2.fillStyle='rgba(60,180,160,.12)'; ctx2.fillRect(x500,18, x4000-x500, h-36);
+    ctx2.strokeStyle='rgba(60,180,160,.6)'; ctx2.setLineDash([4,6]); ctx2.strokeRect(x500,18, x4000-x500, h-36); ctx2.setLineDash([]);
+    ctx2.fillStyle='rgba(60,180,160,.85)'; ctx2.font='10px ui-monospace, monospace'; ctx2.fillText('SPEECH 500–4k', (x500+x4000)/2, 30);
+    // dots per ear
+    const yForDb = db=> 18 + ((-db)/48)*(h-36); // db -48..0
+    function plot(earKey, color, dash){
+      const pts=[];
+      for(let i=0;i<FREQS.length;i++){
+        const f=FREQS[i]; const db = audiogram[earKey][f];
+        if(db==null) continue;
+        const x=44 + (w-56)*(i/(FREQS.length-1)); const y=yForDb(db);
+        pts.push({x,y,f,db});
+      }
+      if(!pts.length) return;
+      ctx2.strokeStyle=color; ctx2.lineWidth=2; ctx2.setLineDash(dash? [6,4]:[]);
+      ctx2.beginPath(); pts.forEach((p,i)=> i?ctx2.lineTo(p.x,p.y):ctx2.moveTo(p.x,p.y)); ctx2.stroke(); ctx2.setLineDash([]);
+      for(const p of pts){
+        ctx2.fillStyle=color; ctx2.beginPath(); ctx2.arc(p.x,p.y,5,0,Math.PI*2); ctx2.fill();
+        ctx2.fillStyle='#000'; ctx2.font='800 10px ui-monospace, monospace'; ctx2.textAlign='center'; ctx2.fillText(Math.round(p.db)+'dB', p.x, p.y-10);
+      }
+    }
+    plot('R','#ffdf85',false);
+    plot('L','#7ec8ff', false);
+    if(ear==='both'){ plot('both','#9dffb0', true); }
+    // selected freq highlight
+    const selIdx = FREQS.indexOf(selectedFreq);
+    if(selIdx>=0){ const x=44 + (w-56)*(selIdx/(FREQS.length-1)); ctx2.strokeStyle='rgba(255,223,133,.9)'; ctx2.lineWidth=1; ctx2.setLineDash([2,4]); ctx2.beginPath(); ctx2.moveTo(x,18); ctx2.lineTo(x,h-18); ctx2.stroke(); ctx2.setLineDash([]); }
+    // legend
+    ctx2.fillStyle='#ffdf85'; ctx2.fillRect(w-122, h-30, 10,10); ctx2.fillStyle='#e6e6e6'; ctx2.font='10px ui-monospace, monospace'; ctx2.textAlign='left'; ctx2.fillText('Right', w-108, h-22);
+    ctx2.fillStyle='#7ec8ff'; ctx2.fillRect(w-72, h-30, 10,10); ctx2.fillText('Left', w-58, h-22);
+    ctx2.fillStyle='#6e6a5f'; ctx2.fillText('(lower = softer heard = better ear)', 50, h-10);
+  }
+
+  // --- EQ curve ---
+  function drawEqCurve(){
+    const c=$('#eqCurve'); const dpr=Math.min(2, window.devicePixelRatio||1);
+    const W=c.width, H=c.height; const ctx2=c.getContext('2d');
+    ctx2.setTransform(dpr,0,0,dpr,0,0);
+    const w=W/dpr, h=H/dpr;
+    ctx2.clearRect(0,0,w,h);
+    ctx2.fillStyle='#0d0d0d'; ctx2.fillRect(0,0,w,h);
+    // freq log scale: 20..16000
+    const logMin=Math.log10(20), logMax=Math.log10(16000);
+    const xForF = f=> 12 + (w-24)*((Math.log10(f)-logMin)/(logMax-logMin));
+    const yForDb = db=> (h/2) - db*(h*0.36/12); // +-12dB fits
+    // grid
+    ctx2.strokeStyle='#1c1c1c'; ctx2.lineWidth=1;
+    for(let db=-12; db<=12; db+=6){ const y=yForDb(db); ctx2.beginPath(); ctx2.moveTo(12,y); ctx2.lineTo(w-12,y); ctx2.stroke(); if(db!==0){ ctx2.fillStyle='#5a5a5a'; ctx2.font='9px ui-monospace, monospace'; ctx2.textAlign='right'; ctx2.fillText((db>0?'+':'')+db+'dB', w-14, y-2); } else { ctx2.fillStyle='#7a7a7a'; ctx2.fillText('0 dB', w-14, y-2);} }
+    const freqs=[20,50,80,120,250,500,1000,1500,2000,3500,4000,6000,8000,12000,16000];
+    for(const f of freqs){ const x=xForF(f); ctx2.beginPath(); ctx2.moveTo(x,10); ctx2.lineTo(x,h-10); ctx2.stroke(); if([80,250,500,1000,2000,4000,8000,16000].includes(f)){ ctx2.fillStyle='#6a6a6a'; ctx2.font='9px ui-monospace, monospace'; ctx2.textAlign='center'; const lbl=f>=1000?(f/1000)+'k':String(f); ctx2.fillText(lbl, x, h-2); } }
+    // speech band
+    const x500=xForF(500), x4k=xForF(4000);
+    ctx2.fillStyle='rgba(60,180,160,.10)'; ctx2.fillRect(x500,10, x4k-x500, h-20);
+    ctx2.strokeStyle='rgba(60,180,160,.35)'; ctx2.setLineDash([4,7]); ctx2.strokeRect(x500,10, x4k-x500, h-20); ctx2.setLineDash([]);
+    // selected freq line
+    ctx2.strokeStyle='rgba(255,223,133,.55)'; ctx2.setLineDash([3,6]); const xs=xForF(selectedFreq); ctx2.beginPath(); ctx2.moveTo(xs,10); ctx2.lineTo(xs,h-10); ctx2.stroke(); ctx2.setLineDash([]);
+    // build EQ curve sum (approx: biquad gains summed with bell)
+    // we approximate by summing filter gains with gaussian spread rather than exact biquad math (good enough for display)
+    ctx2.strokeStyle='rgba(255,223,133,.95)'; ctx2.lineWidth=2.6; ctx2.beginPath();
+    let avg=0, n=0;
+    for(let px=0; px<w-24; px++){
+      const logF = logMin + (px/(w-24))*(logMax-logMin);
+      const f = Math.pow(10, logF);
+      let g = 0;
+      // each EQ band contributes bell
+      for(const d of EQ_DEFS){
+        const dial = document.querySelector(`.knob[data-id="${d.id}"] .dial`);
+        const gv = dial? parseFloat(dial.dataset.val):0;
+        if(Math.abs(gv)<0.01) continue;
+        const cf = [120,500,1500,3500,7000][EQ_DEFS.indexOf(d)];
+        // width: roughly 1 octave for peaking, wider for shelves
+        const oct = (d.id==='low' || d.id==='high') ? 1.8 : 0.9;
+        const dist = Math.abs(Math.log2(f/cf));
+        const weight = Math.exp(- (dist*dist) / (2*(oct*oct*0.6)) );
+        // shelves: plateau beyond
+        let w2 = weight;
+        if(d.id==='low' && f<cf) w2 = 1 - 0.4*dist;
+        if(d.id==='high' && f>cf) w2 = 1 - 0.3*dist;
+        g += gv * Math.max(0, w2);
+      }
+      // loudness
+      const loudV = parseFloat($('#loudness').value||0);
+      const t=loudV/100;
+      if(t>0){
+        const lowBoost = t*6 * Math.exp(-Math.pow(Math.log2(Math.max(1,f/90)),2)/1.1);
+        const highBoost = t*4 * Math.exp(-Math.pow(Math.log2(Math.max(1,f/7000)),2)/1.6);
+        g += lowBoost + highBoost;
+      }
+      if(bypass) g=0;
+      const y = yForDb(g);
+      if(px===0) ctx2.moveTo(12+px, y); else ctx2.lineTo(12+px, y);
+      avg+=g; n++;
+    }
+    ctx2.stroke();
+    // also plot audiogram dots projected onto curve as red markers
+    const curEar = ear;
+    for(const f of FREQS){
+      const db = audiogram[curEar][f];
+      if(db==null) continue;
+      const x=xForF(f);
+      // map threshold db (-48 quiet ..0 loud) to boost needed: boost = - (db + 28) ? heuristic: quiet heard => needs boost
+      // Actually for display, just draw red diamond at threshold's inverse height
+      // Let loss = ceiling - db: if db=-10 (needs loud) => loss high => show red higher
+      // We'll just place red dot at y = yForDb( ( -20 - db) * 0.45 )
+      const loss = (-10 - db); // -10 is "normal" anchor at -10dB; positive = loss
+      const y = yForDb(Math.max(-12, Math.min(12, loss*0.5)));
+      ctx2.fillStyle='rgba(255,59,47,.95)'; ctx2.strokeStyle='#000'; ctx2.lineWidth=1;
+      ctx2.beginPath(); ctx2.moveTo(x, y-5); ctx2.lineTo(x+5, y); ctx2.lineTo(x, y+5); ctx2.lineTo(x-5, y); ctx2.closePath(); ctx2.fill(); ctx2.stroke();
+    }
+    avg/=n;
+    $('#curveDb').textContent = (avg>0?'+':'')+avg.toFixed(1)+' dB avg' + (bypass?' (BYPASS)':'');
+  }
+
+  function updateSummary(){
+    const sum = $$('.knob').map(k=> `${k.dataset.id}:${parseFloat(k.querySelector('.dial').dataset.val).toFixed(1)}`).join(' ');
+    $('#knobsSummary').textContent = sum;
+  }
+
+  // --- mic ---
+  async function startMic(){
+    ensureChain(); ensureCtx();
+    if(micStream){
+      // already running
+      return;
+    }
+    const devices = await navigator.mediaDevices.enumerateDevices().catch(()=>[]);
+    let devId = $('#selInput').value || undefined;
+    if(devId==='default') devId=undefined;
+    const constraints = { audio:{ echoCancellation:false, autoGainControl:false, noiseSuppression:false, sampleRate:48000, channelCount:1, deviceId: devId? {exact:devId}:undefined } };
+    try{
+      micStream = await navigator.mediaDevices.getUserMedia(constraints);
+    }catch(e){
+      alert('Mic blocked: '+e.message+'\nTry HTTPS + allow mic in Chromebook site settings (lock icon).');
+      return;
+    }
+    micSrc = ctx.createMediaStreamSource(micStream);
+    connectMicChain(micSrc);
+    // populate inputs
+    try{
+      const devs = await navigator.mediaDevices.enumerateDevices();
+      const auds = devs.filter(d=>d.kind==='audioinput');
+      const sel=$('#selInput'); sel.innerHTML=''; for(const d of auds){ const o=document.createElement('option'); o.value=d.deviceId; o.textContent=d.label||('mic '+(sel.length+1)); sel.appendChild(o); }
+      if(devId) sel.value=devId;
+    }catch{}
+    $('#ledLive').classList.add('on');
+    $('#liveWarn').textContent = '🎙 LIVE — speak normally, watch gold, keep out of red. Earbuds = his ears now.';
+    // start VU + meter poll
+    startVu();
+  }
+  function stopMic(){
+    if(micStream){ micStream.getTracks().forEach(t=>t.stop()); }
+    micStream=null;
+    if(micSrc){ try{micSrc.disconnect();}catch{} micSrc=null; }
+    $('#ledLive').classList.remove('on');
+    $('#liveWarn').textContent = 'Mic stopped — limiter safe. Hit START MIC to go again.';
+    stopVu();
+  }
+
+  // --- VU ---
+  let vuRaf=null;
+  function startVu(){
+    const cL=$('#vuL'), cR=$('#vuR');
+    const gL=cL.getContext('2d'), gR=cR.getContext('2d');
+    const bufL=new Uint8Array(analyserIn?analyserIn.frequencyBinCount:1024);
+    const bufR=new Uint8Array(analyserOut?analyserOut.frequencyBinCount:1024);
+    let peakL=0, peakR=0;
+    const draw = ()=>{
+      vuRaf = requestAnimationFrame(draw);
+      let rmsL=0, rmsR=0, maxL=0, maxR=0;
+      if(analyserIn && micStream){
+        analyserIn.getByteTimeDomainData(bufL);
+        let sum=0; for(let i=0;i<bufL.length;i++){ const v=(bufL[i]-128)/128; sum+=v*v; maxL=Math.max(maxL, Math.abs(v)); }
+        rmsL = Math.sqrt(sum/bufL.length);
+      }
+      if(analyserOut){
+        analyserOut.getByteTimeDomainData(bufR);
+        let sum=0; for(let i=0;i<bufR.length;i++){ const v=(bufR[i]-128)/128; sum+=v*v; maxR=Math.max(maxR, Math.abs(v)); }
+        rmsR = Math.sqrt(sum/bufR.length);
+      }
+      // limiter LED: if reduction? compressor has no easy readout; infer from rmsR vs rmsL
+      const loud = maxR>0.72;
+      $('#ledLim').classList.toggle('on', loud);
+      $('#ledLim').classList.toggle('warn', loud);
+      // draw meters
+      const dbL = rmsL>0.0001? 20*Math.log10(rmsL): -80;
+      const dbR = rmsR>0.0001? 20*Math.log10(rmsR): -80;
+      drawVuCanvas(gL, cL, dbL, rmsL, maxL, 'IN');
+      drawVuCanvas(gR, cR, dbR, rmsR, maxR, 'OUT');
+      // bars
+      const pctL = Math.max(0, Math.min(100, (dbL+60)/60*100));
+      const pctR = Math.max(0, Math.min(100, (dbR+60)/60*100));
+      $('#micFill').style.width = pctL+'%';
+      $('#outFill').style.width = pctR+'%';
+      $('#micDb').textContent = dbL<-58?'-∞': dbL.toFixed(1)+' dB';
+      $('#outDb').textContent = dbR<-58?'-∞': dbR.toFixed(1)+' dB';
+      // auto decay peak
+      peakL = Math.max(maxL, peakL*0.985);
+      peakR = Math.max(maxR, peakR*0.985);
+    };
+    draw();
+  }
+  function stopVu(){
+    if(vuRaf) cancelAnimationFrame(vuRaf); vuRaf=null;
+    // clear
+  }
+  function drawVuCanvas(g, c, db, rms, peak, label){
+    const w=c.width, h=c.height;
+    g.clearRect(0,0,w,h);
+    // background
+    g.fillStyle='#0d0d0d'; g.fillRect(0,0,w,h);
+    // scale
+    g.strokeStyle='#222'; g.lineWidth=1;
+    for(let dbv=-60; dbv<=0; dbv+=12){
+      const x = 10 + (w-20)*((dbv+60)/60);
+      g.beginPath(); g.moveTo(x, 10); g.lineTo(x, h-18); g.stroke();
+      g.fillStyle='#5a5a5a'; g.font='9px ui-monospace, monospace'; g.textAlign='center'; g.fillText((dbv===0?'0':String(dbv)), x, h-5);
+    }
+    // needle
+    const pct = Math.max(0, Math.min(1, (db+60)/60));
+    const x = 10 + (w-20)*pct;
+    // trail
+    g.fillStyle = db> -3 ? '#ff3b2f' : db> -9 ? '#ffd54a' : '#2aff6a';
+    g.fillRect(10, h/2-10, (w-20)*pct, 20);
+    g.fillStyle='rgba(0,0,0,.45)'; g.fillRect(10, h/2+2, (w-20)*pct, 8);
+    // needle
+    g.strokeStyle='#e9e6de'; g.lineWidth=2; g.beginPath(); g.moveTo(x, 8); g.lineTo(x, h-8); g.stroke();
+    g.fillStyle='#e9e6de'; g.beginPath(); g.arc(x, h/2, 4, 0, Math.PI*2); g.fill();
+    g.fillStyle='#0d0d0d'; g.font='800 10px ui-monospace, monospace'; g.textAlign='left'; g.fillText(label, 8, 14);
+  }
+
+  // --- presets / audiogram -> EQ ---
+  function applyAudiogramToEq(){
+    // naive: for each freq, boost = loss * 0.55, clamp, distribute to nearest knob
+    // Use thresholds: quiet heard = -35 (good) vs -10 (needs loud). Loss = (-10 - db)?? Wait db is level played: -10 loud, -40 soft.
+    // If he hears at -10 (needs loud), loss = (-10) - (-10)=0? Actually anchor -10 loud => 0 loss, -40 soft => bonus -30 loss negative.
+    // Better: reference normal = -32 dB heard (soft). Loss = (-32 - db) * -1? Hmm confusion.
+    // Let's define: good ear hears at -38 (soft), bad ear at -12 (loud). So boost should be (-12 - (-38))? Let's set ref = lowest (best) threshold across freqs.
+    const cur = audiogram[ear] || {};
+    const vals = FREQS.map(f=> cur[f]).filter(v=>v!=null);
+    if(!vals.length){ alert('Save at least 2 thresholds first (e.g., 1000Hz and 3000Hz).'); return; }
+    // ref = softest hearing (lowest dB value = best hearing, like -40)
+    const ref = Math.min(...vals); // e.g., -38
+    // for each band center, interpolate loss from nearest freq
+    const centers = [120,500,1500,3500,7000];
+    const boosts = centers.map(cf=>{
+      // find two nearest freq points
+      let best=0, bestDist=1e9;
+      for(const f of FREQS){
+        const v = cur[f];
+        if(v==null) continue;
+        const loss = (-v) - (-ref); // larger when v is louder (bad)
+        // Actually -v: quiet -38 => 38, loud -10 =>10, so good - bad = 38-10=28 positive meaning good - bad is big... wait
+        // We want boost positive when he needs louder: if ref=-38 (good) and cur at 4k = -12 (bad), loss = (-12?) Let's compute directly:
+        // boost ~= (ref - v) * 0.45 with sign flipped? ref=-38, v=-12 => ref - v = -26 => negative, wrong.
+        // So boost = (v - ref)*0.55 with v - ref = -12 - (-38)=26 positive correct!
+        const b = (v - ref)*0.55;
+        const dist = Math.abs(Math.log2(cf/f));
+        if(dist < bestDist){ bestDist=dist; best=b; }
+        // linear blend with distance weight? simpler nearest neighbor
+      }
+      return Math.max(-6, Math.min(10, Math.round(best*2)/2));
+    });
+    // apply
+    for(let i=0;i<EQ_DEFS.length;i++){
+      const id=EQ_DEFS[i].id; const v=boosts[i];
+      const knob=document.querySelector(`.knob[data-id="${id}"] .dial`);
+      if(!knob) continue;
+      knob.dataset.val=String(v);
+      knob.parentElement.querySelector('.val').textContent = fmtDb(v);
+      paintDial(knob, v, -12, 12);
+      ensureChain(); if(filters[i]) filters[i].gain.value = bypass?0:v;
+    }
+    saveEq(); drawEqCurve(); updateSummary();
+    alert('Applied — check the gold curve. Now START MIC and let Jerry say "clearer?" Nudge 3.5k ±2dB. Save when he smiles.');
+  }
+
+  function applyPreset(name){
+    // levels for each knob id
+    const presets = {
+      speech: {low:-2, loMid: -1, mid: 2, hiMid: 4, high: 1},
+      jerry:  JSON.parse(localStorage.getItem('jerry/eq')||'null') || null,
+      soft:   {low:1, loMid:0, mid:0, hiMid:2, high:-1},
+      clear:  {low:-2, loMid:-0.5, mid:1.5, hiMid:3, high:0},
+    };
+    let p = presets[name];
+    if(name==='jerry' && !p){ alert('No Jerry save yet — do hearing test → apply → SAVE preset first.'); return; }
+    if(!p) return;
+    for(const d of EQ_DEFS){
+      const v = p[d.id] ?? 0;
+      const knob=document.querySelector(`.knob[data-id="${d.id}"] .dial`);
+      if(!knob) continue;
+      knob.dataset.val=String(v);
+      knob.parentElement.querySelector('.val').textContent = fmtDb(v);
+      paintDial(knob, v, -12,12);
+      ensureChain(); const f=filters[d.idx]; if(f) f.gain.value = bypass?0:v;
+    }
+    saveEq(); drawEqCurve();
+  }
+
+  // --- init binds ---
+  function init(){
+    renderFreqBtns();
+    renderKnobs();
+    drawAudioGram();
+    ensureChain();
+    // restore loudness
+    const loud = parseInt(localStorage.getItem('jerry/loud')||'22'); $('#loudness').value=loud; applyLoudness(loud);
+    // restore eq already in knobs; push to filters
+    for(const d of EQ_DEFS){
+      const knob=document.querySelector(`.knob[data-id="${d.id}"] .dial`);
+      const v=parseFloat(knob.dataset.val||'0'); const f=filters[d.idx]; if(f) f.gain.value=v;
+    }
+    drawEqCurve();
+
+    // tabs
+    $$('.tab').forEach(t=> t.addEventListener('click', ()=>{
+      $$('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
+      const which=t.dataset.tab;
+      $('#panelTest').style.display = which==='test'? 'block':'none';
+      $('#panelLive').style.display = which==='live'? 'block':'none';
+      if(which==='live'){ drawEqCurve(); }
+      else { drawAudioGram(); }
+    }));
+
+    // tone controls
+    $('#btnBeep').addEventListener('click', ()=>{
+      const dur = parseInt($('#toneDur').value||'0');
+      const warble = $('#togWarble').classList.contains('on');
+      playTone(selectedFreq, dur, warble);
+    });
+    $('#btnStop').addEventListener('click', stopTone);
+    $('#toneGain').addEventListener('input', e=>{ $('#toneGainVal').textContent = e.target.value+' dB'; });
+    $('#togWarble').addEventListener('click', e=> e.currentTarget.classList.toggle('on'));
+    $('#btnSaveThresh').addEventListener('click', saveThreshold);
+    $('#btnClearThresh').addEventListener('click', ()=>{
+      if(confirm('Clear all thresholds for '+ear+'?')){ audiogram[ear]={}; localStorage.setItem('jerry/audiogram', JSON.stringify(audiogram)); drawAudioGram(); drawEqCurve(); }
+    });
+    $('#btnExport').addEventListener('click', ()=>{
+      let csv='ear,freq_hz,threshold_db\n';
+      for(const e of ['L','R','both']){ for(const f of FREQS){ const v=audiogram[e][f]; if(v!=null) csv+=`${e},${f},${v}\n`; } }
+      const b=new Blob([csv], {type:'text/csv'}); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download='jerry-audiogram-'+new Date().toISOString().slice(0,10)+'.csv'; a.click(); URL.revokeObjectURL(u);
+    });
+    $('#presetEar').addEventListener('change', e=>{ ear=e.target.value; localStorage.setItem('jerry/ear', ear); drawAudioGram(); drawEqCurve(); });
+    // space = hearing
+    window.addEventListener('keydown', e=>{
+      if(e.code==='Space'){ $('#hearingDot').classList.add('on'); e.preventDefault(); }
+    });
+    window.addEventListener('keyup', e=>{
+      if(e.code==='Space'){ $('#hearingDot').classList.remove('on'); e.preventDefault(); }
+    });
+    // vibrate + vu when hearing
+    // click hearing dot toggles
+    $('#hearingDot').addEventListener('click', e=> e.target.classList.toggle('on'));
+
+    // live
+    $('#btnMic').addEventListener('click', async ()=>{
+      ensureCtx();
+      if(!micStream){ await startMic(); $('#btnMic').textContent='⏹ STOP MIC'; $('#btnMic').classList.remove('primary'); }
+      else { stopMic(); $('#btnMic').textContent='🎙 START MIC'; $('#btnMic').classList.add('primary'); }
+    });
+    $('#btnMute').addEventListener('click', ()=>{
+      if(!masterGain) return;
+      const muted = masterGain.gain.value < 0.001;
+      if(muted){ masterGain.gain.value = 0.35; $('#btnMute').textContent='MUTE'; $('#btnMute').classList.remove('danger'); }
+      else { masterGain.gain.value = 0.0001; $('#btnMute').textContent='UNMUTE'; $('#btnMute').classList.add('danger'); }
+    });
+    $('#btnBy').addEventListener('click', ()=>{
+      bypass = !bypass;
+      $('#btnBy').textContent = bypass? 'EQ: BYPASS (raw)' : 'BYPASS EQ';
+      $('#btnBy').classList.toggle('primary', bypass);
+      // push gains
+      for(const d of EQ_DEFS){ const knob=document.querySelector(`.knob[data-id="${d.id}"] .dial`); const v=parseFloat(knob.dataset.val); const f=filters[d.idx]; if(f) f.gain.value = bypass?0:v; }
+      const loud = parseInt($('#loudness').value||0); if(filters.loudLow) filters.loudLow.gain.value = bypass?0: (loud/100)*6; if(filters.loudHigh) filters.loudHigh.gain.value = bypass?0: (loud/100)*4;
+      drawEqCurve();
+    });
+    $('#togLimit').addEventListener('click', e=>{
+      e.currentTarget.classList.toggle('on');
+      const on = e.currentTarget.classList.contains('on');
+      if(limiter) limiter.threshold.value = on ? -20 : 6; // off = barely limit
+    });
+    $('#togMonitor').addEventListener('click', e=> e.currentTarget.classList.toggle('on'));
+    $('#outGain').addEventListener('input', e=>{
+      const db=parseFloat(e.target.value); $('#outGainVal').textContent=(db>0?'+':'')+db+' dB';
+      ensureChain(); if(masterGain) masterGain.gain.value = Math.pow(10, db/20)*0.55;
+    });
+    $('#loudness').addEventListener('input', e=> applyLoudness(parseInt(e.target.value)));
+    $('#btnFlat').addEventListener('click', ()=>{ $('#loudness').value=0; applyLoudness(0); });
+    $('#selInput').addEventListener('change', async ()=>{ if(micStream){ stopMic(); await startMic(); }});
+
+    $$('[data-preset]').forEach(b=> b.addEventListener('click', ()=> applyPreset(b.dataset.preset)));
+    $('#btnApplyAudiogram').addEventListener('click', applyAudiogramToEq);
+    $('#btnSavePreset').addEventListener('click', ()=>{
+      const name=$('#saveName').value.trim()||'Jerry-Speech-1';
+      const eq = JSON.parse(localStorage.getItem('jerry/eq')||'{}');
+      // also save thresholds snapshot
+      localStorage.setItem('jerry/preset_'+name, JSON.stringify({eq, audiogram:JSON.parse(JSON.stringify(audiogram)), loud: parseInt($('#loudness').value), ts:new Date().toISOString(), notes: $('#notes').value.slice(0,600)}));
+      alert('Saved preset "'+name+'" locally. Switch Live Assist → test with Jerry, nudge 3.5k if needed, re-save.');
+    });
+    $('#btnLoadPreset').addEventListener('click', ()=>{
+      const name=$('#saveName').value.trim()||'Jerry-Speech-1';
+      const raw = localStorage.getItem('jerry/preset_'+name);
+      if(!raw){ alert('No preset "'+name+'" — check name. Try Jerry-Speech-1'); return; }
+      try{
+        const j=JSON.parse(raw);
+        for(const d of EQ_DEFS){
+          const v=j.eq[d.id]??0;
+          const knob=document.querySelector(`.knob[data-id="${d.id}"] .dial`);
+          knob.dataset.val=String(v); knob.parentElement.querySelector('.val').textContent=fmtDb(v); paintDial(knob,v,-12,12);
+          ensureChain(); const f=filters[d.idx]; if(f) f.gain.value = bypass?0:v;
+        }
+        if(j.loud!=null){ $('#loudness').value=j.loud; applyLoudness(j.loud); }
+        if(j.audiogram) { audiogram=j.audiogram; localStorage.setItem('jerry/audiogram', JSON.stringify(audiogram)); drawAudioGram(); }
+        if(j.notes) $('#notes').value=j.notes;
+        drawEqCurve();
+        alert('Loaded "'+name+'"');
+      }catch(e){ alert('Bad preset: '+e.message); }
+    });
+    $('#btnNotesSave').addEventListener('click', ()=>{
+      localStorage.setItem('jerry/notes', $('#notes').value);
+      const b=$('#btnNotesSave'); const o=b.textContent; b.textContent='✓ saved local'; setTimeout(()=>b.textContent=o,1200);
+    });
+    $('#btnNotesExport').addEventListener('click', ()=>{
+      const md = `# Jerry's Ears — notes ${new Date().toISOString().slice(0,10)}\n\n${$('#notes').value}\n\n---\nAudiogram (R/L): ${JSON.stringify(audiogram)}\nEQ: ${localStorage.getItem('jerry/eq')||'{}'}\nLoudness: ${$('#loudness').value}\n`;
+      const b=new Blob([md],{type:'text/markdown'}); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download='jerry-notes-'+new Date().toISOString().slice(0,10)+'.md'; a.click(); URL.revokeObjectURL(u);
+    });
+    $('#btnShare').addEventListener('click', ()=>{
+      const txt = `Jerry's Ears vintage bench — mic→EQ→earbuds with Fletcher-Munson for speech.\nOpen jerry.html on Chromebook, Hearing Test → Live Assist → save Jerry-Speech-1.\nHard limiter + BYPASS + MUTE. Not medical, just a lens to hear him better.\n`;
+      navigator.clipboard.writeText(txt).then(()=> alert('Copied — paste wherever.'), ()=> prompt('Copy this:', txt));
+    });
+
+    // initial draw loop for vu canvas idle
+    drawVuCanvas($('#vuL').getContext('2d'), $('#vuL'), -80, 0, 0, 'IN');
+    drawVuCanvas($('#vuR').getContext('2d'), $('#vuR'), -80, 0, 0, 'OUT');
+  }
+
+  function updateVuLive(active){
+    // stub for led
+  }
+
+  // boot
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+  // keep audiogram canvas crisp on resize
+  window.addEventListener('resize', ()=>{ drawAudioGram(); drawEqCurve(); });
+
+  // --- Jerry's View — Lone Ranger stage (minimal for him, horse is VU) ---
+  let jerryScore=0, jerryRaf=null;
+  try{ jerryScore = parseInt(localStorage.getItem('jerry/score')||'0'); }catch{}
+  function initJerryStage(){
+    const canv=$('#jerryCanvas'); if(!canv) return;
+    const g=canv.getContext('2d'); const W=canv.width, H=canv.height;
+    let dust=[], tumble=null, hatTip=0, wheelie=0;
+    let lastHeardFlash=0;
+    try{ $('#jerryScore').textContent=String(jerryScore); }catch{}
+    function drawStage(rmsIn){
+      // rmsIn 0..0.4 drives horse speed
+      const speed = Math.min(1, rmsIn*3.2); // 0..1
+      // state
+      const state = speed<0.06? 'walking' : speed<0.28? 'trotting' : speed>0.6? 'GALLOP!' : 'running';
+      try{ $('#jerryHorseState').textContent=state; $('#jerryFreqLabel').textContent = isBeeping? (selectedFreq+' Hz • whistle') : 'listening…'; }catch{}
+      // bg
+      g.clearRect(0,0,W,H);
+      // sky
+      const sky=g.createLinearGradient(0,0,0,H*0.55); sky.addColorStop(0,'#8ecaff'); sky.addColorStop(1,'#fef6d6'); g.fillStyle=sky; g.fillRect(0,0,W,H*0.58);
+      // sun
+      g.fillStyle='#ffe9a0'; g.beginPath(); g.arc(W-92, 52, 28, 0, Math.PI*2); g.fill(); g.fillStyle='rgba(255,223,133,.35)'; g.beginPath(); g.arc(W-92, 52, 44, 0, Math.PI*2); g.fill();
+      // mesas
+      g.fillStyle='#d8b48a'; g.beginPath(); g.moveTo(0, H*0.58); g.lineTo(110, H*0.38); g.lineTo(220, H*0.46); g.lineTo(360, H*0.33); g.lineTo(520, H*0.44); g.lineTo(660, H*0.30); g.lineTo(820, H*0.42); g.lineTo(W, H*0.36); g.lineTo(W, H*0.58); g.closePath(); g.fill();
+      g.fillStyle='#b8936a'; g.beginPath(); g.moveTo(0, H*0.58); g.lineTo(90, H*0.44); g.lineTo(180, H*0.50); g.lineTo(300, H*0.40); g.lineTo(460, H*0.48); g.closePath(); g.fill();
+      // ground
+      g.fillStyle='#e8c99a'; g.fillRect(0, H*0.58, W, H*0.42);
+      g.fillStyle='#d7b98a'; for(let i=0;i<W;i+=28){ g.fillRect(i, H*0.58+ (i%56?12:22), 18, 2); }
+      // cacti
+      function cactus(x, s){ g.fillStyle='#3a6b3a'; g.fillRect(x, H*0.58 - 54*s, 14*s, 54*s); g.fillRect(x-10*s, H*0.58 - 32*s, 10*s, 18*s); g.fillRect(x+14*s, H*0.58 - 38*s, 10*s, 22*s); g.fillStyle='#2f5a2f'; g.fillRect(x+4*s, H*0.58 - 50*s, 2*s, 46*s); }
+      cactus(52,1.0); cactus(W-72,1.2); cactus(W-140,0.8);
+      // tumbleweed if recently caught
+      if(tumble && Date.now()-tumble.t<900){
+        const p=(Date.now()-tumble.t)/900;
+        const x = W*0.72 + p*120; const y = H*0.72 + Math.sin(p*12)*3;
+        g.fillStyle='#cbb89a'; g.beginPath(); g.arc(x,y, 10+Math.sin(p*20)*1, 0, Math.PI*2); g.fill();
+        g.strokeStyle='#a9977a'; g.lineWidth=1; for(let a=0;a<6;a++){ const ang=a/6*Math.PI*2 + p*6; g.beginPath(); g.moveTo(x,y); g.lineTo(x+Math.cos(ang)*14, y+Math.sin(ang)*6); g.stroke(); }
+      }
+      // horse + rider — simple but charming, speed drives leg phase and dust
+      const baseX = W*0.34, baseY = H*0.68;
+      const phase = (Date.now()/ (speed<0.08? 280 : speed<0.3? 160 : 90)) % (Math.PI*2);
+      const bob = Math.sin(phase)* (speed*3+1);
+      const gallopBob = speed>0.55 ? Math.sin(phase*2)*2 : 0;
+      const y = baseY + bob*0.6 + gallopBob;
+      // dust
+      if(speed>0.12){
+        if(Math.random()< (0.22 + speed*0.5)){
+          dust.push({x: baseX-22, y: y+18, vx: -1.2 - speed*2 - Math.random()*1.5, vy: -0.6 - Math.random()*0.8, a: 0.9, r: 3+Math.random()*4});
+        }
+      }
+      // draw dust
+      for(let i=dust.length-1;i>=0;i--){
+        const d=dust[i]; d.x+=d.vx; d.y+=d.vy; d.vy+=0.14; d.a-=0.021; d.r+=0.06;
+        if(d.a<=0){ dust.splice(i,1); continue; }
+        g.fillStyle=`rgba(210,180,130,${d.a.toFixed(2)})`; g.beginPath(); g.arc(d.x,d.y,d.r,0,Math.PI*2); g.fill();
+      }
+      // shadow
+      g.fillStyle='rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(baseX+6, H*0.78, 38+speed*10, 8, 0, 0, Math.PI*2); g.fill();
+      // horse body
+      g.fillStyle='#5c3a18'; // dark brown horse = Silver but dusty
+      const hx = baseX, hy = y;
+      // body rect
+      g.fillRect(hx-30, hy-14, 56, 18);
+      // neck
+      g.save(); g.translate(hx+18, hy-10); g.rotate(-0.22 + Math.sin(phase)*0.04);
+      g.fillRect(0,-6, 22, 12); g.restore();
+      // head
+      const hx2 = hx+38 + Math.sin(phase)*1.2, hy2 = hy-16;
+      g.fillRect(hx2-6, hy2-8, 18, 12);
+      g.fillStyle='#1a1200'; g.fillRect(hx2+10, hy2-4, 4, 2); // nostril
+      // ear
+      g.fillStyle='#3b2210'; g.beginPath(); g.moveTo(hx2+2, hy2-8); g.lineTo(hx2+6, hy2-14); g.lineTo(hx2+8, hy2-8); g.closePath(); g.fill();
+      // mane
+      g.fillStyle='#e8d9a8'; g.fillRect(hx+20, hy-18, 16, 4);
+      // tail
+      g.fillStyle='#e8d9a8'; g.save(); g.translate(hx-30, hy-6); g.rotate(Math.sin(phase)*0.5); g.fillRect(-14, -3, 14, 6); g.restore();
+      // legs — 4 sticks with phase offset
+      g.strokeStyle='#3b2210'; g.lineWidth=4; g.lineCap='round';
+      for(let leg=0;leg<4;leg++){
+        const off = leg*1.25;
+        const ang = Math.sin(phase+off)* (0.55 + speed*0.45);
+        const lx = hx -16 + leg*12;
+        const ly = hy+4;
+        g.beginPath(); g.moveTo(lx, ly); g.lineTo(lx+Math.sin(ang)*10, ly+10+Math.abs(Math.cos(phase+off))*4); g.stroke();
+      }
+      // rider — Lone Ranger minimal
+      const rx = hx-4, ry = hy-22;
+      // hat
+      const tip = hatTip>0 ? (1 - hatTip/420)*0.9 : 0;
+      g.fillStyle='#faf6e8'; g.beginPath(); g.ellipse(rx+2, ry-10 - tip*8, 18, 6, 0, 0, Math.PI*2); g.fill(); // brim
+      g.fillStyle='#e9e6de'; g.fillRect(rx-6, ry-18 - tip*8, 16, 10); // crown
+      g.fillStyle='#1a1a1a'; g.fillRect(rx-6, ry-10 - tip*8, 16, 3); // band
+      // mask
+      g.fillStyle='#111'; g.fillRect(rx-4, ry-8, 12, 4);
+      g.fillStyle='#ffdf85'; g.fillRect(rx, ry-7, 4, 2); // eye slit
+      // body
+      g.fillStyle='#203a8a'; g.fillRect(rx-8, ry-6, 16, 14); // blue shirt
+      g.fillStyle='#d7b24a'; g.fillRect(rx-7, ry+2, 14, 3); // belt
+      // arm wave when caught
+      g.strokeStyle='#203a8a'; g.lineWidth=4;
+      g.beginPath(); g.moveTo(rx+8, ry); g.lineTo(rx+14 + tip*6, ry-8 - tip*4); g.stroke();
+      // hat tip decay
+      if(hatTip>0) hatTip -= 16;
+      if(wheelie>0){
+        // horse rears a bit
+        g.fillStyle='rgba(255,223,133,.22)'; g.beginPath(); g.arc(hx, hy-28, 22+wheelie/12, 0, Math.PI*2); g.fill();
+        wheelie -= 14;
+      }
+      // heard flash
+      if(Date.now()-lastHeardFlash<420){
+        g.fillStyle='rgba(42,255,106,.18)'; g.fillRect(0,0,W,H);
+        g.fillStyle='#1a1200'; g.font='800 18px ui-monospace, monospace'; g.textAlign='center';
+        g.fillText('GOT HIM! 🤠  *hat tip*', W/2, 28);
+      }
+      // vignette text at top
+      g.fillStyle='rgba(26,18,0,.72)'; g.font='800 10px ui-monospace, monospace'; g.textAlign='left';
+      g.fillText('LONE RANGER STAGE — Silver runs when YOU talk. Beep = outlaw whistle. He taps I HEARD IT.', 10, 14);
+    }
+    function loop(){
+      let rms=0;
+      try{
+        if(analyserIn && micStream){
+          const buf=new Uint8Array(analyserIn.frequencyBinCount);
+          analyserIn.getByteTimeDomainData(buf);
+          let sum=0, mx=0; for(let i=0;i<buf.length;i++){ const v=(buf[i]-128)/128; sum+=v*v; mx=Math.max(mx, Math.abs(v)); }
+          rms = Math.sqrt(sum/buf.length);
+        } else if(isBeeping){
+          rms = 0.18; // fake trot during beep so horse doesn't sleep
+        }
+      }catch{}
+      drawStage(rms);
+      jerryRaf = requestAnimationFrame(loop);
+    }
+    // start
+    if(jerryRaf) cancelAnimationFrame(jerryRaf);
+    loop();
+    // expose helpers for beep interactions
+    window._jerryStage = { flashHeard: ()=>{ lastHeardFlash=Date.now(); },
+      wheelie: ()=>{ wheelie=220; },
+      dustBurst: ()=>{ for(let i=0;i<10;i++) dust.push({x: W*0.32, y: H*0.74, vx: -1 - Math.random()*2, vy: -1 - Math.random()*1.4, a:1, r: 3+Math.random()*5}); },
+      setTumble: ()=>{ tumble={t:Date.now()}; },
+      setHat: ()=>{ hatTip=420; }
+    };
+  }
+
+  // Wire Jerry view tab switching + big button + pop-out
+  (function wireJerry(){
+    const tabJerry = document.querySelector('.tab[data-tab="jerry"]');
+    const panelJerry = $('#panelJerry');
+    if(!tabJerry || !panelJerry) return;
+    // extend tab handler to include jerry
+    const allTabs = document.querySelectorAll('.tab');
+    allTabs.forEach(t=> t.addEventListener('click', ()=>{
+      allTabs.forEach(x=>x.classList.remove('active')); t.classList.add('active');
+      const which=t.dataset.tab;
+      $('#panelTest').style.display = which==='test'? 'block':'none';
+      $('#panelLive').style.display = which==='live'? 'block':'none';
+      panelJerry.style.display = which==='jerry'? 'block':'none';
+      if(which==='jerry'){ initJerryStage(); try{ $('#jerryFreqLabel').textContent = selectedFreq+' Hz'; }catch{} }
+      else if(which==='test'){ drawAudioGram(); } else { drawEqCurve(); }
+    }));
+    // big button = heard
+    const big = $('#btnJerryHeard');
+    if(big){
+      const heard = ()=>{
+        // same as saving threshold? we flash and score, but also count as hearing — let user still SAVE threshold on bench side
+        // variable reward: every 3rd is wheelie
+        jerryScore++; localStorage.setItem('jerry/score', String(jerryScore));
+        try{ $('#jerryScore').textContent=String(jerryScore); }catch{}
+        if(window._jerryStage){ window._jerryStage.flashHeard(); window._jerryStage.setHat(); window._jerryStage.setTumble();
+          if(jerryScore%3===0){ window._jerryStage.wheelie(); window._jerryStage.dustBurst(); }
+        }
+        // haptic
+        try{ navigator.vibrate(40); }catch{}
+        // audio ding
+        try{
+          ensureCtx();
+          const o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='triangle'; o.frequency.value=880; o.frequency.linearRampToValueAtTime(1320, ctx.currentTime+0.08);
+          g.gain.value=0.22; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.24);
+          o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+0.25);
+        }catch{}
+        // also mark hearing dot
+        const dot=$('#hearingDot'); if(dot){ dot.classList.add('on'); setTimeout(()=> dot.classList.remove('on'), 220); }
+        // if beeping, auto-save threshold hint? don't auto-save, let bench side do it — but flash that you heard
+      };
+      big.addEventListener('click', heard);
+      big.addEventListener('touchstart', (e)=>{ e.preventDefault(); heard(); }, {passive:false});
+    }
+    // pop-out
+    const popBtn=$('#btnPopOut');
+    if(popBtn){
+      popBtn.addEventListener('click', ()=>{
+        const w=window.open('', '_blank', 'width=920,height=560');
+        if(!w){ alert('Pop-up blocked — just drag Jerry\'s View tab to a new window manually, or turn laptop toward him.'); return; }
+        const canv=document.getElementById('jerryCanvas');
+        // clone minimal stage into new window
+        w.document.write(`<!doctype html><title>Jerry's View — Prairie</title><style>body{margin:0;background:#faf6e8;font:14px ui-monospace} canvas{width:100%;height:52vh;display:block} button{width:100%;padding:22px;font-size:32px;font-weight:900;background:linear-gradient(#ffdf85,#d7b24a);border:3px solid #1a1200;border-radius:16px}<\/style><canvas id="c" width="920" height="360"><\/canvas><button id="b">I HEARD IT! <small>— tambourine? whistle? —<\/small><\/button><div style="text-align:center;padding:8px;opacity:.6">Hi-Yo Silver! — watch the horse run when he talks<\/div>`);
+        w.document.close();
+        // simple horse loop in pop-out (tethered)
+        const c=w.document.getElementById('c'), g=c.getContext('2d'), b=w.document.getElementById('b');
+        b.addEventListener('click', ()=>{ b.textContent='GOT HIM! 🤠'; setTimeout(()=> b.innerHTML='I HEARD IT! <small>— tambourine? whistle? —<\/small>', 600); try{ window.focus(); document.getElementById('btnJerryHeard')?.click(); }catch{} });
+        let ph=0; (function loop(){ requestAnimationFrame(loop); ph+=0.14; g.fillStyle='#e8c99a'; g.fillRect(0,0,c.width,c.height); g.fillStyle='#5c3a18'; const x=c.width*0.4, y=c.height*0.6+Math.sin(ph)*3; g.fillRect(x-30,y-14,56,18); g.fillStyle='#faf6e8'; g.fillRect(x-6,y-28,16,12); })();
+        w.focus();
+      });
+    }
+    // make SPACE also count as Jerry heard when in Jerry view
+    window.addEventListener('keydown', (e)=>{
+      if(e.code==='Space' && panelJerry.style.display!=='none'){
+        const big2=$('#btnJerryHeard'); if(big2) big2.click();
+        e.preventDefault();
+      }
+    });
+  })();
+
+})();
+</script>
+</body>
+</html>

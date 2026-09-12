@@ -1,0 +1,19 @@
+/* ribbon.css — deterministic, zero-dep. Works standalone or with ribbon.js */
+.ribbon-wrap { position: relative; width: 100%; overflow: hidden; }
+.ribbon-svg { display: block; width: 100%; height: auto; }
+.ribbon-path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* draw-in animation: stroke-dashoffset driven by @keyframes */
+}
+/* CSS fallback animation (JS upgrades to per-segment timing) */
+@keyframes ribbon-draw { from { stroke-dashoffset: var(--len, 1000); } to { stroke-dashoffset: 0; } }
+.ribbon-path.animate {
+  stroke-dasharray: var(--len, 1000);
+  stroke-dashoffset: var(--len, 1000);
+  animation: ribbon-draw var(--dur, 1800ms) var(--easing, ease-in-out) infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ribbon-path.animate { animation: none; stroke-dashoffset: 0; }
+}

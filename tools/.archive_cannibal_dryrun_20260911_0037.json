@@ -1,0 +1,32 @@
+{
+  "root": "/home/bleaknarratives/tools",
+  "generated_at": "2026-09-11T00:37:53.936010",
+  "mode": "dry-run",
+  "humane_guarantee": "NO FILE DELETED \u2014 losers archived intact + unique defs grafted to winner with versioned names; identical defs skipped",
+  "groups": [
+    {
+      "group": "~cross-dir~:dna_tag/dna_tag",
+      "winner": "provenance/dna_tag.py",
+      "losers": [
+        "provenance/legacy/dna_tag_v0.py"
+      ],
+      "grafts": [
+        {
+          "loser": "provenance/legacy/dna_tag_v0.py",
+          "would_graft": [
+            "interactive_fields",
+            "prompt_choice__from_dna_tag_v0_v1",
+            "stamp_file__from_dna_tag_v0_v1",
+            "main__from_dna_tag_v0_v1"
+          ],
+          "would_archive_to": "/home/bleaknarratives/tools/.archive_cannibal/20260911_003753/~cross-dir~:dna_tag/dna_tag_v0.py"
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "groups": 1,
+    "archived": 0,
+    "grafted_defs": 0
+  }
+}

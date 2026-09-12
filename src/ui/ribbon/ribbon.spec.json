@@ -1,0 +1,12 @@
+{
+  "version": "ribbon.v1",
+  "kind": "ribbon",
+  "ribbons": [
+    {
+      "id": "hero-ribbon",
+      "path": {"points": [[20, 80], [180, 20], [340, 80], [500, 20]], "closed": false},
+      "style": {"stroke": "#7c5cff", "width": 3, "opacity": 0.95},
+      "animation": {"duration_ms": 1800, "easing": "ease-in-out", "loop": true, "direction": "alternate"}
+    }
+  ]
+}

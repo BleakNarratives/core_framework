@@ -1,0 +1,28 @@
+{
+  "seed": 42,
+  "root": "/home/bleaknarratives/p_recovery",
+  "rel": "~/p_recovery",
+  "wedge": "Fix one broken file in ~/p_recovery and gate with py_compile",
+  "void": "monetization",
+  "cr": 6.0,
+  "mkt": 7.4,
+  "evidence": [
+    "E3",
+    "E11",
+    "E1",
+    "E10",
+    "E9",
+    "E4"
+  ],
+  "constraint": "15 broken files block shipping before any monetization",
+  "kill": "py_compile passes on primary entrypoint and one grafted dupe; if not in 7 days, thesis no-go",
+  "chains": [
+    "/home/bleaknarratives/tools/ruberg/1-spark/seed-42-p_recovery.md",
+    "/home/bleaknarratives/tools/ruberg/2-spec/spec-42-p_recovery.md",
+    "/home/bleaknarratives/tools/ruberg/3-patch/patch-42-p_recovery.diff"
+  ],
+  "mode": "zen",
+  "ts": "2026-09-11T05:03:11.387946+00:00",
+  "humane": "archive not delete \u2014 losers intact",
+  "next": "open theater: lookingglass --theater \u2192 flip \u262f metal \u2192 \ud83d\udd25 BLEGH"
+}

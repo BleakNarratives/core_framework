@@ -1,0 +1,14 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ribbon — demo (zero-dep)</title>
+<link rel="stylesheet" href="ribbon.css">
+<style>body{font:14px/1.4 system-ui;margin:24px;color:#222} .card{border:1px solid #e6e6e6;border-radius:12px;padding:16px;max-width:640px} code{font-size:12px;background:#f6f6f6;padding:2px 6px;border-radius:6px}</style>
+<div class="card">
+  <h3 style="margin-top:0">Ribbon — deterministic CSS animation</h3>
+  <p>Fallback: pure CSS <code>@keyframes</code>. JS (ribbon.js) upgrades to measured <code>stroke-dasharray=len</code> so loops stay exact across reflows.</p>
+  <div class="ribbon-wrap" data-ribbon='{"version":"ribbon.v1","kind":"ribbon","ribbons":[{"id":"hero-ribbon","path":{"points":[[20,80],[180,20],[340,80],[500,20]]},"style":{"stroke":"#7c5cff","width":3,"opacity":0.95},"animation":{"duration_ms":1800,"easing":"ease-in-out","loop":true,"direction":"alternate"}}]}' style="background:#faf8ff;border-radius:10px;padding:8px"></div>
+  <p style="color:#666;font-size:12px;margin-bottom:0">Validate: <code>python3 src/ui/ribbon/validate.py</code> — exits non-zero on schema drift, writes <code>analysis_report.json</code> without touching the bundle.</p>
+  <p style="color:#666;font-size:12px;margin-top:4px">Snapshot: <code>./tools/guard/guard.sh snap pre-ribbon</code> → rollback via <code>guard.sh rollback &lt;id&gt;</code></p>
+</div>
+<script src="ribbon.js"></script>

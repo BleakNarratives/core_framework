@@ -1,0 +1,655 @@
+{
+  "seed": 146,
+  "root": "/home/bleaknarratives/p_recovery/Poncho-Villa",
+  "rel": "~/p_recovery/Poncho-Villa",
+  "created": "2026-09-11T04:05:49.735318+00:00",
+  "depth": 2,
+  "branch": 2,
+  "nodes": [
+    {
+      "id": "root",
+      "depth": 0,
+      "branch": 0,
+      "parent": null,
+      "thesis": "Should we park KYC and add gift path behind guard in Poncho-Villa? (seed 146, CR 5.7 MKT 4.1) \u2014 board, then eventuality, then mirror.",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "conditional",
+        "constraint": "Dupe stem 'meatwatch' with 3 versions \u2014 fragmentation dwarfs leverage",
+        "wedge": "Humane graft 'meatwatch': meatwatch-1.py wins, meatwatch.py, meatwatch_v2.py archived + grafted as __from_* \u2014 py_compile gate, ship one slic",
+        "kill": "Run humane_cannibal --dry-run then --execute on 'meatwatch' group; if winner py_compiles and tests still pass within 48h, go else conditiona",
+        "evidence_used": [
+          "E3",
+          "E6",
+          "E5",
+          "E2",
+          "E4",
+          "E1"
+        ],
+        "session": "devbr_a49f393994",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.5,
+            "p10_hours": 3.8,
+            "p90_hours": 4.9,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.6,
+            "p10_hours": 2.4,
+            "p90_hours": 3.0,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.8,
+            "p10_hours": 1.6,
+            "p90_hours": 2.0,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E8",
+          "E1",
+          "E4",
+          "E1",
+          "E3",
+          "E8"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 5.7,
+          "cr_eventual": 5.31,
+          "delta": 0.39,
+          "mkt": 4.1,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "eventuality",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "base": {
+          "cr_now": 5.7,
+          "cr_eventual": 4.89,
+          "delta": 0.81,
+          "mkt": 4.1,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "eventuality",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "upside": {
+          "cr_now": 5.7,
+          "cr_eventual": 4.64,
+          "delta": 1.06,
+          "mkt": 4.1,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "eventuality",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        }
+      },
+      "diff": "# root mirror \u2014 seed 146 \u2014 Poncho-Villa CR5.7 \u2192 gift path\n# board conditional \u2014 Dupe stem 'meatwatch' with 3 versions \u2014 fragmentation dwarfs leverage\n"
+    },
+    {
+      "id": "n01-d1b0",
+      "depth": 1,
+      "branch": 0,
+      "parent": "root",
+      "thesis": "Assume we park KYC and add gift path behind guard in Poncho-Villa (seed 146). The board said [SYSTEMS_CARTOGRAPHER] saw monetization. Mirror it: what would future-you thank you for?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "conditional",
+        "constraint": "Dupe stem 'meatwatch' with 3 versions \u2014 fragmentation dwarfs leverage",
+        "wedge": "Humane graft 'meatwatch': meatwatch-1.py wins, meatwatch.py, meatwatch_v2.py archived + grafted as __from_* \u2014 py_compile gate, ship one slic",
+        "kill": "Run humane_cannibal --dry-run then --execute on 'meatwatch' group; if winner py_compiles and tests still pass within 48h, go else conditiona",
+        "evidence_used": [
+          "E4",
+          "E3",
+          "E1",
+          "E2"
+        ],
+        "session": "devbr_c06bcd7419",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.5,
+            "p10_hours": 4.0,
+            "p90_hours": 4.8,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.7,
+            "p10_hours": 2.4,
+            "p90_hours": 3.0,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.7,
+            "p10_hours": 1.5,
+            "p90_hours": 1.9,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E1",
+          "E4",
+          "E2",
+          "E4",
+          "E2",
+          "E3"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 5.7,
+          "cr_eventual": 5.31,
+          "delta": 0.39,
+          "mkt": 4.1,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "90 days",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "base": {
+          "cr_now": 5.7,
+          "cr_eventual": 4.89,
+          "delta": 0.81,
+          "mkt": 4.1,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "90 days",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "upside": {
+          "cr_now": 5.7,
+          "cr_eventual": 4.64,
+          "delta": 1.06,
+          "mkt": 4.1,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "90 days",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n01-d1b0 \u2014 seed 146 depth 1\n# if_this: monetization 9/10 @ Poncho-Villa \u2192 then_that: park KYC and add gift path behind guard\n# board: conditional cites ['E4', 'E3', 'E1', 'E2'] \n# eventuality base: CR 4.89 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n02-d2b0",
+      "depth": 2,
+      "branch": 0,
+      "parent": "n01-d1b0",
+      "thesis": "Assume we park KYC and add gift path behind guard in Poncho-Villa (seed 146). The board said [EVIDENCE_AUDITOR] saw monetization. Mirror it: what would future-you thank you for?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "conditional",
+        "constraint": "Dupe stem 'meatwatch' with 3 versions \u2014 fragmentation dwarfs leverage",
+        "wedge": "Humane graft 'meatwatch': meatwatch-1.py wins, meatwatch.py, meatwatch_v2.py archived + grafted as __from_* \u2014 py_compile gate, ship one slic",
+        "kill": "Run humane_cannibal --dry-run then --execute on 'meatwatch' group; if winner py_compiles and tests still pass within 48h, go else conditiona",
+        "evidence_used": [
+          "E6",
+          "E4",
+          "E1",
+          "E2"
+        ],
+        "session": "devbr_c1a194f827",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.3,
+            "p10_hours": 3.8,
+            "p90_hours": 4.7,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.7,
+            "p10_hours": 2.3,
+            "p90_hours": 3.0,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.8,
+            "p10_hours": 1.6,
+            "p90_hours": 1.9,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E1",
+          "E2",
+          "E1",
+          "E2",
+          "E4",
+          "E1"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 5.7,
+          "cr_eventual": 5.31,
+          "delta": 0.39,
+          "mkt": 4.1,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "30 days",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "base": {
+          "cr_now": 5.7,
+          "cr_eventual": 4.89,
+          "delta": 0.81,
+          "mkt": 4.1,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "30 days",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "upside": {
+          "cr_now": 5.7,
+          "cr_eventual": 4.64,
+          "delta": 1.06,
+          "mkt": 4.1,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "30 days",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n02-d2b0 \u2014 seed 146 depth 2\n# if_this: monetization 9/10 @ Poncho-Villa \u2192 then_that: park KYC and add gift path behind guard\n# board: conditional cites ['E6', 'E4', 'E1', 'E2'] \n# eventuality base: CR 4.89 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n03-d2b1",
+      "depth": 2,
+      "branch": 1,
+      "parent": "n01-d1b0",
+      "thesis": "Given monetization gap 9 and MKT 4.1, pay one small price now (Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo) \u2014 what eventuality does that buy in mirror year?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "conditional",
+        "constraint": "Dupe stem 'meatwatch' with 3 versions \u2014 fragmentation dwarfs leverage",
+        "wedge": "Humane graft 'meatwatch': meatwatch-1.py wins, meatwatch.py, meatwatch_v2.py archived + grafted as __from_* \u2014 py_compile gate, ship one slic",
+        "kill": "Run humane_cannibal --dry-run then --execute on 'meatwatch' group; if winner py_compiles and tests still pass within 48h, go else conditiona",
+        "evidence_used": [
+          "E3",
+          "E6",
+          "E2",
+          "E7",
+          "E4",
+          "E8"
+        ],
+        "session": "devbr_80c74f6208",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.4,
+            "p10_hours": 4.0,
+            "p90_hours": 4.8,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.7,
+            "p10_hours": 2.4,
+            "p90_hours": 3.1,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.7,
+            "p10_hours": 1.6,
+            "p90_hours": 2.0,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E2",
+          "E8",
+          "E2",
+          "E4",
+          "E3",
+          "E7"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 5.7,
+          "cr_eventual": 5.31,
+          "delta": 0.39,
+          "mkt": 4.1,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "mirror year",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "base": {
+          "cr_now": 5.7,
+          "cr_eventual": 4.89,
+          "delta": 0.81,
+          "mkt": 4.1,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "mirror year",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "upside": {
+          "cr_now": 5.7,
+          "cr_eventual": 4.64,
+          "delta": 1.06,
+          "mkt": 4.1,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "mirror year",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n03-d2b1 \u2014 seed 146 depth 2\n# if_this: monetization 9/10 @ Poncho-Villa \u2192 then_that: park KYC and add gift path behind guard\n# board: conditional cites ['E3', 'E6', 'E2', 'E7', 'E4', 'E8'] \n# eventuality base: CR 4.89 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n04-d1b1",
+      "depth": 1,
+      "branch": 1,
+      "parent": "root",
+      "thesis": "Assume we park KYC and add gift path behind guard in Poncho-Villa (seed 146). The board said [EVIDENCE_AUDITOR] saw monetization. Mirror it: what would future-you thank you for?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "conditional",
+        "constraint": "Dupe stem 'meatwatch' with 3 versions \u2014 fragmentation dwarfs leverage",
+        "wedge": "Humane graft 'meatwatch': meatwatch-1.py wins, meatwatch.py, meatwatch_v2.py archived + grafted as __from_* \u2014 py_compile gate, ship one slic",
+        "kill": "Run humane_cannibal --dry-run then --execute on 'meatwatch' group; if winner py_compiles and tests still pass within 48h, go else conditiona",
+        "evidence_used": [
+          "E3",
+          "E6",
+          "E2",
+          "E4",
+          "E1"
+        ],
+        "session": "devbr_0ebde09b58",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.3,
+            "p10_hours": 3.7,
+            "p90_hours": 4.7,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.8,
+            "p10_hours": 2.4,
+            "p90_hours": 3.1,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.7,
+            "p10_hours": 1.5,
+            "p90_hours": 1.9,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E1",
+          "E4",
+          "E1",
+          "E4",
+          "E2",
+          "E3"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 5.7,
+          "cr_eventual": 5.31,
+          "delta": 0.39,
+          "mkt": 4.1,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "eventuality (1 year)",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "base": {
+          "cr_now": 5.7,
+          "cr_eventual": 4.89,
+          "delta": 0.81,
+          "mkt": 4.1,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "eventuality (1 year)",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "upside": {
+          "cr_now": 5.7,
+          "cr_eventual": 4.64,
+          "delta": 1.06,
+          "mkt": 4.1,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "eventuality (1 year)",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n04-d1b1 \u2014 seed 146 depth 1\n# if_this: monetization 9/10 @ Poncho-Villa \u2192 then_that: park KYC and add gift path behind guard\n# board: conditional cites ['E3', 'E6', 'E2', 'E4', 'E1'] \n# eventuality base: CR 4.89 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n05-d2b0",
+      "depth": 2,
+      "branch": 0,
+      "parent": "n04-d1b1",
+      "thesis": "Given monetization gap 9 and MKT 4.1, pay one small price now (Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo) \u2014 what eventuality does that buy in mirror year?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "conditional",
+        "constraint": "Dupe stem 'meatwatch' with 3 versions \u2014 fragmentation dwarfs leverage",
+        "wedge": "Humane graft 'meatwatch': meatwatch-1.py wins, meatwatch.py, meatwatch_v2.py archived + grafted as __from_* \u2014 py_compile gate, ship one slic",
+        "kill": "Run humane_cannibal --dry-run then --execute on 'meatwatch' group; if winner py_compiles and tests still pass within 48h, go else conditiona",
+        "evidence_used": [
+          "E3",
+          "E2",
+          "E7",
+          "E1",
+          "E8"
+        ],
+        "session": "devbr_5c0cb859d7",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.3,
+            "p10_hours": 3.8,
+            "p90_hours": 4.7,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.7,
+            "p10_hours": 2.3,
+            "p90_hours": 3.0,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.8,
+            "p10_hours": 1.6,
+            "p90_hours": 1.9,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E7",
+          "E8",
+          "E1",
+          "E2",
+          "E3",
+          "E8"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 5.7,
+          "cr_eventual": 5.31,
+          "delta": 0.39,
+          "mkt": 4.1,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "mirror year",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "base": {
+          "cr_now": 5.7,
+          "cr_eventual": 4.89,
+          "delta": 0.81,
+          "mkt": 4.1,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "mirror year",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "upside": {
+          "cr_now": 5.7,
+          "cr_eventual": 4.64,
+          "delta": 1.06,
+          "mkt": 4.1,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "mirror year",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n05-d2b0 \u2014 seed 146 depth 2\n# if_this: monetization 9/10 @ Poncho-Villa \u2192 then_that: park KYC and add gift path behind guard\n# board: conditional cites ['E3', 'E2', 'E7', 'E1', 'E8'] \n# eventuality base: CR 4.89 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n06-d2b1",
+      "depth": 2,
+      "branch": 1,
+      "parent": "n04-d1b1",
+      "thesis": "If this holds (monetization=9/10 at Poncho-Villa), then that follows: Park/strip KYC: tip jar + gift path (no Stripe) \u2014 wire `/webhooks/gift` behind guard_judo \u2014 but what does eventuality look like if we park KYC and add gift path behind guard for 30 days?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "conditional",
+        "constraint": "Dupe stem 'meatwatch' with 3 versions \u2014 fragmentation dwarfs leverage",
+        "wedge": "Humane graft 'meatwatch': meatwatch-1.py wins, meatwatch.py, meatwatch_v2.py archived + grafted as __from_* \u2014 py_compile gate, ship one slic",
+        "kill": "Run humane_cannibal --dry-run then --execute on 'meatwatch' group; if winner py_compiles and tests still pass within 48h, go else conditiona",
+        "evidence_used": [
+          "E5",
+          "E2",
+          "E9",
+          "E1",
+          "E8"
+        ],
+        "session": "devbr_1ce68f92b6",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.4,
+            "p10_hours": 4.0,
+            "p90_hours": 4.8,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.7,
+            "p10_hours": 2.4,
+            "p90_hours": 3.1,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.7,
+            "p10_hours": 1.6,
+            "p90_hours": 2.0,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E1",
+          "E2",
+          "E1",
+          "E2",
+          "E2",
+          "E8"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 5.7,
+          "cr_eventual": 5.31,
+          "delta": 0.39,
+          "mkt": 4.1,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "30 days",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "base": {
+          "cr_now": 5.7,
+          "cr_eventual": 4.89,
+          "delta": 0.81,
+          "mkt": 4.1,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "30 days",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        },
+        "upside": {
+          "cr_now": 5.7,
+          "cr_eventual": 4.64,
+          "delta": 1.06,
+          "mkt": 4.1,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "30 days",
+          "if_this": "monetization 9/10",
+          "then_that": "park KYC and add gift path behind guard"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n06-d2b1 \u2014 seed 146 depth 2\n# if_this: monetization 9/10 @ Poncho-Villa \u2192 then_that: park KYC and add gift path behind guard\n# board: conditional cites ['E5', 'E2', 'E9', 'E1', 'E8'] \n# eventuality base: CR 4.89 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    }
+  ],
+  "monitor": {
+    "max_depth": 5,
+    "max_branch": 3,
+    "max_parallel": 2,
+    "max_chains": 9,
+    "budget_tokens": 8000,
+    "forbidden": [
+      "rm -rf",
+      "shred ",
+      "DROP ",
+      "DELETE FROM",
+      "push --force"
+    ],
+    "require_humane": true,
+    "require_citation": true
+  },
+  "stats": {
+    "nodes": 7,
+    "throttled": 0,
+    "depth": 2,
+    "branch": 2
+  }
+}

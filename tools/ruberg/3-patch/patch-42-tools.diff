@@ -1,0 +1,16 @@
+# Patch — tools — seed 42
+*Ruberg domino 3 (Codex — Boss Coder) — humane, reversible*
+
+Target: /home/bleaknarratives/tools/guard_judo.py + gift path (civiliter mortuus, no KYC) — wire /webhooks/gift behind tarpit
+Wedge: Bundle ~/tools with neighboring folder that shares purpose (sherpa parent), sell the pair as utility
+Void: monetization [E10, E7, E2]
+
+*** humane patch preview (no deletion, graft hint) ***
+# + CURATOR.md — folder remembers after sleep (sherpa --write)
+# + guard_judo tarpit behind gift path (civiliter mortuus)
+# + /health or --help gate (distribution)
+# Archive: .archive_cannibal/ — losers intact as __from_* — never rm -rf
+
+Gate: python3 -m py_compile /home/bleaknarratives/tools/guard_judo.py  # must pass
+
+JANUS: deposit_sediment("ruberg","PATCH", "tools", "spec→patch", {"seed":42,"void":"monetization"})

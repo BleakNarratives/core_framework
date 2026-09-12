@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ribbon.spec.v1",
+  "type": "object",
+  "required": ["version", "kind", "ribbons"],
+  "properties": {
+    "version": {"type": "string", "const": "ribbon.v1"},
+    "kind": {"type": "string", "const": "ribbon"},
+    "ribbons": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "path", "style"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9_-]+$"},
+          "path": {
+            "type": "object", "required": ["points"],
+            "properties": {
+              "points": {
+                "type": "array", "minItems": 2,
+                "items": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}
+              },
+              "closed": {"type": "boolean", "default": false}
+            }
+          },
+          "style": {
+            "type": "object", "required": ["stroke", "width"],
+            "properties": {
+              "stroke": {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$"},
+              "width": {"type": "number", "minimum": 0.5, "maximum": 32},
+              "dash": {"type": "array", "items": {"type": "number"}},
+              "opacity": {"type": "number", "minimum": 0, "maximum": 1, "default": 1}
+            }
+          },
+          "animation": {
+            "type": "object",
+            "properties": {
+              "duration_ms": {"type": "integer", "minimum": 100},
+              "easing": {"type": "string", "enum": ["linear","ease-in","ease-out","ease-in-out"]},
+              "loop": {"type": "boolean", "default": true},
+              "direction": {"type": "string", "enum": ["forward","reverse","alternate"], "default": "forward"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

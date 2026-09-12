@@ -1,0 +1,28 @@
+{
+  "seed": 42,
+  "root": "/home/bleaknarratives/tools",
+  "rel": "~/tools",
+  "wedge": "Bundle ~/tools with neighboring folder that shares purpose (sherpa parent), sell the pair as utility",
+  "void": "monetization",
+  "cr": 4.4,
+  "mkt": 7.7,
+  "evidence": [
+    "E10",
+    "E7",
+    "E2",
+    "E1",
+    "E5",
+    "E6"
+  ],
+  "constraint": "Too thin \u2014 not enough code to be a product, just a script",
+  "kill": "Identify a paying niche that would pay $10 for this slice within 30 days via one outreach; no bite = no-go",
+  "chains": [
+    "/home/bleaknarratives/tools/ruberg/1-spark/seed-42-tools.md",
+    "/home/bleaknarratives/tools/ruberg/2-spec/spec-42-tools.md",
+    "/home/bleaknarratives/tools/ruberg/3-patch/patch-42-tools.diff"
+  ],
+  "mode": "zen",
+  "ts": "2026-09-11T05:00:47.246001+00:00",
+  "humane": "archive not delete \u2014 losers intact",
+  "next": "open theater: lookingglass --theater \u2192 flip \u262f metal \u2192 \ud83d\udd25 BLEGH"
+}

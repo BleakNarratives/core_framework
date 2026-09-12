@@ -1,0 +1,16 @@
+# Patch — p_recovery — seed 42
+*Ruberg domino 3 (Codex — Boss Coder) — humane, reversible*
+
+Target: /home/bleaknarratives/p_recovery/guard_judo.py + gift path (civiliter mortuus, no KYC) — wire /webhooks/gift behind tarpit
+Wedge: Fix one broken file in ~/p_recovery and gate with py_compile
+Void: monetization [E3, E11, E1]
+
+*** humane patch preview (no deletion, graft hint) ***
+# + CURATOR.md — folder remembers after sleep (sherpa --write)
+# + guard_judo tarpit behind gift path (civiliter mortuus)
+# + /health or --help gate (distribution)
+# Archive: .archive_cannibal/ — losers intact as __from_* — never rm -rf
+
+Gate: python3 -m py_compile /home/bleaknarratives/p_recovery/guard_judo.py  # must pass
+
+JANUS: deposit_sediment("ruberg","PATCH", "p_recovery", "spec→patch", {"seed":42,"void":"monetization"})

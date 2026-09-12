@@ -1,0 +1,656 @@
+{
+  "seed": 107,
+  "root": "/home/bleaknarratives/p_recovery/personas",
+  "rel": "~/p_recovery/personas",
+  "created": "2026-09-11T04:05:48.371124+00:00",
+  "depth": 2,
+  "branch": 2,
+  "nodes": [
+    {
+      "id": "root",
+      "depth": 0,
+      "branch": 0,
+      "parent": null,
+      "thesis": "Should we ship one ENTRY with /health in personas? (seed 107, CR 6.2 MKT 4.7) \u2014 board, then eventuality, then mirror.",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "conditional",
+        "constraint": "Too thin \u2014 not enough code to be a product, just a script",
+        "wedge": "Bundle ~/p_recovery/personas with neighboring folder that shares purpose (sherpa parent), sell the pair as utility",
+        "kill": "Identify a paying niche that would pay $10 for this slice within 30 days via one outreach; no bite = no-go",
+        "evidence_used": [
+          "E3",
+          "E5",
+          "E2",
+          "E4",
+          "E1"
+        ],
+        "session": "devbr_6b13c0f36a",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.2,
+            "p10_hours": 3.9,
+            "p90_hours": 4.8,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.8,
+            "p10_hours": 2.6,
+            "p90_hours": 3.0,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.8,
+            "p10_hours": 1.5,
+            "p90_hours": 2.0,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E2",
+          "E5",
+          "E1",
+          "E2",
+          "E5",
+          "E1"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 6.2,
+          "cr_eventual": 5.68,
+          "delta": 0.52,
+          "mkt": 4.7,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "eventuality",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        },
+        "base": {
+          "cr_now": 6.2,
+          "cr_eventual": 5.23,
+          "delta": 0.97,
+          "mkt": 4.7,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "eventuality",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        },
+        "upside": {
+          "cr_now": 6.2,
+          "cr_eventual": 4.82,
+          "delta": 1.38,
+          "mkt": 4.7,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "eventuality",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        }
+      },
+      "diff": "# root mirror \u2014 seed 107 \u2014 personas CR6.2 \u2192 gift path\n# board conditional \u2014 Too thin \u2014 not enough code to be a product, just a script\n"
+    },
+    {
+      "id": "n01-d1b0",
+      "depth": 1,
+      "branch": 0,
+      "parent": "root",
+      "thesis": "Assume we ship one ENTRY with /health in personas (seed 107). The board said [TIME_ALCHEMIST] saw distribution. Mirror it: what would future-you thank you for?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "conditional",
+        "constraint": "Too thin \u2014 not enough code to be a product, just a script",
+        "wedge": "Bundle ~/p_recovery/personas with neighboring folder that shares purpose (sherpa parent), sell the pair as utility",
+        "kill": "Identify a paying niche that would pay $10 for this slice within 30 days via one outreach; no bite = no-go",
+        "evidence_used": [
+          "E3",
+          "E5",
+          "E2",
+          "E4",
+          "E1"
+        ],
+        "session": "devbr_0527acfee6",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.5,
+            "p10_hours": 3.8,
+            "p90_hours": 4.9,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.5,
+            "p10_hours": 2.4,
+            "p90_hours": 2.9,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.8,
+            "p10_hours": 1.6,
+            "p90_hours": 2.0,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E2",
+          "E1",
+          "E2",
+          "E4",
+          "E5",
+          "E1"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 6.2,
+          "cr_eventual": 5.68,
+          "delta": 0.52,
+          "mkt": 4.7,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "90 days",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        },
+        "base": {
+          "cr_now": 6.2,
+          "cr_eventual": 5.23,
+          "delta": 0.97,
+          "mkt": 4.7,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "90 days",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        },
+        "upside": {
+          "cr_now": 6.2,
+          "cr_eventual": 4.82,
+          "delta": 1.38,
+          "mkt": 4.7,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "90 days",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n01-d1b0 \u2014 seed 107 depth 1\n# if_this: distribution 9/10 @ personas \u2192 then_that: ship one ENTRY with /health\n# board: conditional cites ['E3', 'E5', 'E2', 'E4', 'E1'] \n# eventuality base: CR 5.23 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n02-d2b0",
+      "depth": 2,
+      "branch": 0,
+      "parent": "n01-d1b0",
+      "thesis": "Given distribution gap 9 and MKT 4.7, pay one small price now (Add one ENTRY: `python3 main.py --help` + health route that passes `curl /health` in 2 min) \u2014 what eventuality does that buy in mirror year?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "conditional",
+        "constraint": "Too thin \u2014 not enough code to be a product, just a script",
+        "wedge": "Bundle ~/p_recovery/personas with neighboring folder that shares purpose (sherpa parent), sell the pair as utility",
+        "kill": "Identify a paying niche that would pay $10 for this slice within 30 days via one outreach; no bite = no-go",
+        "evidence_used": [
+          "E3",
+          "E6",
+          "E5",
+          "E2",
+          "E4",
+          "E1"
+        ],
+        "session": "devbr_9ed36e2668",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.3,
+            "p10_hours": 3.8,
+            "p90_hours": 4.9,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.7,
+            "p10_hours": 2.4,
+            "p90_hours": 2.9,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.8,
+            "p10_hours": 1.5,
+            "p90_hours": 2.0,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E1",
+          "E2",
+          "E1",
+          "E6",
+          "E3",
+          "E4"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 6.2,
+          "cr_eventual": 5.68,
+          "delta": 0.52,
+          "mkt": 4.7,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "mirror year",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        },
+        "base": {
+          "cr_now": 6.2,
+          "cr_eventual": 5.23,
+          "delta": 0.97,
+          "mkt": 4.7,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "mirror year",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        },
+        "upside": {
+          "cr_now": 6.2,
+          "cr_eventual": 4.82,
+          "delta": 1.38,
+          "mkt": 4.7,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "mirror year",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n02-d2b0 \u2014 seed 107 depth 2\n# if_this: distribution 9/10 @ personas \u2192 then_that: ship one ENTRY with /health\n# board: conditional cites ['E3', 'E6', 'E5', 'E2', 'E4', 'E1'] \n# eventuality base: CR 5.23 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n03-d2b1",
+      "depth": 2,
+      "branch": 1,
+      "parent": "n01-d1b0",
+      "thesis": "Assume we ship one ENTRY with /health in personas (seed 107). The board said [SYSTEMS_CARTOGRAPHER] saw distribution. Mirror it: what would future-you thank you for?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "conditional",
+        "constraint": "Too thin \u2014 not enough code to be a product, just a script",
+        "wedge": "Bundle ~/p_recovery/personas with neighboring folder that shares purpose (sherpa parent), sell the pair as utility",
+        "kill": "Identify a paying niche that would pay $10 for this slice within 30 days via one outreach; no bite = no-go",
+        "evidence_used": [
+          "E3",
+          "E5",
+          "E2",
+          "E4",
+          "E1"
+        ],
+        "session": "devbr_2184554493",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.4,
+            "p10_hours": 4.1,
+            "p90_hours": 4.9,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.8,
+            "p10_hours": 2.5,
+            "p90_hours": 3.0,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.8,
+            "p10_hours": 1.6,
+            "p90_hours": 2.0,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E5",
+          "E1",
+          "E2",
+          "E5",
+          "E1",
+          "E3"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 6.2,
+          "cr_eventual": 5.68,
+          "delta": 0.52,
+          "mkt": 4.7,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "30 days",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        },
+        "base": {
+          "cr_now": 6.2,
+          "cr_eventual": 5.23,
+          "delta": 0.97,
+          "mkt": 4.7,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "30 days",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        },
+        "upside": {
+          "cr_now": 6.2,
+          "cr_eventual": 4.82,
+          "delta": 1.38,
+          "mkt": 4.7,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "30 days",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n03-d2b1 \u2014 seed 107 depth 2\n# if_this: distribution 9/10 @ personas \u2192 then_that: ship one ENTRY with /health\n# board: conditional cites ['E3', 'E5', 'E2', 'E4', 'E1'] \n# eventuality base: CR 5.23 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n04-d1b1",
+      "depth": 1,
+      "branch": 1,
+      "parent": "root",
+      "thesis": "Given distribution gap 9 and MKT 4.7, pay one small price now (Add one ENTRY: `python3 main.py --help` + health route that passes `curl /health` in 2 min) \u2014 what eventuality does that buy in eventuality (1 year)?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "conditional",
+        "constraint": "Too thin \u2014 not enough code to be a product, just a script",
+        "wedge": "Bundle ~/p_recovery/personas with neighboring folder that shares purpose (sherpa parent), sell the pair as utility",
+        "kill": "Identify a paying niche that would pay $10 for this slice within 30 days via one outreach; no bite = no-go",
+        "evidence_used": [
+          "E3",
+          "E6",
+          "E2",
+          "E4",
+          "E1"
+        ],
+        "session": "devbr_f244d602a7",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.6,
+            "p10_hours": 3.9,
+            "p90_hours": 4.8,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.8,
+            "p10_hours": 2.4,
+            "p90_hours": 3.1,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.8,
+            "p10_hours": 1.5,
+            "p90_hours": 1.9,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E1",
+          "E3",
+          "E3",
+          "E6",
+          "E2",
+          "E1"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 6.2,
+          "cr_eventual": 5.68,
+          "delta": 0.52,
+          "mkt": 4.7,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "eventuality (1 year)",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        },
+        "base": {
+          "cr_now": 6.2,
+          "cr_eventual": 5.23,
+          "delta": 0.97,
+          "mkt": 4.7,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "eventuality (1 year)",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        },
+        "upside": {
+          "cr_now": 6.2,
+          "cr_eventual": 4.82,
+          "delta": 1.38,
+          "mkt": 4.7,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "eventuality (1 year)",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n04-d1b1 \u2014 seed 107 depth 1\n# if_this: distribution 9/10 @ personas \u2192 then_that: ship one ENTRY with /health\n# board: conditional cites ['E3', 'E6', 'E2', 'E4', 'E1'] \n# eventuality base: CR 5.23 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n05-d2b0",
+      "depth": 2,
+      "branch": 0,
+      "parent": "n04-d1b1",
+      "thesis": "If this holds (distribution=9/10 at personas), then that follows: Add one ENTRY: `python3 main.py --help` + health route that passes `curl /health` in 2 min \u2014 but what does eventuality look like if we ship one ENTRY with /health for 30 days?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "conditional",
+        "constraint": "Too thin \u2014 not enough code to be a product, just a script",
+        "wedge": "Bundle ~/p_recovery/personas with neighboring folder that shares purpose (sherpa parent), sell the pair as utility",
+        "kill": "Identify a paying niche that would pay $10 for this slice within 30 days via one outreach; no bite = no-go",
+        "evidence_used": [
+          "E3",
+          "E5",
+          "E2",
+          "E4",
+          "E1"
+        ],
+        "session": "devbr_d24a199861",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.3,
+            "p10_hours": 3.8,
+            "p90_hours": 4.9,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.7,
+            "p10_hours": 2.4,
+            "p90_hours": 2.9,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.8,
+            "p10_hours": 1.5,
+            "p90_hours": 2.0,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E5",
+          "E5",
+          "E2",
+          "E4",
+          "E1",
+          "E3"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 6.2,
+          "cr_eventual": 5.68,
+          "delta": 0.52,
+          "mkt": 4.7,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "30 days",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        },
+        "base": {
+          "cr_now": 6.2,
+          "cr_eventual": 5.23,
+          "delta": 0.97,
+          "mkt": 4.7,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "30 days",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        },
+        "upside": {
+          "cr_now": 6.2,
+          "cr_eventual": 4.82,
+          "delta": 1.38,
+          "mkt": 4.7,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "30 days",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n05-d2b0 \u2014 seed 107 depth 2\n# if_this: distribution 9/10 @ personas \u2192 then_that: ship one ENTRY with /health\n# board: conditional cites ['E3', 'E5', 'E2', 'E4', 'E1'] \n# eventuality base: CR 5.23 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    },
+    {
+      "id": "n06-d2b1",
+      "depth": 2,
+      "branch": 1,
+      "parent": "n04-d1b1",
+      "thesis": "If this holds (distribution=9/10 at personas), then that follows: Add one ENTRY: `python3 main.py --help` + health route that passes `curl /health` in 2 min \u2014 but what does eventuality look like if we ship one ENTRY with /health for eventuality (1 year)?",
+      "monitor": {
+        "ok": true,
+        "reason": "ok"
+      },
+      "board": {
+        "verdict": "conditional",
+        "constraint": "Too thin \u2014 not enough code to be a product, just a script",
+        "wedge": "Bundle ~/p_recovery/personas with neighboring folder that shares purpose (sherpa parent), sell the pair as utility",
+        "kill": "Identify a paying niche that would pay $10 for this slice within 30 days via one outreach; no bite = no-go",
+        "evidence_used": [
+          "E3",
+          "E5",
+          "E2",
+          "E4",
+          "E1"
+        ],
+        "session": "devbr_1eb654d666",
+        "sims": {
+          "downside": {
+            "hours_to_shippable": 4.4,
+            "p10_hours": 4.1,
+            "p90_hours": 4.9,
+            "ship_prob": 0.28,
+            "ending_orpphans": 0
+          },
+          "base": {
+            "hours_to_shippable": 2.8,
+            "p10_hours": 2.5,
+            "p90_hours": 3.0,
+            "ship_prob": 0.58,
+            "ending_orpphans": 0
+          },
+          "upside": {
+            "hours_to_shippable": 1.8,
+            "p10_hours": 1.6,
+            "p90_hours": 2.0,
+            "ship_prob": 0.82,
+            "ending_orpphans": 0
+          }
+        },
+        "citations": [
+          "E4",
+          "E5",
+          "E1",
+          "E1",
+          "E2",
+          "E1"
+        ]
+      },
+      "eventuality": {
+        "downside": {
+          "cr_now": 6.2,
+          "cr_eventual": 5.68,
+          "delta": 0.52,
+          "mkt": 4.7,
+          "flavor": "too speedy \u2014 monitor throttled, debt not cruelty, just unfinished sipe",
+          "horizon": "eventuality (1 year)",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        },
+        "base": {
+          "cr_now": 6.2,
+          "cr_eventual": 5.23,
+          "delta": 0.97,
+          "mkt": 4.7,
+          "flavor": "steady: one void per poop, archive keeps receipts, chain breathes",
+          "horizon": "eventuality (1 year)",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        },
+        "upside": {
+          "cr_now": 6.2,
+          "cr_eventual": 4.82,
+          "delta": 1.38,
+          "mkt": 4.7,
+          "flavor": "kingdom remembers; one gift path \u2192 trust compounds; future-you opens CURATOR and smiles",
+          "horizon": "eventuality (1 year)",
+          "if_this": "distribution 9/10",
+          "then_that": "ship one ENTRY with /health"
+        }
+      },
+      "diff": "# lookingglass diff \u2014 n06-d2b1 \u2014 seed 107 depth 2\n# if_this: distribution 9/10 @ personas \u2192 then_that: ship one ENTRY with /health\n# board: conditional cites ['E3', 'E5', 'E2', 'E4', 'E1'] \n# eventuality base: CR 5.23 (steady: one void per poop, archive keeps receipts, chain breathes)\n# humane: archive not delete \u2014 graft hint below (sipes/fades in theater)\n# + CURATOR.md \u2014 folder remembers after sleep\n# + guard_judo tarpit behind gift path (civiliter mortuus)\n"
+    }
+  ],
+  "monitor": {
+    "max_depth": 5,
+    "max_branch": 3,
+    "max_parallel": 2,
+    "max_chains": 9,
+    "budget_tokens": 8000,
+    "forbidden": [
+      "rm -rf",
+      "shred ",
+      "DROP ",
+      "DELETE FROM",
+      "push --force"
+    ],
+    "require_humane": true,
+    "require_citation": true
+  },
+  "stats": {
+    "nodes": 7,
+    "throttled": 0,
+    "depth": 2,
+    "branch": 2
+  }
+}

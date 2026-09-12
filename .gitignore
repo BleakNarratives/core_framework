@@ -1,0 +1,36 @@
+# 2026-09-11 FIX — was lone `*` from `python -m venv ~` (venv template writes * to ignore itself).
+# That nuked the home git repo: feature/ribbon-animation couldn't add ANY file.
+# Fix: ignore-everything AT ROOT then allowlist only the ship tree.
+# Home = 70G of noise; only src/tools + manifests should ever commit here.
+
+# — block everything at root —
+/*
+/.*
+
+# — allowlist: the only paths this repo tracks —
+!/src
+!/src/**
+!/tools
+!/tools/**
+!/.gitignore
+!/package.json
+!/package-lock.json
+
+# — ephemeral everywhere (even inside src/tools) —
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+node_modules/
+.DS_Store
+*.log
+
+# — venv / dot-noise already covered by /* and /.* —
+# explicit keeps for clarity if someone reads this file:
+.env.vault
+screenshots_scan/
+
+# guard snapshots are ephemeral (SHA-256 chain lives in guard.jsonl, tar is local)
+tools/guard/snapshots/
+tools/guard/guard.jsonl

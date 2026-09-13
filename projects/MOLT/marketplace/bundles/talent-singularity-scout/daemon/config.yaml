@@ -1,0 +1,12 @@
+# daemon/config.yaml — talent-singularity-scout
+skill: talent-singularity-scout
+oomf_level: 3
+interval: "2h"   # cron shorthand; expand to systemd timer / crontab in prod
+feeds: [commit_velocity, github_x_signals, latent_discourse]
+target_domains: ["github.com", "x.com", "discourse.internal"]
+oracle: { mode: strict }
+entitlements:
+  active: [base]        # base | premium (retainer)
+  premium_note: "Set license.key to unlock private high-frequency feeds."
+license:
+  key: ""               # offline nonce — author-issued

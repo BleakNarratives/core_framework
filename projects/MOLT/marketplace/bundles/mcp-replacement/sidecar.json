@@ -1,0 +1,48 @@
+{
+  "skill": "mcp-replacement",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:21:28.243201+00:00",
+  "oomf_level": 3,
+  "buyer": "Dev teams & Product Ops (Jira/GitHub/HubSpot replacement)",
+  "feeds": {
+    "api_schemas": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "active_tickets": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "recent_commits": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "deal_pipeline": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "schemas_cached": {
+    "status": "sample",
+    "count": 0
+  },
+  "ticket_snapshot": {
+    "status": "sample",
+    "count": 0
+  },
+  "commit_digest": {
+    "status": "sample",
+    "count": 0
+  },
+  "pipeline_state": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json."
+}

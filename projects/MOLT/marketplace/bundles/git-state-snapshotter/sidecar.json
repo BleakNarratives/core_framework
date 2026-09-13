@@ -1,0 +1,48 @@
+{
+  "skill": "git-state-snapshotter",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:34:43.683905+00:00",
+  "oomf_level": 2,
+  "buyer": "SRE & Security (zero-downtime rollback)",
+  "feeds": {
+    "version_logs": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "mutation_diffs": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "branch_maps": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "rollback_events": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "snapshot_head": {
+    "status": "sample",
+    "count": 0
+  },
+  "version_history": {
+    "status": "sample",
+    "count": 0
+  },
+  "diff_preview": {
+    "status": "sample",
+    "count": 0
+  },
+  "rewind_receipts": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json."
+}

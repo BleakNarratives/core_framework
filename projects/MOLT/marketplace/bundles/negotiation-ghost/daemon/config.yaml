@@ -1,0 +1,12 @@
+# daemon/config.yaml — negotiation-ghost
+skill: negotiation-ghost
+oomf_level: 4
+interval: "1h"   # cron shorthand; expand to systemd timer / crontab in prod
+feeds: [sec_filings, salary_bands, deal_history, playbook_hints]
+target_domains: ["sec.gov", "levels.fyi", "company.internal"]
+oracle: { mode: strict }
+entitlements:
+  active: [base]        # base | premium (retainer)
+  premium_note: "Set license.key to unlock private high-frequency feeds."
+license:
+  key: ""               # offline nonce — author-issued

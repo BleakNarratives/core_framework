@@ -1,0 +1,12 @@
+# daemon/config.yaml — loom-thread-weaver
+skill: loom-thread-weaver
+oomf_level: 3
+interval: "5m"   # cron shorthand; expand to systemd timer / crontab in prod
+feeds: [execution_traces, agent_states, chain_digests, loom_weaves]
+target_domains: ["whorl.loom", "rag_storage/loom", "~/.whorl/bus"]
+oracle: { mode: strict }
+entitlements:
+  active: [base]        # base | premium (retainer)
+  premium_note: "Set license.key to unlock private high-frequency feeds."
+license:
+  key: ""               # offline nonce — author-issued

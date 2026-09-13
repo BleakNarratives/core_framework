@@ -1,0 +1,12 @@
+# daemon/config.yaml — whorl-bus-dispatcher
+skill: whorl-bus-dispatcher
+oomf_level: 3
+interval: "1m"   # cron shorthand; expand to systemd timer / crontab in prod
+feeds: [bus_inbox, dead_letters, registry_heartbeats, arena_signals]
+target_domains: ["~/.whorl/bus", "whorl.core.config", "whorl.bus"]
+oracle: { mode: strict }
+entitlements:
+  active: [base]        # base | premium (retainer)
+  premium_note: "Set license.key to unlock private high-frequency feeds."
+license:
+  key: ""               # offline nonce — author-issued

@@ -1,0 +1,48 @@
+{
+  "skill": "scout-foreman",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:21:28.249460+00:00",
+  "oomf_level": 2,
+  "buyer": "Marketplace buyers (herds all Scouts)",
+  "feeds": {
+    "scout_health": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "memory_footprint": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "secret_rotation": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "sweep_results": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "herd_status": {
+    "status": "sample",
+    "count": 0
+  },
+  "footprint_budget": {
+    "status": "sample",
+    "count": 0
+  },
+  "key_vault_refs": {
+    "status": "sample",
+    "count": 0
+  },
+  "sweep_log": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json."
+}

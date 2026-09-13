@@ -1,0 +1,41 @@
+{
+  "skill": "akasha-mutation-vault",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:52:03.668906+00:00",
+  "oomf_level": 3,
+  "buyer": "SRE & Security (audit + rollback)",
+  "feeds": {
+    "last_cycle": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "vault_object": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "snapshot_chain": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "vault_index": {
+    "status": "sample",
+    "count": 0
+  },
+  "checkpoint_id": {
+    "status": "sample",
+    "count": 0
+  },
+  "rollback_target": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json.",
+  "sovereign_layer": "akasha-mutation-vault"
+}

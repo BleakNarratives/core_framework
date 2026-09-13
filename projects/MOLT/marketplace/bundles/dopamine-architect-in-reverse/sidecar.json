@@ -1,0 +1,48 @@
+{
+  "skill": "dopamine-architect-in-reverse",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:21:28.246584+00:00",
+  "oomf_level": 2,
+  "buyer": "Families & Deep-work teams (Attention OS)",
+  "feeds": {
+    "app_usage": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "screen_time": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "social_hooks": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "blocklist_state": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "attention_report": {
+    "status": "sample",
+    "count": 0
+  },
+  "hook_inventory": {
+    "status": "sample",
+    "count": 0
+  },
+  "blocklist_patch": {
+    "status": "sample",
+    "count": 0
+  },
+  "deep_work_schedule": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json."
+}

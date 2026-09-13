@@ -1,0 +1,48 @@
+{
+  "skill": "arena-logic-gladiator",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:34:43.684999+00:00",
+  "oomf_level": 3,
+  "buyer": "ML/R&D teams (survival-of-the-fittest skill evolution)",
+  "feeds": {
+    "benchmark_scores": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "oracle_verdicts": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "token_usage": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "elo_updates": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "leaderboard": {
+    "status": "sample",
+    "count": 0
+  },
+  "evolution_rate": {
+    "status": "sample",
+    "count": 0
+  },
+  "survival_report": {
+    "status": "sample",
+    "count": 0
+  },
+  "mutation_queue": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json."
+}

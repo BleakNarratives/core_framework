@@ -1,0 +1,40 @@
+{
+  "skill": "bureaucracy-judo",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:20:15.596228+00:00",
+  "oomf_level": 3,
+  "buyer": "LegalTech & Agencies",
+  "feeds": {
+    "regulatory_filings": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "zoning_updates": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "foia_logs": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "filing_templates": {
+    "status": "sample",
+    "count": 0
+  },
+  "eligibility_deltas": {
+    "status": "sample",
+    "count": 0
+  },
+  "deadline_map": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json."
+}

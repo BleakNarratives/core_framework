@@ -1,0 +1,41 @@
+{
+  "skill": "molt-instar-autoloop",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:52:03.666842+00:00",
+  "oomf_level": 4,
+  "buyer": "AI Lab Leads & Sovereign Founders",
+  "feeds": {
+    "implor_blueprint": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "thoth_synthesis": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "idle_signal": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "next_goal": {
+    "status": "sample",
+    "count": 0
+  },
+  "blueprint": {
+    "status": "sample",
+    "count": 0
+  },
+  "last_verdict": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json.",
+  "sovereign_layer": "molt-instar-autoloop"
+}

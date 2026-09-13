@@ -1,0 +1,40 @@
+{
+  "skill": "saas-churn-oracle",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:20:15.574259+00:00",
+  "oomf_level": 3,
+  "buyer": "B2B founders & Sales Ops",
+  "feeds": {
+    "local_telemetry": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "support_tickets": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "pricing_visits": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "risk_playbooks": {
+    "status": "sample",
+    "count": 0
+  },
+  "account_risk": {
+    "status": "sample",
+    "count": 0
+  },
+  "pricing_signals": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json."
+}

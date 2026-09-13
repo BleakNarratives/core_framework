@@ -1,0 +1,12 @@
+# daemon/config.yaml — git-state-snapshotter
+skill: git-state-snapshotter
+oomf_level: 2
+interval: "6h"   # cron shorthand; expand to systemd timer / crontab in prod
+feeds: [version_logs, mutation_diffs, branch_maps, rollback_events]
+target_domains: ["~/.whorl/agents", "rag_storage/molt_state"]
+oracle: { mode: strict }
+entitlements:
+  active: [base]        # base | premium (retainer)
+  premium_note: "Set license.key to unlock private high-frequency feeds."
+license:
+  key: ""               # offline nonce — author-issued

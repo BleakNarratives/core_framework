@@ -1,0 +1,41 @@
+{
+  "skill": "merkaba-claw-bridge",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:52:03.671625+00:00",
+  "oomf_level": 3,
+  "buyer": "Platform & Infra (Merkaba + Claw)",
+  "feeds": {
+    "ka_package": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "bus_route": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "claw_staged_intent": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "ka_path": {
+    "status": "sample",
+    "count": 0
+  },
+  "route_receipt": {
+    "status": "sample",
+    "count": 0
+  },
+  "claw_gate": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json.",
+  "sovereign_layer": "merkaba-claw-bridge"
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Provenance Oracle Sidecar",
+  "type": "object",
+  "required": [
+    "skill",
+    "version",
+    "hydrated_at",
+    "feeds"
+  ],
+  "properties": {
+    "skill": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "hydrated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "oomf_level": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "feeds": {
+      "type": "object"
+    },
+    "entitlements": {
+      "type": "object"
+    }
+  }
+}

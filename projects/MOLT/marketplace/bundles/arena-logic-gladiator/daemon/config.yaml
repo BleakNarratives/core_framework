@@ -1,0 +1,12 @@
+# daemon/config.yaml — arena-logic-gladiator
+skill: arena-logic-gladiator
+oomf_level: 3
+interval: "1h"   # cron shorthand; expand to systemd timer / crontab in prod
+feeds: [benchmark_scores, oracle_verdicts, token_usage, elo_updates]
+target_domains: ["whorl.arena", "rag_storage/arena", "~/.whorl/arena_signals.jsonl"]
+oracle: { mode: strict }
+entitlements:
+  active: [base]        # base | premium (retainer)
+  premium_note: "Set license.key to unlock private high-frequency feeds."
+license:
+  key: ""               # offline nonce — author-issued

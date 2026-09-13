@@ -1,0 +1,40 @@
+{
+  "skill": "provenance-oracle",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:21:28.251068+00:00",
+  "oomf_level": 3,
+  "buyer": "Media production houses (Sora/Flux/Veo pipeline)",
+  "feeds": {
+    "c2pa_manifests": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "generator_signatures": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "attestation_log": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "manifest_index": {
+    "status": "sample",
+    "count": 0
+  },
+  "deepfake_flags": {
+    "status": "sample",
+    "count": 0
+  },
+  "provenance_seal": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json."
+}

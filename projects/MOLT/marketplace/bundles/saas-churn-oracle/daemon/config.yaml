@@ -1,0 +1,12 @@
+# daemon/config.yaml — saas-churn-oracle
+skill: saas-churn-oracle
+oomf_level: 3
+interval: "1h"   # cron shorthand; expand to systemd timer / crontab in prod
+feeds: [local_telemetry, support_tickets, pricing_visits]
+target_domains: ["telemetry.internal", "support.internal", "pricing.internal"]
+oracle: { mode: strict }
+entitlements:
+  active: [base]        # base | premium (retainer)
+  premium_note: "Set license.key to unlock private high-frequency feeds."
+license:
+  key: ""               # offline nonce — author-issued

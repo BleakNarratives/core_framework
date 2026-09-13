@@ -1,0 +1,48 @@
+{
+  "skill": "negotiation-ghost",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:21:28.245101+00:00",
+  "oomf_level": 4,
+  "buyer": "Founders, Sales & M&A (live deal whisperer)",
+  "feeds": {
+    "sec_filings": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "salary_bands": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "deal_history": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "playbook_hints": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "counterparty_dossier": {
+    "status": "sample",
+    "count": 0
+  },
+  "band_table": {
+    "status": "sample",
+    "count": 0
+  },
+  "leverage_map": {
+    "status": "sample",
+    "count": 0
+  },
+  "whisper_lines": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json."
+}

@@ -1,0 +1,40 @@
+{
+  "skill": "adversary-emulator",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:20:15.592288+00:00",
+  "oomf_level": 4,
+  "buyer": "SecOps & Lead Devs",
+  "feeds": {
+    "cve_feed": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "cisa_kev": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "exploit_pocs": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "defense_rules": {
+    "status": "sample",
+    "count": 0
+  },
+  "zero_day_drafts": {
+    "status": "sample",
+    "count": 0
+  },
+  "coverage_delta": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json."
+}

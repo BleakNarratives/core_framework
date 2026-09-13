@@ -1,0 +1,12 @@
+# daemon/config.yaml — adversary-emulator
+skill: adversary-emulator
+oomf_level: 4
+interval: "30m"   # cron shorthand; expand to systemd timer / crontab in prod
+feeds: [cve_feed, cisa_kev, exploit_pocs]
+target_domains: ["nvd.nist.gov", "cisa.gov", "github.com/exploits"]
+oracle: { mode: strict }
+entitlements:
+  active: [base]        # base | premium (retainer)
+  premium_note: "Set license.key to unlock private high-frequency feeds."
+license:
+  key: ""               # offline nonce — author-issued

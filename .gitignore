@@ -12,9 +12,20 @@
 !/src/**
 !/tools
 !/tools/**
+!/templates
+!/templates/**
+!/tests
+!/tests/**
+!/docs
+!/docs/**
+!/projects
+!/projects/**
+!/rag_storage
+!/rag_storage/**
 !/.gitignore
 !/package.json
 !/package-lock.json
+!/README.md
 
 # — ephemeral everywhere (even inside src/tools) —
 __pycache__/
@@ -25,6 +36,12 @@ venv/
 node_modules/
 .DS_Store
 *.log
+# MOLT: keep RAG sidecars + instar state, ignore raw audits & gamed telemetry
+rag_storage/governor_audit.jsonl
+rag_storage/*.tmp
+.pytest_cache/
+.coverage
+coverage.xml
 
 # — venv / dot-noise already covered by /* and /.* —
 # explicit keeps for clarity if someone reads this file:
@@ -34,3 +51,14 @@ screenshots_scan/
 # guard snapshots are ephemeral (SHA-256 chain lives in guard.jsonl, tar is local)
 tools/guard/snapshots/
 tools/guard/guard.jsonl
+
+# — additional large/temporary artifacts to keep the indexer fast —
+.cache/
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.rar
+*.7z
+*.tmp
+*.temp

@@ -1,0 +1,352 @@
+{
+  "name": "ScoutEmpire",
+  "version": "0.1.0",
+  "created": "2026-09-12T21:57:07.469554",
+  "description": "40 self-evolving SKILL.md scouts + foreman. Each skill has tiny scout that retrains on desired_settings.",
+  "counts": {
+    "skills_total": 48,
+    "scout_skills": 40
+  },
+  "scouts": [
+    {
+      "slug": "adversary-emulator",
+      "description": "Emulate APT TTPs for authorized purple team exercises. Scout evolves TTPs that bypass current blue detections. Use when asked about red team, adversary emulation, MITRE ATT&CK, purple team, or breach simulation.",
+      "optimize_for": "detection_gap_found",
+      "path": ".agents/skills/adversary-emulator",
+      "scout_path": ".agents/skills/adversary-emulator/scout"
+    },
+    {
+      "slug": "anomaly-hunter",
+      "description": "Streaming anomaly detection for biz metrics and logs. Scout tunes sensitivity from false-positive feedback.",
+      "optimize_for": "recall_per_alert_fatigue",
+      "path": ".agents/skills/anomaly-hunter",
+      "scout_path": ".agents/skills/anomaly-hunter/scout"
+    },
+    {
+      "slug": "bci-signal-cleaner",
+      "description": "EEG/EMG denoise + decode intent. Scout personalizes to user's neural signature.",
+      "optimize_for": "decode_accuracy",
+      "path": ".agents/skills/bci-signal-cleaner",
+      "scout_path": ".agents/skills/bci-signal-cleaner/scout"
+    },
+    {
+      "slug": "black-swan-bounty",
+      "description": "Systematically hunts 0.1% probability * 1000x impact bets. Scout optimizes for calibration, not accuracy.",
+      "optimize_for": "calibration",
+      "path": ".agents/skills/black-swan-bounty",
+      "scout_path": ".agents/skills/black-swan-bounty/scout"
+    },
+    {
+      "slug": "bureaucracy-judo",
+      "description": "Turns permits/FOIA/grants/lawsuits into weapons. Scout learns which lever cracks which agency.",
+      "optimize_for": "days_saved",
+      "path": ".agents/skills/bureaucracy-judo",
+      "scout_path": ".agents/skills/bureaucracy-judo/scout"
+    },
+    {
+      "slug": "case-linker",
+      "description": "Links MO, evidence, timelines across cases. Scout learns from detective confirmed links, strict chain-of-custody.",
+      "optimize_for": "confirmed_link_precision",
+      "path": ".agents/skills/case-linker",
+      "scout_path": ".agents/skills/case-linker/scout"
+    },
+    {
+      "slug": "causal-inference-lab",
+      "description": "A/B test / diff-in-diff / synthetic control designer. Scout learns what experiment designs actually moved the needle.",
+      "optimize_for": "true_causal_lift",
+      "path": ".agents/skills/causal-inference-lab",
+      "scout_path": ".agents/skills/causal-inference-lab/scout"
+    },
+    {
+      "slug": "epistemic-immune-system",
+      "description": "Detects when you are being manipulated \u2014 narrative laundering, LLM consensus attacks, astroturfing, deepfake persuasion. Scout learns your cognitive blindspots and tunes sensitivity. Use when asked about manipulation, disinfo, bias, narrative, epistemic, or deception.",
+      "optimize_for": "deception_caught",
+      "path": ".agents/skills/epistemic-immune-system",
+      "scout_path": ".agents/skills/epistemic-immune-system/scout"
+    },
+    {
+      "slug": "failure-library",
+      "description": "Your anti-portfolio. Mines YOUR failures + others to prevent repeat. Scout optimizes for not_repeating_fuckup.",
+      "optimize_for": "repeat_prevention",
+      "path": ".agents/skills/failure-library",
+      "scout_path": ".agents/skills/failure-library/scout"
+    },
+    {
+      "slug": "forensics-chain",
+      "description": "Digital forensics timeline + artifact parser, court-admissible. Scout optimizes for admissibility.",
+      "optimize_for": "admissibility",
+      "path": ".agents/skills/forensics-chain",
+      "scout_path": ".agents/skills/forensics-chain/scout"
+    },
+    {
+      "slug": "fortress-assessor",
+      "description": "Physical + digital audit for home/business defense. Scout tunes false-alarm vs detection from break-in/pentest data. Use when asked about home security, business defense, cameras, locks, network hardening, or fortress.",
+      "optimize_for": "deterrence_per_dollar",
+      "path": ".agents/skills/fortress-assessor",
+      "scout_path": ".agents/skills/fortress-assessor/scout"
+    },
+    {
+      "slug": "hazard-guardian",
+      "description": "SDS-aware safety, incompatible reagent checker, never optimizes away safety. Compliance locked.",
+      "optimize_for": "safety_locked",
+      "path": ".agents/skills/hazard-guardian",
+      "scout_path": ".agents/skills/hazard-guardian/scout"
+    },
+    {
+      "slug": "incident-commander",
+      "description": "Auto RCA, runbooks, and post-mortem writer. Scout learns from MTTR and recurrence.",
+      "optimize_for": "MTTR",
+      "path": ".agents/skills/incident-commander",
+      "scout_path": ".agents/skills/incident-commander/scout"
+    },
+    {
+      "slug": "infra-cost-killer",
+      "description": "Finds $10k/mo savings in AWS/GCP. Scout optimizes for cost without perf drop.",
+      "optimize_for": "savings_per_perf",
+      "path": ".agents/skills/infra-cost-killer",
+      "scout_path": ".agents/skills/infra-cost-killer/scout"
+    },
+    {
+      "slug": "jurisdiction-arbitrageur",
+      "description": "Finds where to live/incorporate/host data/sue for max freedom + min tax + max defense. Scout learns optimize stealth vs legitimacy. Use when asked about jurisdiction, tax, entity, residency, data sovereignty, or arbitrage.",
+      "optimize_for": "sovereignty_per_compliance_cost",
+      "path": ".agents/skills/jurisdiction-arbitrageur",
+      "scout_path": ".agents/skills/jurisdiction-arbitrageur/scout"
+    },
+    {
+      "slug": "lab-optimizer",
+      "description": "DOE for wet lab, minimizes reagents and runs. Scout Bayesian optimization loop.",
+      "optimize_for": "yield_per_run",
+      "path": ".agents/skills/lab-optimizer",
+      "scout_path": ".agents/skills/lab-optimizer/scout"
+    },
+    {
+      "slug": "materials-discoverer",
+      "description": "Predicts novel alloys/polymers for target property. Scout retrains on lab validation.",
+      "optimize_for": "validated_hit_rate",
+      "path": ".agents/skills/materials-discoverer",
+      "scout_path": ".agents/skills/materials-discoverer/scout"
+    },
+    {
+      "slug": "med-triage-copilot",
+      "description": "Symptom intake + differential + urgency score (triage assist, NOT diagnosis). Scout learns from clinician overrides.",
+      "optimize_for": "urgency_calibration",
+      "path": ".agents/skills/med-triage-copilot",
+      "scout_path": ".agents/skills/med-triage-copilot/scout"
+    },
+    {
+      "slug": "memory-hole-archivist",
+      "description": "OSINT that auto-archives ephemeral signals before deletion/censorship. Scout learns what gets deleted and why.",
+      "optimize_for": "ephemeral_capture_rate",
+      "path": ".agents/skills/memory-hole-archivist",
+      "scout_path": ".agents/skills/memory-hole-archivist/scout"
+    },
+    {
+      "slug": "ml-pipeline-autotuner",
+      "description": "End-to-end tune: data -> features -> model -> deploy. Scout hill-climbs on $/accuracy Pareto.",
+      "optimize_for": "accuracy_per_dollar",
+      "path": ".agents/skills/ml-pipeline-autotuner",
+      "scout_path": ".agents/skills/ml-pipeline-autotuner/scout"
+    },
+    {
+      "slug": "off-grid-escape-hatch",
+      "description": "Designs comms/energy/money that works when internet/banks die (mesh/HAM/BTC/multisig). Scout stress-tests vs black swans.",
+      "optimize_for": "autonomy_days_offgrid",
+      "path": ".agents/skills/off-grid-escape-hatch",
+      "scout_path": ".agents/skills/off-grid-escape-hatch/scout"
+    },
+    {
+      "slug": "paper-to-protocol",
+      "description": "Replicates paper -> executable lab protocol. Scout tracks replication success rate.",
+      "optimize_for": "replication_success",
+      "path": ".agents/skills/paper-to-protocol",
+      "scout_path": ".agents/skills/paper-to-protocol/scout"
+    },
+    {
+      "slug": "perimeter-sentry",
+      "description": "Sensor fusion + drone patrol logic for perimeter. Scout tunes false alarm vs detection.",
+      "optimize_for": "detection_per_false_alarm",
+      "path": ".agents/skills/perimeter-sentry",
+      "scout_path": ".agents/skills/perimeter-sentry/scout"
+    },
+    {
+      "slug": "phish-resilience-drill",
+      "description": "Generates + measures phishing sims (defensive training). Scout learns which lures your org falls for.",
+      "optimize_for": "click_rate_down",
+      "path": ".agents/skills/phish-resilience-drill",
+      "scout_path": ".agents/skills/phish-resilience-drill/scout"
+    },
+    {
+      "slug": "prophet-on-steroids",
+      "description": "Time-series + causal forecasting for any metric. Scout retrains on MAPE and learns seasonality + intervention impact.",
+      "optimize_for": "forecast_accuracy",
+      "path": ".agents/skills/prophet-on-steroids",
+      "scout_path": ".agents/skills/prophet-on-steroids/scout"
+    },
+    {
+      "slug": "provenance-oracle",
+      "description": "Makes your content provably real (C2PA, attestations) + detects deepfakes of you. Scout evolves with each new generator (Sora/Flux/Veo). Use when asked about provenance, C2PA, deepfake, attestation, watermark, or authenticity.",
+      "optimize_for": "provable_real_rate",
+      "path": ".agents/skills/provenance-oracle",
+      "scout_path": ".agents/skills/provenance-oracle/scout"
+    },
+    {
+      "slug": "purple-validator",
+      "description": "Validates if blue detections fired after red emulation. Scout retrains detection rules.",
+      "optimize_for": "detection_coverage",
+      "path": ".agents/skills/purple-validator",
+      "scout_path": ".agents/skills/purple-validator/scout"
+    },
+    {
+      "slug": "regulatory-premonition",
+      "description": "Predicts which laws will hit your sector 18mo early from bill/lobby/committee traces. Scout hit rate on enacted vs dead bills.",
+      "optimize_for": "enacted_prediction",
+      "path": ".agents/skills/regulatory-premonition",
+      "scout_path": ".agents/skills/regulatory-premonition/scout"
+    },
+    {
+      "slug": "reward-shaper-pro",
+      "description": "Fixes reward hacking, sparse rewards, and designs shaped rewards for RL. Scout evolves rewards via human preference and environment trace. Use when asked about reward shaping, RL training, reward hacking, or sparse reward.",
+      "optimize_for": "sample_efficiency",
+      "path": ".agents/skills/reward-shaper-pro",
+      "scout_path": ".agents/skills/reward-shaper-pro/scout"
+    },
+    {
+      "slug": "rl-env-designer",
+      "description": "Builds Gym envs + reward functions from description. Scout optimizes for sample efficiency and transfer.",
+      "optimize_for": "sample_efficiency",
+      "path": ".agents/skills/rl-env-designer",
+      "scout_path": ".agents/skills/rl-env-designer/scout"
+    },
+    {
+      "slug": "robo-manipulation-trainer",
+      "description": "RL for grasping in Isaac Sim. Scout handles sim2real transfer success.",
+      "optimize_for": "sim2real_success",
+      "path": ".agents/skills/robo-manipulation-trainer",
+      "scout_path": ".agents/skills/robo-manipulation-trainer/scout"
+    },
+    {
+      "slug": "saas-churn-oracle",
+      "description": "Predict churn 30/60/90 days + auto-intervention playbooks. Scout retrains on saved vs lost accounts, tunes threshold weekly. Use when asked about churn, retention, LTV, or SaaS health.",
+      "optimize_for": "revenue_retained",
+      "path": ".agents/skills/saas-churn-oracle",
+      "scout_path": ".agents/skills/saas-churn-oracle/scout"
+    },
+    {
+      "slug": "saas-onboarding-architect",
+      "description": "Generates onboarding flows that reduce time-to-value. Scout optimizes for activation rate.",
+      "optimize_for": "activation_rate",
+      "path": ".agents/skills/saas-onboarding-architect",
+      "scout_path": ".agents/skills/saas-onboarding-architect/scout"
+    },
+    {
+      "slug": "saas-pricing-optimizer",
+      "description": "Dynamic pricing, packaging, and willingness-to-pay modeling. Scout A/B tests price points and learns from conversion.",
+      "optimize_for": "ARPU_expansion",
+      "path": ".agents/skills/saas-pricing-optimizer",
+      "scout_path": ".agents/skills/saas-pricing-optimizer/scout"
+    },
+    {
+      "slug": "scout-foreman",
+      "description": "Meta-skill that manages all scouts \u2014 decides when to retrain, prune, merge, or spawn skills. Set global desired_settings once and it herds the scouts. Use when asked about scouts, retrain, foreman, desired settings, or skill orchestration.",
+      "optimize_for": "revenue_retained",
+      "path": ".agents/skills/scout-foreman",
+      "scout_path": ".agents/skills/scout-foreman/scout"
+    },
+    {
+      "slug": "supply-chain-ghost-mapper",
+      "description": "Finds the ONE Taiwanese screw that kills your whole business. Scout retrains on disruption signals.",
+      "optimize_for": "single_point_found",
+      "path": ".agents/skills/supply-chain-ghost-mapper",
+      "scout_path": ".agents/skills/supply-chain-ghost-mapper/scout"
+    },
+    {
+      "slug": "synthesis-planner",
+      "description": "Retrosynthesis + route optimization for chemistry. Scout learns from yield/purity data to propose better routes. Use when asked about synthesis, retrosynthesis, reaction planning, or route optimization.",
+      "optimize_for": "yield_per_cost",
+      "path": ".agents/skills/synthesis-planner",
+      "scout_path": ".agents/skills/synthesis-planner/scout"
+    },
+    {
+      "slug": "talent-singularity-scout",
+      "description": "Finds 10x humans BEFORE they're obvious \u2014 commit velocity, latent discourse, failed startup pattern. Scout learns from hires who actually 10x'd. Use when asked about hiring, talent, 10x, cofounder, team, or talent search.",
+      "optimize_for": "10x_hire_rate",
+      "path": ".agents/skills/talent-singularity-scout",
+      "scout_path": ".agents/skills/talent-singularity-scout/scout"
+    },
+    {
+      "slug": "trial-architect",
+      "description": "Designs pharma trials, inclusion criteria, power calc. Scout optimizes for enrollment speed + FDA compliance.",
+      "optimize_for": "enrollment_per_compliance",
+      "path": ".agents/skills/trial-architect",
+      "scout_path": ".agents/skills/trial-architect/scout"
+    },
+    {
+      "slug": "water-food-grid-nexus",
+      "description": "Models water table + grid stress + food supply fragility for your zipcode from satellite/utility data. Scout optimizes for days_of_autonomy. Use when asked about collapse, resilience, water, grid, food security, or autonomy.",
+      "optimize_for": "days_of_autonomy",
+      "path": ".agents/skills/water-food-grid-nexus",
+      "scout_path": ".agents/skills/water-food-grid-nexus/scout"
+    }
+  ],
+  "continents": {
+    "saas": [
+      "saas-churn-oracle",
+      "saas-pricing-optimizer",
+      "saas-onboarding-architect"
+    ],
+    "predictive": [
+      "prophet-on-steroids",
+      "anomaly-hunter",
+      "causal-inference-lab"
+    ],
+    "ml_rl": [
+      "rl-env-designer",
+      "reward-shaper-pro",
+      "ml-pipeline-autotuner",
+      "robo-manipulation-trainer"
+    ],
+    "medicine_science": [
+      "med-triage-copilot",
+      "trial-architect",
+      "paper-to-protocol",
+      "lab-optimizer"
+    ],
+    "law_security": [
+      "case-linker",
+      "forensics-chain",
+      "fortress-assessor",
+      "perimeter-sentry"
+    ],
+    "it_cyber": [
+      "incident-commander",
+      "infra-cost-killer",
+      "adversary-emulator",
+      "purple-validator",
+      "phish-resilience-drill",
+      "bci-signal-cleaner"
+    ],
+    "chem_matsci": [
+      "synthesis-planner",
+      "hazard-guardian",
+      "materials-discoverer"
+    ],
+    "unknown_unknowns": [
+      "epistemic-immune-system",
+      "memory-hole-archivist",
+      "water-food-grid-nexus",
+      "off-grid-escape-hatch",
+      "supply-chain-ghost-mapper",
+      "jurisdiction-arbitrageur",
+      "bureaucracy-judo",
+      "regulatory-premonition",
+      "talent-singularity-scout",
+      "provenance-oracle",
+      "failure-library",
+      "black-swan-bounty"
+    ],
+    "meta": [
+      "scout-foreman"
+    ]
+  }
+}

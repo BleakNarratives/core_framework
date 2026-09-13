@@ -1,0 +1,12 @@
+# daemon/config.yaml — provenance-oracle
+skill: provenance-oracle
+oomf_level: 3
+interval: "1h"   # cron shorthand; expand to systemd timer / crontab in prod
+feeds: [c2pa_manifests, generator_signatures, attestation_log]
+target_domains: ["c2pa.org", "verify.internal"]
+oracle: { mode: strict }
+entitlements:
+  active: [base]        # base | premium (retainer)
+  premium_note: "Set license.key to unlock private high-frequency feeds."
+license:
+  key: ""               # offline nonce — author-issued

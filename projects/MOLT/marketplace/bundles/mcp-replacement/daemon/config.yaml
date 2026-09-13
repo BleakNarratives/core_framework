@@ -1,0 +1,12 @@
+# daemon/config.yaml — mcp-replacement
+skill: mcp-replacement
+oomf_level: 3
+interval: "15m"   # cron shorthand; expand to systemd timer / crontab in prod
+feeds: [api_schemas, active_tickets, recent_commits, deal_pipeline]
+target_domains: ["api.github.com", "atlassian.net", "api.hubspot.com"]
+oracle: { mode: strict }
+entitlements:
+  active: [base]        # base | premium (retainer)
+  premium_note: "Set license.key to unlock private high-frequency feeds."
+license:
+  key: ""               # offline nonce — author-issued

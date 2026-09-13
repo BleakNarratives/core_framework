@@ -1,0 +1,40 @@
+{
+  "skill": "talent-singularity-scout",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:20:15.601500+00:00",
+  "oomf_level": 3,
+  "buyer": "VC & Recruiters",
+  "feeds": {
+    "commit_velocity": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "github_x_signals": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "latent_discourse": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "talent_leads": {
+    "status": "sample",
+    "count": 0
+  },
+  "signal_strength": {
+    "status": "sample",
+    "count": 0
+  },
+  "reach_playbook": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json."
+}

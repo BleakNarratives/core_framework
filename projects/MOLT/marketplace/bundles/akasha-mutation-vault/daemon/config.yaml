@@ -1,0 +1,12 @@
+# daemon/config.yaml — akasha-mutation-vault
+skill: akasha-mutation-vault
+oomf_level: 3
+interval: "10m"   # cron shorthand; expand to systemd timer / crontab in prod
+feeds: [last_cycle, vault_object, snapshot_chain]
+target_domains: ["akasha.vault", "molt.state", "git.internal"]
+oracle: { mode: strict }
+entitlements:
+  active: [base]        # base | premium (retainer)
+  premium_note: "Set license.key to unlock private high-frequency feeds."
+license:
+  key: ""               # offline nonce — author-issued

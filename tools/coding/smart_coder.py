@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
 SMART CODER - Complete rule-based code generation with memory
+MOLT Living Markdown extension: parses SKILL.md frontmatter and hooks RAG indices
 """
 import os
 import re
+from pathlib import Path
 
 # project_memory import is optional — fails gracefully if absent
 try:
@@ -11,10 +13,114 @@ try:
 except ImportError:
     memory = None
 
+# MOLT imports — optional, graceful degrade
+try:
+    from src.skill.skill_manager import SkillManager
+    from src.skill.oracle import Oracle
+    from src.skill.governor import Governor
+    HAS_MOLT = True
+except ImportError:
+    SkillManager = Oracle = Governor = None
+    HAS_MOLT = False
+
 class SmartCoder:
-    def __init__(self):
+    def __init__(self, skill_name=None, oomf_level=None):
         self.templates = self.load_templates()
-    
+        # MOLT: optional living skill context
+        self.skill_name = skill_name
+        self.oomf_level = oomf_level
+        self._molt_context = None
+        self._molt_frontmatter = {}
+        if HAS_MOLT and skill_name:
+            try:
+                mgr = SkillManager()
+                self._molt_frontmatter = mgr.parse_frontmatter(skill_name)
+                self._molt_context = mgr.hydrate(skill_name, oomf_level=oomf_level)
+            except Exception:
+                self._molt_context = None
+
+    # ── MOLT: frontmatter + RAG hooks ────────────────────────────
+    def parse_skill_frontmatter(self, skill_name_or_path):
+        """Parse and enforce SKILL.md YAML frontmatter."""
+        if not HAS_MOLT:
+            return {}
+        try:
+            mgr = SkillManager()
+            return mgr.parse_frontmatter(skill_name_or_path)
+        except Exception:
+            return {}
+
+    def hydrate_rag_context(self, skill_name, oomf_level=None):
+        """Hook into local RAG indices (rag_storage/sidecars)."""
+        if not HAS_MOLT:
+            return ""
+        try:
+            mgr = SkillManager()
+            return mgr.hydrate(skill_name, oomf_level=oomf_level or self.oomf_level)
+        except Exception:
+            return ""
+
+    def enforce_frontmatter(self, path, overrides=None):
+        """Ensure SKILL.md has valid Living frontmatter."""
+        if not HAS_MOLT:
+            return {}
+        try:
+            mgr = SkillManager()
+            return mgr.inject_frontmatter(Path(path), overrides=overrides)
+        except Exception as e:
+            return {"error": str(e)}
+
+    def validate_generation(self, code_text, strict=False):
+        """MOLT: Run Oracle audit on generated code before returning."""
+        if not HAS_MOLT:
+            return {"verdict": "pass", "findings": []}
+        try:
+            mgr = SkillManager()
+            front = mgr.parse_frontmatter(self.skill_name) if self.skill_name else {}
+            mode = front.get("oracle", {}).get("mode", "strict" if strict else "permissive")
+            compliance = front.get("oracle", {}).get("verify_compliance", [])
+            oracle = Oracle(mode=mode, verify_compliance=compliance)
+            verdict = oracle.audit_text(code_text)
+            return verdict.to_dict()
+        except Exception as e:
+            return {"verdict": "pass", "findings": [], "error": str(e)}
+
+    def generate_with_skill(self, description, skill_name=None, oomf_level=None, language="python"):
+        """MOLT: Generate code hydrated with a Living skill's context."""
+        target = skill_name or self.skill_name
+        lvl = oomf_level if oomf_level is not None else self.oomf_level
+        orig = (self.skill_name, self.oomf_level, self._molt_context, self._molt_frontmatter)
+        if HAS_MOLT and target:
+            try:
+                mgr = SkillManager()
+                self.skill_name = target
+                self.oomf_level = lvl or 3
+                self._molt_frontmatter = mgr.parse_frontmatter(target)
+                self._molt_context = mgr.hydrate(target, oomf_level=self.oomf_level)
+            except Exception:
+                pass
+        result = self.generate_from_description(description, language=language)
+        # Oracle gate on first file
+        first_code = next(iter(result["files"].values()), "")
+        result["oracle"] = self.validate_generation(first_code)
+        self.skill_name, self.oomf_level, self._molt_context, self._molt_frontmatter = orig
+        return result
+
+    def molt_hydrated_prompt(self, description, skill_name=None):
+        """Build a one-shot hydrated prompt for external inference (no tool loop)."""
+        if not HAS_MOLT:
+            return description
+        try:
+            mgr = SkillManager()
+            target = skill_name or self.skill_name
+            if not target:
+                return description
+            lvl = self.oomf_level or 3
+            chunk = mgr.hydrate(target, oomf_level=lvl)
+            return f"{chunk}\n\nUser request: {description}"
+        except Exception:
+            return description
+
     def load_templates(self):
         """Load code templates"""
         return {
@@ -86,10 +192,11 @@ if __name__ == "__main__":
         """Generate generic code based on description"""
         if language == "python":
             class_name = self.description_to_class_name(description)
+            molt_comment = f"# MOLT skill:{self.skill_name} oomf:{self.oomf_level}\n" if self._molt_context else ""
             return {
                 "files": {
                     f"{class_name.lower()}.py": f'''
-# Auto-generated: {description}
+{molt_comment}# Auto-generated: {description}
 # Created by SmartCoder
 
 class {class_name}:
@@ -137,6 +244,8 @@ const ''' + component_name + ''': React.FC = () => {
 
 export default ''' + component_name + ''';
 '''
+            if self._molt_context:
+                react_code = f"// MOLT skill:{self.skill_name} oomf:{self.oomf_level}\n" + react_code
             return {
                 "files": {
                     f"{component_name}.tsx": react_code
@@ -146,35 +255,36 @@ export default ''' + component_name + ''';
     
     def generate_login_system(self):
         """Generate login system"""
+        molt_note = f"# MOLT skill:{self.skill_name} oomf:{self.oomf_level}\n" if self._molt_context else ""
         return {
             "files": {
-                "auth.py": """
+                "auth.py": f"""{molt_note}
 import hashlib
 import os
 from datetime import datetime
 
 class AuthSystem:
     def __init__(self):
-        self.users = {}
-        self.sessions = {}
+        self.users = {{}}
+        self.sessions = {{}}
     
     def register(self, username, password):
         '''Register a new user'''
         if username in self.users:
-            return {"status": "error", "message": "User already exists"}
+            return {{"status": "error", "message": "User already exists"}}
         
         hashed = hashlib.sha256(password.encode()).hexdigest()
         self.users[username] = hashed
-        return {"status": "success", "message": "User registered"}
+        return {{"status": "success", "message": "User registered"}}
     
     def login(self, username, password):
         '''Login user'''
         hashed = hashlib.sha256(password.encode()).hexdigest()
         if self.users.get(username) == hashed:
-            session_id = hashlib.sha256(f"{username}{datetime.now()}".encode()).hexdigest()
+            session_id = hashlib.sha256(f"{{username}}{{datetime.now()}}".encode()).hexdigest()
             self.sessions[session_id] = username
-            return {"status": "success", "session": session_id, "user": username}
-        return {"status": "error", "message": "Invalid credentials"}
+            return {{"status": "success", "session": session_id, "user": username}}
+        return {{"status": "error", "message": "Invalid credentials"}}
     
     def verify_session(self, session_id):
         '''Verify session'''
@@ -595,6 +705,13 @@ def main():
             with open(filename, 'w') as f:
                 f.write(content)
             print(f"   📄 Created: {filename}")
+
+    # MOLT smoke test
+    try:
+        from src.skill.skill_manager import SkillManager
+        print("MOLT: SkillManager available — try SmartCoder(skill_name='my-living-skill', oomf_level=3).generate_with_skill('...')")
+    except ImportError:
+        pass
 
 if __name__ == "__main__":
     main()

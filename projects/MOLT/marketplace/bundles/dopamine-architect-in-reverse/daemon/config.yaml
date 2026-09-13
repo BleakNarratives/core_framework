@@ -1,0 +1,12 @@
+# daemon/config.yaml — dopamine-architect-in-reverse
+skill: dopamine-architect-in-reverse
+oomf_level: 2
+interval: "1h"   # cron shorthand; expand to systemd timer / crontab in prod
+feeds: [app_usage, screen_time, social_hooks, blocklist_state]
+target_domains: ["local.telemetry", "router.internal"]
+oracle: { mode: strict }
+entitlements:
+  active: [base]        # base | premium (retainer)
+  premium_note: "Set license.key to unlock private high-frequency feeds."
+license:
+  key: ""               # offline nonce — author-issued

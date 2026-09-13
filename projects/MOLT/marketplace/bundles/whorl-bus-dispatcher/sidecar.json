@@ -1,0 +1,48 @@
+{
+  "skill": "whorl-bus-dispatcher",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:34:43.681807+00:00",
+  "oomf_level": 3,
+  "buyer": "Distributed teams & edge nodes (Termux/Chromebook/desktop hive)",
+  "feeds": {
+    "bus_inbox": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "dead_letters": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "registry_heartbeats": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "arena_signals": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "bus_status": {
+    "status": "sample",
+    "count": 0
+  },
+  "throughput": {
+    "status": "sample",
+    "count": 0
+  },
+  "clock_latency": {
+    "status": "sample",
+    "count": 0
+  },
+  "zero_drop_report": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json."
+}

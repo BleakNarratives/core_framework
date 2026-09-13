@@ -1,0 +1,48 @@
+{
+  "skill": "loom-thread-weaver",
+  "version": "1.0.0",
+  "hydrated_at": "2026-09-13T03:34:43.682928+00:00",
+  "oomf_level": 3,
+  "buyer": "Ops & AI engineers (multi-step async pipelines)",
+  "feeds": {
+    "execution_traces": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "agent_states": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "chain_digests": {
+      "status": "sample",
+      "last_fetch": null
+    },
+    "loom_weaves": {
+      "status": "sample",
+      "last_fetch": null
+    }
+  },
+  "weave_index": {
+    "status": "sample",
+    "count": 0
+  },
+  "trace_tail": {
+    "status": "sample",
+    "count": 0
+  },
+  "continuity_digest": {
+    "status": "sample",
+    "count": 0
+  },
+  "resume_points": {
+    "status": "sample",
+    "count": 0
+  },
+  "entitlements": {
+    "active": [
+      "base"
+    ],
+    "premium_locked": true
+  },
+  "_note": "Replace sample values with live Scout output. Validated by sidecar.schema.json."
+}

@@ -1,0 +1,12 @@
+# daemon/config.yaml — merkaba-claw-bridge
+skill: merkaba-claw-bridge
+oomf_level: 3
+interval: "5m"   # cron shorthand; expand to systemd timer / crontab in prod
+feeds: [ka_package, bus_route, claw_staged_intent]
+target_domains: ["merkaba.ka", "whorl.bus", "openclaw.endpoint"]
+oracle: { mode: strict }
+entitlements:
+  active: [base]        # base | premium (retainer)
+  premium_note: "Set license.key to unlock private high-frequency feeds."
+license:
+  key: ""               # offline nonce — author-issued

@@ -1,0 +1,367 @@
+#!/usr/bin/env python3
+"""scout — unified CLI for the Scout Empire (40 scouts + foreman)
+Usage:
+  scout list [--continent X] [--verbose]
+  scout info <slug>
+  scout run <slug> [-- <extra args>]
+  scout retrain [slug|--all]
+  scout sweep
+  scout report
+  scout set-optimize <value>
+  scout spawn "<name>"
+  scout catalog
+  scout doctor
+  scout --help
+
+No deps beyond stdlib. Works from any cwd via bin/scout shim.
+"""
+import argparse, pathlib, json, sys, os, re, subprocess, textwrap
+
+# Resolve project root regardless of symlink/cwd
+THIS = pathlib.Path(__file__).resolve()
+# try: projects/ScoutEmpire/cli/scout -> root is 4 up
+def find_root(start):
+    for p in [start] + list(start.parents):
+        if (p / ".agents" / "skills").is_dir() and (p / "projects" / "ScoutEmpire" / "manifest.json").exists():
+            return p
+        # fallback: just find .agents/skills
+        if (p / ".agents" / "skills").is_dir():
+            return p
+    return pathlib.Path.cwd()
+
+ROOT = find_root(THIS)
+PE = ROOT / "projects" / "ScoutEmpire"
+SKILLS = ROOT / ".agents" / "skills"
+MANIFEST = PE / "manifest.json"
+FOREMAN_PY = SKILLS / "scout-foreman" / "scout" / "foreman.py"
+
+def load_manifest():
+    if MANIFEST.exists():
+        try:
+            return json.loads(MANIFEST.read_text())
+        except: pass
+    # fallback: scan filesystem
+    scouts=[]
+    for p in sorted(SKILLS.iterdir()):
+        if (p/"scout").is_dir():
+            scouts.append({"slug":p.name})
+    return {"scouts":scouts,"continents":{},"counts":{"scout_skills":len(scouts)}}
+
+def scout_slugs():
+    m=load_manifest()
+    return sorted([s["slug"] for s in m.get("scouts",[])])
+
+def continent_map():
+    m=load_manifest()
+    cmap={}
+    for cont, slugs in m.get("continents",{}).items():
+        for s in slugs: cmap[s]=cont
+    return cmap
+
+def trace_count(slug):
+    p=SKILLS/slug/"scout"/"traces.jsonl"
+    if not p.exists(): return 0
+    try: return sum(1 for _ in open(p) if _.strip())
+    except: return 0
+
+def config_optimize(slug):
+    p=SKILLS/slug/"scout"/"config.yaml"
+    if not p.exists(): return "?"
+    try:
+        t=p.read_text()
+        m=re.search(r"optimize_for:\s*([^\n]+)",t)
+        return m.group(1).strip() if m else "?"
+    except: return "?"
+
+# ——— subcommands ———
+def cmd_list(args):
+    cmap=continent_map()
+    filt=args.continent
+    verbose=args.verbose
+    slugs=scout_slugs()
+    if filt:
+        # continent filter
+        m=load_manifest()
+        allowed=set(m.get("continents",{}).get(filt,[]))
+        if not allowed:
+            print(f"unknown continent '{filt}'. known: {', '.join(m.get('continents',{}).keys())}")
+            return 1
+        slugs=[s for s in slugs if s in allowed]
+    print(f"Scout Empire — {len(slugs)} scouts" + (f" [{filt}]" if filt else f" (40 total, foreman herds 39)") )
+    print(f"root: {ROOT}")
+    print()
+    # table
+    if verbose:
+        print(f"{'SLUG':<30} {'CONTINENT':<18} {'OPTIMIZE_FOR':<28} {'TRACES':<6} {'STATUS'}")
+        print("-"*100)
+        for s in slugs:
+            cont=cmap.get(s,"?")
+            opt=config_optimize(s)[:27]
+            tc=trace_count(s)
+            status="seeded" if tc==0 else f"{tc} traces"
+            print(f"{s:<30} {cont:<18} {opt:<28} {tc:<6} {status}")
+    else:
+        # grouped by continent if no filter
+        if not filt:
+            m=load_manifest()
+            for cont, cslugs in m.get("continents",{}).items():
+                print(f"## {cont} ({len(cslugs)})")
+                for s in sorted(cslugs):
+                    tc=trace_count(s)
+                    mark="·" if tc==0 else "●"
+                    print(f"  {mark} {s:<32} {config_optimize(s)}")
+                print()
+        else:
+            for s in slugs:
+                tc=trace_count(s)
+                mark="·" if tc==0 else "●"
+                print(f"  {mark} {s:<32} {config_optimize(s)}  traces:{tc}")
+    print(f"\n· seeded (0 traces)  ● has traces")
+    print(f"run: scout run <slug> -- --help   |   scout retrain <slug>   |   scout sweep")
+    return 0
+
+def cmd_info(args):
+    slug=args.slug
+    skill_md=SKILLS/slug/"SKILL.md"
+    cfg=SKILLS/slug/"scout"/"config.yaml"
+    if not skill_md.exists():
+        print(f"no such skill: {slug}")
+        print(f"available: {', '.join(scout_slugs()[:8])} ... ({len(scout_slugs())} total)")
+        return 1
+    print(f"=== {slug} ===")
+    print(f"SKILL.md: {skill_md}")
+    print(skill_md.read_text()[:3000])
+    if cfg.exists():
+        print(f"\n--- scout/config.yaml ---")
+        print(cfg.read_text()[:1500])
+    tc=trace_count(slug)
+    print(f"\ntraces: {tc}  ({SKILLS/slug/'scout'/'traces.jsonl'})")
+    # list entrypoints
+    scout_dir=SKILLS/slug/"scout"
+    pys=list(scout_dir.glob("*.py"))
+    if pys:
+        print(f"entrypoints: {', '.join(p.name for p in sorted(pys))}")
+    return 0
+
+def cmd_run(args):
+    slug=args.slug
+    extra=args.extra or []
+    # strip leading -- if present
+    if extra and extra[0]=="--": extra=extra[1:]
+    scout_dir=SKILLS/slug/"scout"
+    if not scout_dir.is_dir():
+        print(f"no scout dir for {slug}")
+        return 1
+    # pick entrypoint: prefer score.py, then first .py that isn't retrain, else retrain
+    candidates=sorted(scout_dir.glob("*.py"))
+    if not candidates:
+        print(f"no entrypoints in {scout_dir}")
+        return 1
+    # allow --entry flag
+    entry=args.entry
+    target=None
+    if entry:
+        target=scout_dir/f"{entry}.py" if not entry.endswith(".py") else scout_dir/entry
+        if not target.exists():
+            print(f"no such entrypoint {target}, available: {[p.name for p in candidates]}")
+            return 1
+    else:
+        # auto pick: score.py > clean.py > design.py etc > first non-retrain
+        prefs=["score.py","clean.py","design.py","wtp.py","forecast.py","map.py","plan.py","scan.py","triage.py","link.py","watch.py","timeline.py","check.py"]
+        for pref in prefs:
+            cand=scout_dir/pref
+            if cand.exists():
+                target=cand; break
+        if not target:
+            # first non-retrain, fallback to first
+            non_ret=[p for p in candidates if p.name!="retrain.py"]
+            target=non_ret[0] if non_ret else candidates[0]
+    print(f"[scout run] {slug} -> {target.name} {' '.join(extra) if extra else ''}")
+    result=subprocess.run([sys.executable, str(target)] + extra)
+    return result.returncode
+
+def cmd_retrain(args):
+    slug=args.slug
+    if slug=="--all" or slug=="all" or args.all:
+        slugs=scout_slugs()
+        slugs=[s for s in slugs if s!="scout-foreman"]
+        print(f"[retrain --all] {len(slugs)} scouts")
+        code=0
+        for s in slugs:
+            rp=SKILLS/s/"scout"/"retrain.py"
+            if rp.exists():
+                print(f"\n--- {s} ---")
+                r=subprocess.run([sys.executable, str(rp)])
+                code=max(code, r.returncode)
+            else:
+                print(f"  {s}: no retrain.py")
+        return code
+    if not slug:
+        print("usage: scout retrain <slug>|--all")
+        return 1
+    rp=SKILLS/slug/"scout"/"retrain.py"
+    if not rp.exists():
+        print(f"no retrain.py for {slug}")
+        return 1
+    print(f"[retrain] {slug}")
+    r=subprocess.run([sys.executable, str(rp)] + (args.extra or []))
+    return r.returncode
+
+def cmd_sweep(args):
+    print(f"[foreman sweep] via {FOREMAN_PY}")
+    if not FOREMAN_PY.exists():
+        print("foreman.py not found, falling back to manual sweep")
+        slugs=[s for s in scout_slugs() if s!="scout-foreman"]
+        for s in slugs:
+            tc=trace_count(s)
+            print(f"  {s}: {tc} traces")
+        return 0
+    r=subprocess.run([sys.executable, str(FOREMAN_PY), "--sweep"])
+    return r.returncode
+
+def cmd_report(args):
+    if FOREMAN_PY.exists():
+        r=subprocess.run([sys.executable, str(FOREMAN_PY), "--report"])
+        return r.returncode
+    # fallback
+    slugs=scout_slugs()
+    print("# Scout Portfolio Report (fallback)")
+    print(f"scouts: {len(slugs)}")
+    for s in slugs:
+        print(f"  {s}: traces={trace_count(s)} opt={config_optimize(s)}")
+    return 0
+
+def cmd_set_optimize(args):
+    val=args.value
+    if FOREMAN_PY.exists():
+        r=subprocess.run([sys.executable, str(FOREMAN_PY), "--set-optimize", val])
+        return r.returncode
+    # fallback: edit foreman config directly
+    cfg=SKILLS/"scout-foreman"/"scout"/"config.yaml"
+    txt=cfg.read_text() if cfg.exists() else ""
+    import re as _re
+    if "optimize_for:" in txt:
+        txt=_re.sub(r"optimize_for:\s*\S+", f"optimize_for: {val}", txt)
+    else:
+        txt+=f"\noptimize_for: {val}\n"
+    cfg.write_text(txt)
+    print(f"set optimize_for={val}")
+    return 0
+
+def cmd_spawn(args):
+    name=args.name
+    if FOREMAN_PY.exists():
+        r=subprocess.run([sys.executable, str(FOREMAN_PY), "--spawn", name])
+        return r.returncode
+    slug=name.lower().replace(" ","-")
+    print(f"spawn {slug}: foreman not found, would create .agents/skills/{slug}/")
+    return 0
+
+def cmd_catalog(args):
+    m=load_manifest()
+    if args.json:
+        print(json.dumps(m, indent=2))
+        return 0
+    # pretty
+    print(f"# Scout Empire Catalog — {m.get('counts',{}).get('scout_skills','?')} scouts\n")
+    for cont, slugs in m.get("continents",{}).items():
+        print(f"## {cont}")
+        for s in slugs:
+            entry=next((x for x in m.get("scouts",[]) if x["slug"]==s), None)
+            desc=entry.get("description","") if entry else ""
+            print(f"- **{s}** — {desc}")
+        print()
+
+def cmd_doctor(args):
+    slugs=scout_slugs()
+    print(f"[doctor] checking {len(slugs)} scout skills + 8 infra skills")
+    issues=[]
+    for slug in slugs:
+        skill=SKILLS/slug/"SKILL.md"
+        cfg=SKILLS/slug/"scout"/"config.yaml"
+        ret=SKILLS/slug/"scout"/"retrain.py"
+        tr=SKILLS/slug/"scout"/"traces.jsonl"
+        ok=True
+        if not skill.exists(): issues.append(f"{slug}: missing SKILL.md"); ok=False
+        if not cfg.exists(): issues.append(f"{slug}: missing scout/config.yaml"); ok=False
+        if not ret.exists(): issues.append(f"{slug}: missing scout/retrain.py"); ok=False
+        if not tr.exists(): issues.append(f"{slug}: missing traces.jsonl"); ok=False
+        mark="✓" if ok else "✗"
+        if args.verbose or not ok:
+            print(f"  {mark} {slug}")
+    # check foreman
+    if FOREMAN_PY.exists():
+        print(f"  ✓ foreman.py")
+    else:
+        print(f"  ✗ foreman.py missing")
+        issues.append("foreman.py missing")
+    # check CLI
+    bin_scout=ROOT/"bin"/"scout"
+    print(f"  {'✓' if bin_scout.exists() else '✗'} bin/scout {'-> '+str(bin_scout.resolve()) if bin_scout.is_symlink() else ''}")
+    # summary
+    if issues:
+        print(f"\n{len(issues)} issues:")
+        for i in issues: print(f"  - {i}")
+        return 1
+    else:
+        print(f"\nall {len(slugs)} scouts healthy ✓")
+        print(f"foreman managing: {len([s for s in slugs if s!='scout-foreman'])} scouts")
+        return 0
+
+def main():
+    p=argparse.ArgumentParser(prog="scout", description="Scout Empire — 40 self-evolving SKILL.md scouts + foreman", formatter_class=argparse.RawTextHelpFormatter)
+    sub=p.add_subparsers(dest="cmd")
+    # list
+    s=sub.add_parser("list", help="list scouts")
+    s.add_argument("--continent", help="filter by continent")
+    s.add_argument("--verbose","-v", action="store_true")
+    s.add_argument("--json", action="store_true", help="(unused, for compat)")
+    s.set_defaults(func=cmd_list)
+    # info
+    s=sub.add_parser("info", help="show SKILL.md + config for a scout")
+    s.add_argument("slug")
+    s.set_defaults(func=cmd_info)
+    # run
+    s=sub.add_parser("run", help="run a scout entrypoint (auto-picks score.py etc)")
+    s.add_argument("slug", help="scout slug")
+    s.add_argument("--entry","-e", help="explicit entrypoint without .py (e.g. score, retrain)")
+    s.add_argument("extra", nargs=argparse.REMAINDER, help="extra args passed to scout (use -- to separate)")
+    s.set_defaults(func=cmd_run)
+    # retrain
+    s=sub.add_parser("retrain", help="retrain one or all scouts")
+    s.add_argument("slug", nargs="?", help="slug or --all")
+    s.add_argument("--all", action="store_true", help="retrain all")
+    s.add_argument("extra", nargs=argparse.REMAINDER)
+    s.set_defaults(func=cmd_retrain)
+    # sweep
+    s=sub.add_parser("sweep", help="foreman sweep all scouts")
+    s.set_defaults(func=cmd_sweep)
+    # report
+    s=sub.add_parser("report", help="portfolio report")
+    s.set_defaults(func=cmd_report)
+    # set-optimize
+    s=sub.add_parser("set-optimize", help="set global desired_settings.optimize_for")
+    s.add_argument("value")
+    s.set_defaults(func=cmd_set_optimize)
+    # spawn
+    s=sub.add_parser("spawn", help='draft a new scout: scout spawn "my-new-skill"')
+    s.add_argument("name")
+    s.set_defaults(func=cmd_spawn)
+    # catalog
+    s=sub.add_parser("catalog", help="show catalog")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(func=cmd_catalog)
+    # doctor
+    s=sub.add_parser("doctor", help="health check")
+    s.add_argument("--verbose","-v", action="store_true")
+    s.set_defaults(func=cmd_doctor)
+
+    args=p.parse_args()
+    if not args.cmd:
+        # default: list
+        args=p.parse_args(["list"])
+        return args.func(args)
+    return args.func(args)
+
+if __name__=="__main__":
+    sys.exit(main())

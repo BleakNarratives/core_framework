@@ -1,0 +1,12 @@
+# daemon/config.yaml — bureaucracy-judo
+skill: bureaucracy-judo
+oomf_level: 3
+interval: "6h"   # cron shorthand; expand to systemd timer / crontab in prod
+feeds: [regulatory_filings, zoning_updates, foia_logs]
+target_domains: ["state_filings.internal", "zoning.internal", "foia_logs.internal"]
+oracle: { mode: strict }
+entitlements:
+  active: [base]        # base | premium (retainer)
+  premium_note: "Set license.key to unlock private high-frequency feeds."
+license:
+  key: ""               # offline nonce — author-issued

@@ -1,0 +1,17 @@
+[Unit]
+Description=AI Gateway — local OpenAI-compatible endpoint that rotates vault key pools
+After=network-online.target
+
+[Service]
+# Vault keys are loaded in the child only; they are never written into the unit
+# file or the systemd environment.
+ExecStart=/bin/bash -lc ". %h/bin/vault-env >/dev/null 2>&1; exec python3 -u %h/bin/ai_gateway.py"
+Restart=always
+RestartSec=5
+# Local proxy, not a workload: die before the interactive terminal under memory
+# pressure, same policy as the other inference helpers.
+OOMScoreAdjust=250
+Nice=5
+
+[Install]
+WantedBy=default.target

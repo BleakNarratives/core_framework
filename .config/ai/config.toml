@@ -1,0 +1,37 @@
+# The ONE config for every local AI CLI and API call.
+#
+# Consumers:
+#   bin/ai        headless + interactive front-end (this config)
+#   bin/errfix    traceback fixer
+#   bin/anchor/*  persistent-state agent
+#   bin/ai_gateway.py   transport; it reads keys from ~/.concierge/vault.json,
+#                       never from here
+#
+# Point a CLI at the gateway by giving it http://127.0.0.1:7071/v1/auto as its
+# OpenAI base URL. Nothing should hold a provider key except the gateway.
+
+# Gateway root (ai_lib appends /v1/... itself). The trailing /v1/auto form is
+# what OpenAI-shaped CLIs like aider/vibe want.
+base_url = "http://127.0.0.1:7071"
+
+# Used when no model is named.
+default_model = "auto"
+
+# Named presets. Values are gateway model strings:
+#   "auto"            -> walk the live provider chain
+#   "provider::model" -> pin one provider (path-routed by the gateway)
+[models]
+default = "auto"
+auto = "auto"
+fast = "mistral::mistral-small-latest"
+code = "openrouter::z-ai/glm-5.2:free"
+big = "openai::gpt-4o-mini"
+# gemini-2.5-* is refused for this key and gemini-3.5-flash hangs; the
+# -latest alias is the one that actually answers (~2.7s, verified live).
+gemini = "gemini::gemini-flash-latest"
+
+# Answer style for headless callers (bin/ai --headless, errfix, future agents).
+[headless]
+# Keep replies terse so a traceback fix can be applied without reading an essay.
+system = "You are a terse senior engineer. Answer with the fix, not a lecture. Prefer exact code and exact commands."
+max_chars = 6000

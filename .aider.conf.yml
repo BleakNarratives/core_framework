@@ -1,0 +1,26 @@
+# Aider config — routed through the local rotating gateway, not a single key.
+#
+# WHY: this used to pin `groq/openai/gpt-oss-120b` with one unrotated key. All
+# six Groq keys in the vault are now rejected with HTTP 403, so aider died on
+# every run and the five other providers were never touched.
+#
+# bin/ai_gateway.py is an OpenAI-compatible endpoint that walks the live vault
+# pools (OpenRouter, Mistral, Gemini, OpenAI first) and rotates on rate limits.
+# bin/gateway-ensure/`vault-launch` start it on demand, so `aider` alone is
+# enough — the gateway does not need to be started by hand.
+#
+# Keys are never hardcoded here; they are read from ~/.concierge/vault.json by
+# the gateway process.
+model: openai/default
+weak-model: openai/default
+openai-api-base: http://127.0.0.1:7071/v1/auto
+openai-api-key: local-gateway
+auto-commits: false
+gitignore: false
+dark-mode: true
+# Don't auto-add every file — be explicit.
+auto-lint: false
+
+# Scout Empire — 40 self-evolving SKILL.md scouts
+# When user mentions scouts/foreman/desired_settings, read projects/ScoutEmpire/cli/SKILL_HINT.md
+read: projects/ScoutEmpire/cli/SKILL_HINT.md

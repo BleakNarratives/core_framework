@@ -150,6 +150,13 @@ def normalize_url(url: str) -> str:
     Reddit permalinks are stable across re-crawls; the tracking query string on
     them is not. Stripping it is what makes a second run a no-op instead of a
     duplicate.
+
+    LIMIT, measured 2026-09-17: this drops the query unconditionally, so it is
+    wrong for any URL whose identity IS the query. On Hacker News every item is
+    `news.ycombinator.com/item?id=N`, so all of them normalize to one identical
+    string -- which made 263 real job posts deduplicate down to a single entry.
+    Sources with query-keyed URLs must key on the id themselves (see
+    hn_leads.hn_ids_in) rather than route identity through here.
     """
     text = (url or "").strip().rstrip(".,;")
     parts = urlsplit(text)

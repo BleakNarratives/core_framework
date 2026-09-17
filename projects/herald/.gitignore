@@ -1,0 +1,7 @@
+# Data, not code. Both of these accumulate other people's contact details, and a
+# repository is not the right place to keep a list of strangers' emails.
+LEADS.md
+OUTREACH_DRAFTS.md
+
+__pycache__/
+*.py[cod]

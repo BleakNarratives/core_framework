@@ -24,11 +24,11 @@ WHY THIS REPLACED THE SHOW HN SCAN
   account, where every top-level comment is a company advertising an open role.
 
 WHY IT BEATS THE REDDIT SOURCE
-  Measured 2026-09-17 against "Ask HN: Who is hiring? (September 2026)":
-  105 top-level posts, **29 carrying an email** and 86 carrying an external link.
-  The for-hire subreddits publish an address roughly never — the only route there
-  is a DM. And Algolia answered on every attempt while Reddit returned HTTP 429
-  for every feed, in both orders, and after a 30s wait.
+  The HN source is paginated and exposes structured comments, author names, and
+  contact hints; the parser reports email, person-reachable, and application-form
+  counts separately. The for-hire subreddits publish an address roughly never —
+  the only route there is a DM. Algolia is exercised through offline fixtures in
+  the test suite; live Reddit access is currently rate-limited on this host.
 
 WHAT THIS INHERITS
   The contact extraction, dedupe and renderer are imported from monitor_leads
@@ -70,6 +70,7 @@ from monitor_leads import (  # noqa: E402
     new_entries,
     normalize_url,
     plain_text,
+    reaches_a_person,
     render,
     urls_in,
 )
@@ -120,9 +121,9 @@ def find_thread() -> dict:
 def fetch_comments(story_id: str) -> list[dict]:
     """Every comment on the thread, paginated.
 
-    Algolia caps a single response, and the September 2026 thread has 403
-    comments, so a one-page fetch returns a silent subset — the failure mode
-    where a list looks complete and is not.
+    Algolia caps a single response, so a one-page fetch can return a silent
+    subset — the failure mode where a list looks complete and is not. Pagination
+    stops at the API-reported page count, bounded by `MAX_PAGES`.
     """
     out: list[dict] = []
     page = 0
@@ -238,15 +239,22 @@ def main(argv: list[str] | None = None) -> int:
 
     posts = [h for h in hits if is_job_post(h, story_id)]
     entries = [to_entry(h, source) for h in posts]
-    # Reported separately, always. Conflating them reads as "250 people you can
-    # email", when most of those are apply-forms on a company ATS. The gap
-    # between the two numbers is the honest measure of this source.
+    # Three numbers, reported separately and always. Conflating them reads as "250
+    # people you can email", when a large share of those published nothing but an
+    # application form on a company ATS. The gap between "reachable" and "any
+    # route" is the honest measure of this source, and it was 55-vs-a-lot wrong
+    # before the apply-form rule existed.
     with_email = sum(1 for e in entries if has_email(e))
     with_any = sum(1 for e in entries if e["contact"])
+    with_person = sum(1 for e in entries
+                      if any(reaches_a_person(c) for c in e["contact"]))
+    reachable = (lambda e: any(reaches_a_person(c) for c in e["contact"]))
     if args.require_email:
         entries = [e for e in entries if has_email(e)]
     elif args.require_contact:
-        entries = [e for e in entries if e["contact"]]
+        # A form is not a way to reach somebody, so this keeps only the routes a
+        # person can actually be written to.
+        entries = [e for e in entries if reachable(e)]
 
     already = LEADS_FILE.read_text(errors="replace") if LEADS_FILE.is_file() else ""
     known = urls_in(already) | hn_ids_in(already)
@@ -254,8 +262,9 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"  {source}")
     print(f"  {len(hits)} comments, {len(posts)} top-level job posts")
-    print(f"  {with_email} publish an email, {with_any} publish any route at all, "
-          f"{len(fresh)} new")
+    print(f"  {with_email} publish an email, {with_person} reach a person, "
+          f"{with_any} published some route ({with_any - with_person} apply-form "
+          f"only), {len(fresh)} new")
     if not fresh:
         print("nothing new; LEADS.md untouched")
         return 0

@@ -38,12 +38,28 @@ WHAT IT DELIBERATELY DOES NOT DO, AND WHY
   same rule this repo already applies to the shell -- consenting to a draft is
   not consent to contact a stranger.
 
+WHY A REPLY IS NOW CHECKED BEFORE IT IS WRITTEN (measured 2026-09-17)
+  The only test a reply had to pass was "does it start with NO FIT". Anything else
+  was written out as copy. Then a run with `--about-file ABOUT.md` returned six
+  replies that were the *prompt itself* -- the whole question, echoed back as the
+  answer -- and all six were written to OUTREACH_DRAFTS.md as drafts, with an
+  empty subject and a `mailto:` body of "Write one short outreach email...". The
+  file went from 3.5 KB to 155 KB in one run.
+
+  Two things follow. One, a run that counts those as drafts is not reporting a fit
+  rate, it is reporting how often the model echoed the question -- which is how a
+  broken pipe reads as 70% fit. Two, the echo is NOT deterministic: the same lead
+  and prompt, called twice by hand, refused both times. `complete()` goes through
+  `bin/ai`, whose model resolves to `auto`, so the gateway rotates pools and some
+  calls land on a model that behaves this way. Pin `--model` before comparing any
+  two offers, or the comparison measures pool selection.
+
 Usage:
     outreach_agent --list                       who qualifies, and who does not
-    outreach_agent --about FILE                 draft for everyone qualified
-    outreach_agent --about FILE --dry-run       show the prompts; call nothing
-    outreach_agent --about FILE --limit 3       cap drafts this run
-    outreach_agent --about FILE --redo          re-draft already-drafted leads
+    outreach_agent --about-file ABOUT.md             draft for everyone qualified
+    outreach_agent --about-file ABOUT.md --dry-run   show prompts; call nothing
+    outreach_agent --about-file ABOUT.md --limit 3   cap drafts this run
+    outreach_agent --about-file ABOUT.md --redo      re-draft already-drafted leads
 
   --about is required for drafting on purpose. It is your one paragraph of what
   you actually offer; the model tailors it per lead but may not invent beyond it.
@@ -56,6 +72,7 @@ import json
 import re
 import subprocess
 import sys
+import time
 import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
@@ -63,6 +80,26 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 LEADS_FILE = HERE / "LEADS.md"
 DRAFTS_FILE = HERE / "OUTREACH_DRAFTS.md"
+
+# Machine memory, kept separate from the drafts file on purpose. OUTREACH_DRAFTS.md
+# is copy for you to read and send, and a refusal is not copy -- but without a record
+# of refusals a batch cannot resume, because the only thing `todo` could exclude is a
+# lead already *drafted*. Measured 2026-09-17: three batches of 15/17/10 made 42 calls
+# covering 19 distinct leads, because each batch restarted at the first unrefused
+# lead. Safe to delete; deleting it re-opens every lead.
+#
+# The memory is per LEAD, not per offer. A verdict is the model's answer to one lead
+# under one `--about` paragraph, so if you change the offer, run with --redo -- or the
+# answers given to the old offer will stand in for the new one and nothing will be
+# re-asked. Measured 2026-09-17: two offers that looked similar drafted 9 leads and 0.
+STATE_FILE = HERE / ".herald_state.json"
+
+# The apply-form rule lives in monitor_leads and is imported rather than
+# reimplemented. Two copies of "what counts as contact" is how the number drifted
+# in the first place -- and this reader has to grade entries that were written
+# before the rule existed, so it must be the *same* rule, not a similar one.
+sys.path.insert(0, str(HERE))
+from monitor_leads import employment_type, reaches_a_person, route_kind  # noqa: E402
 
 
 def find_ai() -> Path:
@@ -149,6 +186,16 @@ def emails_of(entry: dict) -> list[str]:
             if c.startswith("email:") and "@" in c]
 
 
+def reachable_of(entry: dict) -> list[str]:
+    """The contact hints that reach a person, in file order.
+
+    An application form is a route and not a person: whatever is sent to one goes
+    into an ATS that no human reads as a message. This is what `qualify` gates on,
+    and it is deliberately stricter than "has something in the Contact field".
+    """
+    return [hint for hint in contacts_of(entry) if reaches_a_person(hint)]
+
+
 def qualify(entry: dict) -> tuple[bool, str]:
     """(qualified, reason if not). The reason is shown, never swallowed.
 
@@ -160,6 +207,18 @@ def qualify(entry: dict) -> tuple[bool, str]:
         return False, "not a hiring post (a discussion thread, or a pre-filter entry)"
     if not contacts_of(entry):
         return False, "hiring, but published no way to make contact"
+    if not reachable_of(entry):
+        # Distinguished from the case above on purpose: "nothing published" and
+        # "published only a place" are different facts about a lead, and the second
+        # is what made the headline count wrong before it had its own reason. The
+        # kinds are named, because "a form" and "a homepage" call for different
+        # next actions from you.
+        kinds = sorted({route_kind(h) for h in contacts_of(entry)})
+        if kinds == ["apply"]:
+            return False, ("published only an application form, which reaches a form "
+                           "and not a person")
+        return False, ("published no address and no direct route (only "
+                       + "/".join(kinds) + "), so the thread is the only way in")
     if not source_of(entry):
         return False, "no source link, so no thread to reply in"
     return True, ""
@@ -171,6 +230,44 @@ def split_subject(reply: str) -> tuple[str, str]:
     if lines and lines[0].lower().startswith("subject:"):
         return lines[0].split(":", 1)[1].strip(), "\n".join(lines[1:]).strip()
     return "", (reply or "").strip()
+
+
+# The prompt's own sentences. A reply containing one of these is the question,
+# not an answer -- there is no way a legitimately written email quotes the
+# instruction "Write one short outreach email from me to someone who posted
+# about work", and matching two independent phrases rather than one keeps a
+# stray coincidence from discarding a real draft.
+PROMPT_ECHO_MARKERS = (
+    "write one short outreach email from me to someone who posted about work",
+    "what i actually offer, and the only thing you may claim about me",
+)
+
+# The prompt asks for under 120 words. This is the sanity bound rather than the
+# style rule: a body at 4x the cap is a different kind of output, not a verbose one.
+BODY_WORD_CAP = 200
+
+
+def not_an_email(subject: str, body: str) -> str:
+    """Why this reply cannot be written as a draft, or "" if it can.
+
+    Deliberately separate from the NO FIT path. A refusal is a decision the model
+    is allowed to make; this is a malformed completion. They are counted apart
+    because conflating them is exactly the failure that made a run of six echoed
+    prompts look like six fits.
+    """
+    text = (body or "").strip()
+    lowered = text.lower()
+    if not text:
+        return "empty reply"
+    for marker in PROMPT_ECHO_MARKERS:
+        if marker in lowered:
+            return "the prompt was echoed back instead of answered"
+    if not (subject or "").strip():
+        return "no 'Subject:' first line, which the prompt requires"
+    words = len(text.split())
+    if words > BODY_WORD_CAP:
+        return f"{words} words; the prompt caps the body at 120"
+    return ""
 
 
 def build_prompt(entry: dict, about: str) -> str:
@@ -208,21 +305,39 @@ Write the email in my voice. Rules, and they are not negotiable:
 
 
 def render(entry: dict, subject: str, body: str, now: str) -> str:
-    """One draft block. Records the send route, and says plainly if there is none."""
+    """One draft block. Records the send route, and says plainly if there is none.
+
+    `Contact:` carries only the routes that reach a person. Places -- a homepage, a
+    job document, an application form -- go on their own `Published:` line, because
+    `Contact: link:https://acme.test` is the same overclaim as the count it came
+    from: it puts a venue where a person belongs, in the one place you actually read.
+    """
     who = entry["who"]
-    hints = contacts_of(entry)
+    reachable = reachable_of(entry)
+    places = [hint for hint in contacts_of(entry) if hint not in reachable]
     addresses = emails_of(entry)
     lines = [f"\n## {entry['title']}\n",
              f"- To: {who}",
-             f"- Contact: {', '.join(hints)}",
+             "- Contact: " + (", ".join(reachable) if reachable
+                              else "nothing published reaches a person"),
              f"- Source: {source_of(entry)}",
+             # What the post says it is offering, so a draft to a salaried ad is
+             # visible as such without herald deciding what to do about it.
+             f"- Employment as stated in the post: {employment_type(entry['title'])}",
              f"- Status: **draft only — nothing sent** ({now})"]
+    if places:
+        lines.append(f"- Published (places, not routes): {', '.join(places)}")
     if addresses:
         link = mailto(addresses[0], subject, body)
         lines.append(f"- Send: [open in your mail client]({link})")
     else:
         lines.append("- Send: no email published — the only route is a reply or DM "
                      "on the thread above, which you do yourself")
+    if not addresses and not reachable_of(entry):
+        # A draft can be rendered directly, so say it here too rather than letting
+        # the links above read as a way in.
+        lines.append("- Reach: nothing published reaches a person — "
+                     "reply on the thread instead")
     lines.append("")
     if subject:
         lines.append(f"**Subject:** {subject}\n")
@@ -253,7 +368,127 @@ def drafted_sources(text: str) -> set[str]:
             re.finditer(r"^- Source:\s*(\S+)\s*$", text or "", re.M)}
 
 
+# A verdict that is final, and a verdict that is worth trying again. A refusal and a
+# malformed reply are decisions about a lead that has not changed, so repeating them
+# wastes a call. A transport failure is the opposite: the same lead may answer fine
+# on the next run, so it is recorded for the report and deliberately not skipped.
+RESOLVED_VERDICTS = ("no_fit", "malformed")
+
+
+def load_state(path: Path) -> dict:
+    """Verdicts from earlier runs, keyed by lead source.
+
+    A missing or unreadable file is not an error -- it is a first run, or a file
+    somebody truncated. Failing to read it must never stop a run that would otherwise
+    work: the cost of forgetting is a repeated call, not a broken tool.
+    """
+    if not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"    ignoring unreadable {path.name} ({type(exc).__name__}); "
+              "every lead will be treated as new", file=sys.stderr)
+        return {}
+    leads = data.get("leads") if isinstance(data, dict) else None
+    return leads if isinstance(leads, dict) else {}
+
+
+def save_state(path: Path, leads: dict) -> None:
+    """Write it atomically, so a run killed mid-write cannot truncate the memory."""
+    payload = {
+        "updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "note": "verdict per lead source; delete this file to start over",
+        "leads": leads,
+    }
+    tmp = path.with_name(path.name + ".tmp")
+    try:
+        tmp.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        tmp.replace(path)
+    except OSError as exc:
+        print(f"    could not write {path.name} ({exc}); this run will not resume",
+              file=sys.stderr)
+
+
 # ── model call ───────────────────────────────────────────────────────────────
+
+# A 429 means two different things through this gateway and only one of them is
+# worth waiting for. Measured 2026-09-17 on the raw envelope: `bin/ai --json`
+# returns exactly {"ok", "error"} -- no headers, no retry_after field -- so the
+# provider's own hint has to be read out of the error *string*. Two shapes seen:
+#
+#   "Rate limit reached for model ... Please try again in 7.199999999s"   <- wait
+#   "You have no credits remaining ... credit_balance_exhausted"          <- 429 too
+#
+# The second cannot be fixed by waiting: the pool is out of credit, and retrying
+# turns a fast failure into a slow one. So a wait is only returned when the message
+# actually asks us to wait.
+WAIT_PATTERNS = (
+    re.compile(r"retry[_-]?after\"?\s*[:=]\s*\"?([0-9]+(?:\.[0-9]+)?)", re.I),
+    re.compile(r"try again in ([0-9]+(?:\.[0-9]+)?)s", re.I),
+    re.compile(r"retry after ([0-9]+(?:\.[0-9]+)?)", re.I),
+)
+# Specific codes only. An earlier version of this matched the bare word "billing"
+# and was therefore dead code: Groq's *rate-limit* message ends with a link to
+# https://console.groq.com/settings/billing, so every retryable 429 was classified
+# as a dead account and never retried. Found by running it, not by reading it -- the
+# only visible symptom was that the retry had never fired once.
+QUOTA_EXHAUSTED_RE = re.compile(
+    r"insufficient_quota|credit_balance_exhausted|no credits remaining|"
+    r"exceeded your current quota", re.I)
+MIN_WAIT = 2.0     # a 429 with no hint at all still deserves one short pause
+MAX_WAIT = 60.0    # never hold a run on one lead for longer than this
+DEFAULT_RETRIES = 3
+
+
+def retry_after_seconds(message: str) -> float | None:
+    """How long to wait before trying again, or None if trying again cannot help.
+
+    None covers both "this is not a rate limit" and "this is a rate limit caused by
+    an empty account" -- two different reasons not to sleep.
+    """
+    text = message or ""
+    # In order: is this a rate limit at all, is it one that waiting cannot fix, and
+    # only then how long to wait.
+    if "429" not in text and "rate limit" not in text.lower():
+        return None
+    if QUOTA_EXHAUSTED_RE.search(text):
+        return None
+    for pattern in WAIT_PATTERNS:
+        found = pattern.search(text)
+        if found:
+            try:
+                return min(MAX_WAIT, max(0.0, float(found.group(1))))
+            except ValueError:
+                break
+    return MIN_WAIT
+
+
+def complete_with_retries(prompt: str, model: str | None = None,
+                          retries: int = DEFAULT_RETRIES,
+                          sleep=time.sleep) -> str:
+    """complete(), but a rate limit is a wait rather than a lost lead.
+
+    `sleep` is injected so this path can be tested without a suite that takes four
+    minutes to run -- the same reason `complete` is patched in the tests.
+
+    Measured 2026-09-17: without this, 8 of 10 calls in one run were lost to a
+    per-minute token ceiling, each one carrying the provider's own statement of how
+    long to wait. The run wrote nothing and reported nothing usable.
+    """
+    attempt = 0
+    while True:
+        try:
+            return complete(prompt, model)
+        except RuntimeError as exc:
+            wait = retry_after_seconds(str(exc))
+            if wait is None or attempt >= retries:
+                raise
+            attempt += 1
+            print(f"    rate limited, waiting {wait:.1f}s "
+                  f"(attempt {attempt}/{retries})", file=sys.stderr)
+            sleep(wait)
+
 
 def complete(prompt: str, model: str | None = None) -> str:
     """One call through bin/ai. Raises RuntimeError with what actually failed."""
@@ -297,7 +532,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dry-run", action="store_true",
                         help="print the prompts and write nothing; makes no model calls")
     parser.add_argument("--redo", action="store_true",
-                        help="re-draft leads that are already in OUTREACH_DRAFTS.md")
+                        help="ignore what earlier runs answered — both the drafts "
+                             "file and .herald_state.json — and go round again")
+    parser.add_argument("--retries", type=int, default=DEFAULT_RETRIES,
+                        help="retries for a rate-limited call (default 3; a retry "
+                             "only happens when the provider says how long to "
+                             "wait, never for an account that is out of credit)")
     args = parser.parse_args(argv)
 
     if not LEADS_FILE.is_file():
@@ -314,7 +554,13 @@ def main(argv: list[str] | None = None) -> int:
     for entry, reason in rejected:
         print(f"    skip  {entry['title'][:58]:<58} — {reason}")
     for entry, _ in qualified:
-        print(f"    lead  {entry['title'][:58]:<58} — {', '.join(contacts_of(entry))}")
+        # Shows the routes that reach a person, plus the employment type the post
+        # states. The apply-form links are still in the file and still printed with
+        # the draft; they are just not why this entry qualified. The employment label
+        # informs and never excludes -- see `employment_type` for why there is no
+        # filter here.
+        print(f"    lead  [{employment_type(entry['title'])}] "
+              f"{entry['title'][:52]:<52} — {', '.join(reachable_of(entry))}")
 
     if args.list:
         return 0
@@ -338,12 +584,23 @@ def main(argv: list[str] | None = None) -> int:
         print("  Run monitor_leads.py once Reddit stops answering 429.")
         return 0
 
+    state = load_state(STATE_FILE)
     known = set() if args.redo else drafted_sources(
         DRAFTS_FILE.read_text(errors="replace") if DRAFTS_FILE.is_file() else "")
-    todo = [e for e, _ in qualified if source_of(e) not in known]
-    skipped = len(qualified) - len(todo)
-    if skipped:
-        print(f"  {skipped} already drafted (--redo to redo)")
+    resolved = set() if args.redo else {
+        src for src, record in state.items()
+        if isinstance(record, dict) and record.get("verdict") in RESOLVED_VERDICTS}
+    sources = {source_of(e) for e, _ in qualified}
+    done_drafted = sources & known
+    done_resolved = sources & resolved
+    # This is the whole of "resumable". Without it the batch restarts at the first
+    # unrefused lead and spends its limit on leads it has already refused twice.
+    todo = [e for e, _ in qualified
+            if source_of(e) not in done_drafted and source_of(e) not in done_resolved]
+    if done_drafted or done_resolved:
+        print(f"  already answered: {len(done_drafted)} drafted, "
+              f"{len(done_resolved)} refused on an earlier run — skipped "
+              f"(--redo to redo)")
     todo = todo[: max(0, args.limit)]
 
     if args.dry_run:
@@ -354,12 +611,20 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    blocks, refusals, failures = [], [], 0
+    blocks, refusals, malformed, failures = [], [], [], 0
+    verdicts_now: dict[str, dict] = {}
     for entry in todo:
+        source = source_of(entry)
         try:
-            reply = complete(build_prompt(entry, about), args.model)
+            reply = complete_with_retries(build_prompt(entry, about), args.model,
+                                          args.retries)
         except RuntimeError as exc:
             failures += 1
+            # Recorded for the report, and deliberately *not* treated as resolved: a
+            # transport failure says nothing about the lead, so the next batch may
+            # still try it again.
+            verdicts_now[source] = {"verdict": "failed", "at": now,
+                                    "why": str(exc)[:200]}
             print(f"    failed  {entry['title'][:52]:<52} — {exc}", file=sys.stderr)
             continue
         subject, body = split_subject(reply)
@@ -367,17 +632,49 @@ def main(argv: list[str] | None = None) -> int:
             # The model exercised its one escape hatch. Kept in the report rather
             # than written as a draft: a refused pitch is a finding, not copy.
             refusals.append(f"{entry['title'][:70]} — {body.strip()}")
+            verdicts_now[source] = {"verdict": "no_fit", "at": now,
+                                    "why": body.strip()[:200]}
             print(f"    no fit  {entry['title'][:52]}")
             continue
+        # A reply that is not an email must not become a draft, and must not be
+        # counted as one. Its own category, for the reason in the module docstring.
+        why = not_an_email(subject, body)
+        if why:
+            malformed.append(f"{entry['title'][:70]} — {why}")
+            verdicts_now[source] = {"verdict": "malformed", "at": now, "why": why}
+            print(f"    bad     {entry['title'][:52]} — {why}")
+            continue
         blocks.append(render(entry, subject, body, now))
+        verdicts_now[source] = {"verdict": "drafted", "at": now, "why": subject}
         print(f"    drafted {entry['title'][:52]}")
+
+    # Saved before the drafts are written, so that a batch stopping at its limit -- or
+    # a run killed from outside -- still remembers what it answered. That memory is
+    # the only thing that lets the *next* batch advance.
+    if verdicts_now:
+        save_state(STATE_FILE, {**state, **verdicts_now})
 
     for line in refusals:
         print(f"    (no fit: {line})")
+    for line in malformed:
+        print(f"    (not written: {line})")
+
+    if todo:
+        # Printed before the early returns below, because a run in which everything
+        # was refused is the common case and is exactly when you need to know the
+        # next batch will move on rather than repeat.
+        print(f"  {len(todo)} lead(s) attempted this run; answers remembered in "
+              f"{STATE_FILE.name}, so the next batch continues from here.")
 
     if not blocks:
         if failures:
             print(f"all {failures} model calls failed; nothing written", file=sys.stderr)
+            return 1
+        if malformed and not refusals:
+            # Every reply was the wrong kind of output. Exiting 0 here would
+            # report a broken pipeline as a successful run that found nothing.
+            print(f"no usable replies: {len(malformed)} were not emails; "
+                  "nothing written", file=sys.stderr)
             return 1
         print("no drafts produced")
         return 0
@@ -392,6 +689,8 @@ def main(argv: list[str] | None = None) -> int:
     print("  read them, then send the ones that are true. Nothing was sent.")
     if refusals:
         print(f"  {len(refusals)} lead(s) reported no fit and were not written.")
+    if malformed:
+        print(f"  {len(malformed)} reply(ies) were not emails and were not written.")
     return 0
 
 

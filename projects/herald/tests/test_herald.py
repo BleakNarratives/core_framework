@@ -91,6 +91,46 @@ LEAD_FIXTURE = """# LEADS
   - URL: https://www.reddit.com/r/ChatGPTCoding/comments/1wdfc5x/x/
 """
 
+# Measured 2026-09-17, verbatim in shape: given `--about-file ABOUT.md`, six of ten
+# replies were the prompt itself returned as the completion. It contains both marker
+# phrases on purpose -- the check matches either one, and a fixture with only one
+# would not prove that.
+ECHOED_PROMPT = (
+    "Write one short outreach email from me to someone who posted about work.\n"
+    "\nTheir post:\n"
+    "  title: Lumen Labs | Robotics / Hardware Engineer | San Francisco, CA\n"
+    "  posted by: Daniel_Van_Zant\n"
+    "  source: https://news.ycombinator.com/item?id=49667711\n"
+    "\nWhat I actually offer, and the only thing you may claim about me:\n"
+    "\"\"\"\n"
+    "I make LLM coding agents cheap enough to run on hardware you already own.\n"
+    "\"\"\"")
+
+# Written the way the *old* contact_hints() wrote it: an ATS URL under a bare
+# `link:` prefix, from before application forms had a category of their own. This is
+# what the existing LEADS.md is full of -- 144 link hints -- so the reader has to
+# grade that data by the new rule, not by the prefix it was stored with.
+APPLY_ONLY_LEAD = """* **[u/ats]** Hiring: platform engineer
+  - Link: https://news.ycombinator.com/item?id=999
+  - Matched: `who-is-hiring`
+  - Contact: link:https://jobs.ashbyhq.com/acme/1234
+"""
+
+# A company domain and a job document, and nothing else. This is the shape of the
+# 13 leads that took the count from 45 to 35, written the old way on purpose.
+VENUE_ONLY_LEAD = """* **[u/co]** Hiring: backend engineer
+  - Link: https://news.ycombinator.com/item?id=998
+  - Matched: `who-is-hiring`
+  - Contact: link:https://acme.test, link:https://acme.notion.site/backend-jd
+"""
+
+# A profile page and nothing else: a weaker route than an address, still a route.
+PROFILE_ONLY_LEAD = """* **[u/person]** Hiring: contract python work
+  - Link: https://news.ycombinator.com/item?id=997
+  - Matched: `who-is-hiring`
+  - Contact: link:https://www.linkedin.com/in/someone
+"""
+
 
 class Base(unittest.TestCase):
     def quiet(self, fn, *args, **kwargs):
@@ -214,7 +254,9 @@ class TestContactExtraction(unittest.TestCase):
         self.assertIn("email:jobs@acme.test", self.hints("write to jobs@acme.test"))
 
     def test_external_link_is_recorded(self):
-        self.assertIn("link:https://shop.test/contact",
+        # A plain company page is a venue, and the prefix now says so. It is still
+        # recorded -- what changed is that it no longer reads as a way in.
+        self.assertIn("venue:https://shop.test/contact",
                       self.hints("see https://shop.test/contact"))
 
     def test_reddit_permalink_is_not_contact_information(self):
@@ -228,6 +270,156 @@ class TestContactExtraction(unittest.TestCase):
     def test_html_hrefs_are_captured(self):
         html = '<p>hi <a href="https://cal.test/me">book</a></p>'
         self.assertIn("https://cal.test/me", ml.hrefs(html))
+
+
+class TestEmploymentType(unittest.TestCase):
+    """A label, never a filter -- see `ml.employment_type` for the measurement behind it."""
+
+    def test_full_time_markers(self):
+        for title in ("Acme | Backend | Remote | Full-time | $180k",
+                      "Acme | Dev | W2 only",
+                      "Acme | Dev | Salaried, permanent"):
+            self.assertEqual(ml.employment_type(title), "full-time", title)
+
+    def test_contract_markers(self):
+        for title in ("Acme | Dev | Contract (6 months)",
+                      "Acme | Dev | Part-time | Remote",
+                      "Acme | Fractional CTO",
+                      "Acme | Dev | 1099 / hourly"):
+            self.assertEqual(ml.employment_type(title), "contract", title)
+
+    def test_a_post_offering_both_is_labelled_both(self):
+        # Both of these are real titles from LEADS.md.
+        self.assertEqual(ml.employment_type(
+            "Catalyst·Wayfare AI | Agent Builder | Remote | Full-time / Part-time / Contract"),
+            "both")
+        self.assertEqual(ml.employment_type(
+            "Squoosh.AI | Full-Stack Engineer (full-time, REMOTE) + PhD Researcher (part-time)"),
+            "both")
+
+    def test_silence_is_unstated_not_assumed_full_time(self):
+        # 13 of the 35 live leads say nothing about it. Guessing on their behalf is
+        # how a count starts flattering itself.
+        self.assertEqual(ml.employment_type("Acme | Backend Engineer | Remote (US)"),
+                         "unstated")
+        self.assertEqual(ml.employment_type(""), "unstated")
+
+    def test_a_draft_records_what_the_post_offered(self):
+        entry = oa.parse_leads(LEAD_FIXTURE)[0]
+        block = oa.render(entry, "S", "B", "NOW")
+        self.assertIn("- Employment as stated in the post:", block)
+
+    def test_there_is_no_employment_filter_flag(self):
+        # THE DECISION, pinned behaviourally like the --send test. A contract-only
+        # filter over the live file would hide 18 of 35 leads and match nothing that
+        # was not already there, so the label informs a human instead of the tool
+        # quietly shrinking its own list. If someone adds the filter, this fails.
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            with self.assertRaises(SystemExit):
+                oa.main(["--list", "--employment", "contract"])
+
+
+class TestApplicationForms(unittest.TestCase):
+    """A form is a route; it is not a person.
+
+    The URLs below are taken from the real LEADS.md, not invented, because the line
+    has to be drawn from what the sources actually publish: these hosts were 53
+    distinct domains and 144 link hints on 2026-09-17.
+    """
+
+    FORMS = (
+        "https://jobs.ashbyhq.com/anterior/1163af7a-d1d6-41db",
+        "https://careers.tether.io/o/backend-engineer-wallets-100-remote",
+        "https://grnh.se/26cvuixl3us",
+        "https://greenzie.applytojob.com/apply/UdRcDlWSzs/Robotics",
+        "https://careers.auroraer.com/postings/8c289ab6-283b",
+        "https://jobs.deel.com/swingvision/job-details/c2cc0f23",
+        "https://egmn.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1",
+        "https://form.jotform.com/250488763186166",
+        "https://valkyrie-aero.breezy.hr/",
+        "https://endlessaccess.bamboohr.com/careers/33",
+        "https://obi9.ai/jobs/full-stack-engineer",
+        "https://www.vcluster.com/careers?ashby_jid=516c8859-83be-4535",
+        "https://newtonstree.ai/job/forward-deploy-engineer",
+        "https://acme.test/jobs",
+    )
+
+    PEOPLE = (
+        "https://www.linkedin.com/in/davidzhao/",
+        "https://github.com/closeio",
+        "https://shop.test/contact",
+        "https://cal.test/me",
+        "https://squoosh.ai",
+        "https://mycreportfolio.com/samiksha",
+        "https://drive.google.com/file/d/1Q6IQrVH3llpEqX0CRt/view",
+        "mailto:jobs@acme.test",
+    )
+
+    def test_application_forms_are_recognised(self):
+        for url in self.FORMS:
+            self.assertTrue(ml.is_application_form(url), url)
+
+    def test_a_persons_own_page_is_not_swept_up(self):
+        # The false positive is the expensive one: a real lead silently marked
+        # unreachable, with nothing on screen to say it happened.
+        for url in self.PEOPLE:
+            self.assertFalse(ml.is_application_form(url), url)
+
+    def test_a_form_is_recorded_under_its_own_prefix(self):
+        got = ml.contact_hints({"body": "apply at https://jobs.ashbyhq.com/acme/1",
+                                "links": []})
+        self.assertEqual(got, ["apply:https://jobs.ashbyhq.com/acme/1"])
+
+    def test_a_person_page_is_recorded_as_a_profile(self):
+        got = ml.contact_hints({"body": "ping https://linkedin.com/in/someone",
+                                "links": []})
+        self.assertEqual(got, ["profile:https://linkedin.com/in/someone"])
+
+    def test_a_homepage_or_a_job_document_is_a_venue(self):
+        # The 45 -> 35 correction. Of the 45 that survived the apply-form rule, 13
+        # published no address and no DM, and what they had was a company domain or
+        # a job document. A homepage is a place, not a person.
+        for url in ("https://openrent.co.uk",
+                    "https://squoosh.ai",
+                    "https://desert-bearskin-26d.notion.site/JD",
+                    "https://techcrunch.com/2026/02/19/freeform-raises-67m/",
+                    "https://drive.google.com/file/d/1Q6IQ/view",
+                    "https://langfuse.com"):
+            self.assertEqual(ml.classify_link(url), "venue", url)
+
+    def test_a_profile_page_is_a_route(self):
+        for url in ("https://www.linkedin.com/in/davidzhao/",
+                    "https://github.com/Samiksha-sudo"):
+            self.assertEqual(ml.classify_link(url), "profile", url)
+            self.assertTrue(ml.reaches_a_person(f"profile:{url}"), url)
+
+    def test_an_old_bare_link_prefix_is_re_derived(self):
+        # THE REGRESSION. A homepage written by the old code sat under a bare
+        # `link:` and counted as contact for every entry already in the file.
+        self.assertFalse(ml.reaches_a_person("link:https://openrent.co.uk"))
+        self.assertTrue(ml.reaches_a_person("link:https://linkedin.com/in/x"))
+
+    def test_a_venue_prefix_is_not_a_route(self):
+        self.assertFalse(ml.reaches_a_person("venue:https://squoosh.ai"))
+
+    def test_route_kind_names_all_five(self):
+        self.assertEqual(ml.route_kind("email:a@b.test"), "email")
+        self.assertEqual(ml.route_kind("dm"), "dm")
+        self.assertEqual(ml.route_kind("venue:https://a.test"), "venue")
+        self.assertEqual(ml.route_kind("apply:https://jobs.ashbyhq.com/a/1"), "apply")
+        self.assertEqual(ml.route_kind("profile:https://github.com/x"), "profile")
+
+    def test_reaches_a_person_reads_an_old_link_prefixed_form(self):
+        # THE REGRESSION. Trusting the stored prefix would keep counting exactly the
+        # links this exists to stop counting, for every entry already in the file.
+        self.assertFalse(ml.reaches_a_person("link:https://jobs.ashbyhq.com/acme/1"))
+        self.assertFalse(ml.reaches_a_person("apply:https://jobs.ashbyhq.com/acme/1"))
+
+    def test_reaches_a_person_for_every_other_kind_of_hint(self):
+        self.assertTrue(ml.reaches_a_person("email:jobs@acme.test"))
+        self.assertTrue(ml.reaches_a_person("link:https://linkedin.com/in/x"))
+        self.assertTrue(ml.reaches_a_person("dm"))
 
 
 class TestMonitorLeadsMain(Base):
@@ -366,12 +558,21 @@ class TestHnLeadsMain(Base):
         self.assertFalse(leads.exists())
         self.assertIn("dry run", out)
 
-    def test_counts_email_and_any_route_separately(self):
+    def test_counts_email_person_and_form_separately(self):
         _, out, _ = self.run_main(["--dry-run"])
-        # 2 job posts (the OP comment and the reply are excluded), 1 with email.
+        # 2 job posts (the OP comment and the reply are excluded): one publishes an
+        # address, the other publishes nothing but an application form.
         self.assertIn("2 top-level job posts", out)
         self.assertIn("1 publish an email", out)
-        self.assertIn("2 publish any route", out)
+        self.assertIn("1 reach a person", out)
+        self.assertIn("1 apply-form only", out)
+
+    def test_an_application_form_alone_is_not_a_way_to_reach_anyone(self):
+        # THE BUG: this used to read "2 publish any route", i.e. two employers you
+        # could write to, when the second was an ATS intake form.
+        _, out, _ = self.run_main(["--dry-run"])
+        self.assertIn("2 published some route", out)
+        self.assertNotIn("2 reach a person", out)
 
     def test_real_run_appends_qualified_posts(self):
         rc, _, leads = self.run_main([])
@@ -459,6 +660,308 @@ class TestDrafting(unittest.TestCase):
     def test_a_missing_subject_is_not_an_error(self):
         self.assertEqual(oa.split_subject("just a body"), ("", "just a body"))
 
+
+class TestReplyValidation(unittest.TestCase):
+    """A reply has to look like an email before it is written as one.
+
+    Before this existed the only test was "does the text start with NO FIT", so a
+    reply that was the *prompt echoed back* was written to OUTREACH_DRAFTS.md as
+    copy, with an empty subject and a mailto body of "Write one short outreach
+    email...". Six of ten replies did that in one run.
+    """
+
+    def test_an_echoed_prompt_is_not_an_email(self):
+        self.assertIn("echoed", oa.not_an_email("", ECHOED_PROMPT))
+
+    def test_the_echo_check_needs_only_one_marker(self):
+        # Not every echo will reproduce both sentences.
+        half = "What I actually offer, and the only thing you may claim about me:\n" \
+               "I do backend work."
+        self.assertIn("echoed", oa.not_an_email("Subject: hi", half))
+
+    def test_a_reply_with_no_subject_line_is_rejected(self):
+        # The prompt requires "Subject: <subject>" as the first line. The echoes
+        # never had one, which is itself the cheapest signal that it is not an email.
+        self.assertIn("Subject", oa.not_an_email("", "A short honest body."))
+
+    def test_a_body_far_over_the_cap_is_rejected(self):
+        self.assertIn("120", oa.not_an_email("Subject: S", "word " * 250))
+
+    def test_an_empty_reply_is_rejected(self):
+        self.assertEqual(oa.not_an_email("Subject: S", "   "), "empty reply")
+
+    def test_a_normal_email_passes(self):
+        self.assertEqual(
+            oa.not_an_email("Subject: untangling your monolith",
+                            "You mentioned a Django monolith. I refactor those. "
+                            "Could I see the repo?"), "")
+
+    def test_the_cap_is_not_so_tight_that_it_rejects_a_real_email(self):
+        # The prompt asks for under 120 words. A 150-word draft is verbose, not
+        # malformed, and discarding it would trade one failure for another.
+        self.assertEqual(oa.not_an_email("Subject: S", "word " * 150), "")
+
+
+class TestRateLimitRetries(unittest.TestCase):
+    """Measured 2026-09-17: 8 of 10 calls in one run were lost to a per-minute token
+    ceiling, and every one of them carried the provider's own statement of how long
+    to wait. The run wrote nothing."""
+
+    # The real wording, including its tail. The tail matters: see the billing test.
+    GROQ_TPM = ('model call failed: gateway HTTP 429: Rate limit reached for model '
+                '`openai/gpt-oss-120b` in organization `org_01k407mvmdfpq8m0ak32bn1wxk` '
+                'service tier `on_demand` on tokens per minute (TPM): Limit 8000, '
+                'Used 6651, Requested 2309. Please try again in 7.199999999s. Need '
+                'more tokens? Upgrade to Dev Tier today at '
+                'https://console.groq.com/settings/billing')
+    NO_CREDIT = ('model call failed: gateway HTTP 429: {"error": {"message": '
+                 '"You have no credits remaining. Add credits to continue."}}')
+
+    def test_the_providers_own_wait_is_read_out_of_the_message(self):
+        self.assertAlmostEqual(oa.retry_after_seconds(self.GROQ_TPM), 7.2, places=1)
+
+    def test_a_rate_limit_that_mentions_billing_is_still_retried(self):
+        # THE BUG I WROTE. A quota check on the bare word "billing" matched this
+        # rate-limit message's upgrade link, so 429s that said exactly how long to
+        # wait were treated as a dead account. The retry never fired once, and
+        # nothing on screen said so. Pinned with the provider's real wording.
+        self.assertIn("billing", self.GROQ_TPM)
+        self.assertIsNotNone(oa.retry_after_seconds(self.GROQ_TPM))
+
+    def test_an_account_out_of_credit_is_not_retried(self):
+        # A 429 again, and no amount of waiting fixes billing. Retrying here would
+        # turn a fast failure into a slow one.
+        self.assertIsNone(oa.retry_after_seconds(self.NO_CREDIT))
+
+    def test_an_ordinary_failure_is_not_retried(self):
+        self.assertIsNone(oa.retry_after_seconds("gateway HTTP 500: boom"))
+
+    def test_a_429_with_no_hint_still_pauses_briefly(self):
+        self.assertEqual(oa.retry_after_seconds("gateway HTTP 429: rate limit"),
+                         oa.MIN_WAIT)
+
+    def test_a_retry_happens_and_waits_the_stated_time(self):
+        slept, calls = [], []
+
+        def flaky(prompt, model=None):
+            calls.append(prompt)
+            if len(calls) == 1:
+                raise RuntimeError(self.GROQ_TPM)
+            return "Subject: S\n\nBody."
+
+        with patch.object(oa, "complete", flaky):
+            got = oa.complete_with_retries("p", None, retries=3, sleep=slept.append)
+        self.assertEqual(got, "Subject: S\n\nBody.")
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(len(slept), 1)
+        self.assertAlmostEqual(slept[0], 7.2, places=1)
+
+    def test_a_quota_429_raises_without_sleeping(self):
+        slept = []
+
+        def dead(prompt, model=None):
+            raise RuntimeError(self.NO_CREDIT)
+
+        with patch.object(oa, "complete", dead):
+            with self.assertRaises(RuntimeError):
+                oa.complete_with_retries("p", None, retries=3, sleep=slept.append)
+        self.assertEqual(slept, [])
+
+    def test_it_gives_up_after_the_retry_budget(self):
+        calls = []
+
+        def always(prompt, model=None):
+            calls.append(1)
+            raise RuntimeError(self.GROQ_TPM)
+
+        with patch.object(oa, "complete", always):
+            with self.assertRaises(RuntimeError):
+                oa.complete_with_retries("p", None, retries=2, sleep=lambda s: None)
+        self.assertEqual(len(calls), 3)   # the first attempt plus two retries
+
+
+class TestContactLineShowsOnlyRoutes(unittest.TestCase):
+    """The one line you actually read must not offer a venue as a way to a person."""
+
+    def contact_line(self, block):
+        return next(l for l in block.splitlines() if l.startswith("- Contact:"))
+
+    def test_a_venue_never_appears_on_the_contact_line(self):
+        entry = oa.parse_leads(VENUE_ONLY_LEAD)[0]
+        block = oa.render(entry, "", "body", "NOW")
+        self.assertIn("nothing published reaches a person", self.contact_line(block))
+        self.assertNotIn("http", self.contact_line(block))
+
+    def test_places_are_still_listed_just_not_as_contact(self):
+        entry = oa.parse_leads(VENUE_ONLY_LEAD)[0]
+        block = oa.render(entry, "", "body", "NOW")
+        self.assertIn("- Published (places, not routes):", block)
+        self.assertIn("acme.test", block)
+
+    def test_an_address_and_a_form_are_shown_apart(self):
+        entry = oa.parse_leads(
+            "* **[u/mix]** Hiring: python\n"
+            "  - Link: https://news.ycombinator.com/item?id=1\n"
+            "  - Matched: `hiring`\n"
+            "  - Contact: email:jobs@acme.test, apply:https://jobs.ashbyhq.com/a/1\n")[0]
+        block = oa.render(entry, "S", "body", "NOW")
+        self.assertEqual(self.contact_line(block), "- Contact: email:jobs@acme.test")
+        self.assertIn("Published (places, not routes)", block)
+        self.assertIn("apply:https://jobs.ashbyhq.com/a/1", block)
+
+
+class TestResumableRuns(Base):
+    """A batch has to remember what it answered, or it cannot make progress.
+
+    Measured 2026-09-17: three batches of 15/17/10 made 42 calls covering 19 distinct
+    leads, because `todo` could only exclude leads already *drafted*. Every batch
+    restarted at the first unrefused lead and spent its limit on repeats.
+    """
+
+    def run_in(self, d, argv, reply="NO FIT — wrong stack.", complete=None):
+        leads = d / "LEADS.md"
+        if not leads.is_file():
+            leads.write_text(LEAD_FIXTURE)
+        fake = complete if complete is not None else (lambda p, model=None: reply)
+        with patch.object(oa, "LEADS_FILE", leads), \
+             patch.object(oa, "DRAFTS_FILE", d / "OUTREACH_DRAFTS.md"), \
+             patch.object(oa, "STATE_FILE", d / ".herald_state.json"), \
+             patch.object(oa, "complete", fake):
+            rc, out = self.quiet(oa.main, argv)
+        return rc, out, d / "OUTREACH_DRAFTS.md", d / ".herald_state.json"
+
+    def test_a_refusal_is_remembered(self):
+        _, _, _, state = self.run_in(self.tmpdir(), ["--about", "I do X."])
+        self.assertTrue(state.is_file())
+        self.assertIn("no_fit", state.read_text())
+
+    def test_the_next_batch_calls_nothing_when_everything_is_answered(self):
+        # THE BUG. This used to re-ask the same lead every batch, for ever.
+        d = self.tmpdir()
+        self.run_in(d, ["--about", "I do X."])
+        calls = []
+        _, out, _, _ = self.run_in(d, ["--about", "I do X."],
+                                   complete=lambda p, model=None: calls.append(p))
+        self.assertEqual(calls, [])
+        self.assertIn("already answered", out)
+
+    def test_redo_goes_round_again_on_purpose(self):
+        d = self.tmpdir()
+        self.run_in(d, ["--about", "I do X."])
+        calls = []
+        self.run_in(d, ["--about", "I do X.", "--redo"],
+                    complete=lambda p, model=None: (calls.append(p),
+                                                    "NO FIT — again")[1])
+        self.assertEqual(len(calls), 1)
+
+    def test_a_transport_failure_is_not_treated_as_answered(self):
+        # A failure says nothing about the lead, so the next batch may try it again.
+        d = self.tmpdir()
+
+        def boom(prompt, model=None):
+            raise RuntimeError("gateway HTTP 500: upstream down")
+
+        _, _, _, state = self.run_in(d, ["--about", "I do X."], complete=boom)
+        self.assertIn("failed", state.read_text())
+        self.assertIn("500", state.read_text())
+        _, out, _, _ = self.run_in(d, ["--about", "I do X."],
+                                  reply="NO FIT — wrong stack.")
+        self.assertNotIn("already answered", out)
+
+    def test_a_corrupt_state_file_does_not_stop_the_run(self):
+        d = self.tmpdir()
+        (d / ".herald_state.json").write_text("{not json at all")
+        rc, out, _, state = self.run_in(d, ["--about", "I do X."])
+        self.assertEqual(rc, 0)
+        self.assertIn("ignoring unreadable", out)
+        self.assertIn("no_fit", state.read_text())      # recovered, and rewrote it
+
+    def test_the_run_says_how_many_it_attempted(self):
+        _, out, _, _ = self.run_in(self.tmpdir(), ["--about", "I do X."])
+        self.assertIn("1 lead(s) attempted this run", out)
+
+
+class TestApplicationFormsAreNotLeads(unittest.TestCase):
+    """A form is a route; it is not a person. The distinction the count got wrong."""
+
+    def setUp(self):
+        self.entry = oa.parse_leads(APPLY_ONLY_LEAD)[0]
+
+    def test_an_apply_only_lead_does_not_qualify(self):
+        ok, why = oa.qualify(self.entry)
+        self.assertFalse(ok)
+        self.assertIn("application form", why)
+
+    def test_that_reason_differs_from_having_no_contact_at_all(self):
+        # Both mean "cannot write to this", and they are different facts. Collapsing
+        # them is how a form came to look like a route.
+        nothing = oa.parse_leads(LEAD_FIXTURE)[1]
+        self.assertNotEqual(oa.qualify(self.entry)[1], oa.qualify(nothing)[1])
+
+    def test_the_hint_is_still_recorded_it_is_just_not_reachable(self):
+        self.assertEqual(oa.reachable_of(self.entry), [])
+        self.assertEqual(oa.contacts_of(self.entry),
+                         ["link:https://jobs.ashbyhq.com/acme/1234"])
+
+    def test_render_says_the_links_are_not_a_way_in(self):
+        block = oa.render(self.entry, "", "body", "NOW")
+        self.assertIn("reply on the thread", block)
+
+    def test_a_venue_only_lead_does_not_qualify(self):
+        entry = oa.parse_leads(VENUE_ONLY_LEAD)[0]
+        ok, why = oa.qualify(entry)
+        self.assertFalse(ok)
+        self.assertIn("no direct route", why)
+        self.assertIn("venue", why)      # the kinds present are named
+
+    def test_a_venue_only_reason_differs_from_a_form_only_one(self):
+        # "a form" and "a homepage" call for different next actions.
+        venue = oa.parse_leads(VENUE_ONLY_LEAD)[0]
+        form = oa.parse_leads(APPLY_ONLY_LEAD)[0]
+        self.assertNotEqual(oa.qualify(venue)[1], oa.qualify(form)[1])
+
+    def test_the_venues_are_still_recorded_on_the_entry(self):
+        # Nothing is hidden: the lead is skipped, and the file still shows what it
+        # published, which is how you decide whether to reply on the thread anyway.
+        entry = oa.parse_leads(VENUE_ONLY_LEAD)[0]
+        self.assertIn("link:https://acme.test", oa.contacts_of(entry))
+        self.assertEqual(oa.reachable_of(entry), [])
+
+    def test_a_profile_only_lead_still_qualifies(self):
+        # LinkedIn and GitHub are platforms with a messaging path, so a profile is
+        # a weaker route than an address but still a route.
+        entry = oa.parse_leads(PROFILE_ONLY_LEAD)[0]
+        self.assertEqual(oa.qualify(entry), (True, ""))
+        self.assertEqual(oa.reachable_of(entry),
+                         ["link:https://www.linkedin.com/in/someone"])
+
+    def test_a_lead_with_an_address_and_a_form_still_qualifies(self):
+        entry = oa.parse_leads(
+            "* **[u/mix]** Hiring: python\n"
+            "  - Link: https://news.ycombinator.com/item?id=1\n"
+            "  - Matched: `hiring`\n"
+            "  - Contact: email:jobs@acme.test, link:https://jobs.ashbyhq.com/a/1\n")[0]
+        self.assertEqual(oa.qualify(entry), (True, ""))
+        self.assertEqual(oa.reachable_of(entry), ["email:jobs@acme.test"])
+
+    def test_list_mode_reports_it_as_skipped_not_as_a_lead(self):
+        leads = self._tmp() / "LEADS.md"
+        leads.write_text(APPLY_ONLY_LEAD)
+        with patch.object(oa, "LEADS_FILE", leads), \
+             patch.object(oa, "STATE_FILE", self._tmp() / ".herald_state.json"):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+                rc = oa.main(["--list"])
+        out = buf.getvalue()
+        self.assertEqual(rc, 0)
+        self.assertIn("0 qualified", out)
+        self.assertIn("application form", out)
+
+    def _tmp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        return Path(tmp.name)
+
     def test_mailto_encodes_subject_and_body(self):
         link = oa.mailto("a@b.test", "S & T", "x y")
         self.assertTrue(link.startswith("mailto:a@b.test?subject=S%20%26%20T&body=x%20y"))
@@ -490,12 +993,22 @@ class TestDrafting(unittest.TestCase):
 
 
 class TestOutreachMain(Base):
+    """main(), end to end, with every path it writes redirected.
+
+    STATE_FILE is patched here too, and that is not decoration. It is the resume
+    memory, so a test that leaves it real writes verdicts into the project directory
+    and the *next* test reads them -- eight unrelated tests failed exactly that way
+    when the resume feature landed, all of them reporting FileNotFoundError on a
+    drafts file that had correctly never been written.
+    """
+
     def run_main(self, argv, reply="Subject: Hi\n\nShort body."):
         leads = self.tmpdir() / "LEADS.md"
         drafts = self.tmpdir() / "OUTREACH_DRAFTS.md"
         leads.write_text(LEAD_FIXTURE)
         with patch.object(oa, "LEADS_FILE", leads), \
              patch.object(oa, "DRAFTS_FILE", drafts), \
+             patch.object(oa, "STATE_FILE", self.tmpdir() / ".herald_state.json"), \
              patch.object(oa, "complete", lambda prompt, model=None: reply):
             rc, out = self.quiet(oa.main, argv)
         return rc, out, drafts
@@ -521,12 +1034,42 @@ class TestOutreachMain(Base):
         self.assertIn("no fit", out)
         self.assertFalse(drafts.exists())
 
+    def test_an_echoed_prompt_is_reported_and_never_written(self):
+        # THE BUG. `--about-file ABOUT.md` produced seven of these in one run and
+        # the tool wrote all seven as drafts, reporting a 70% fit rate that was
+        # really a count of how often the model echoed the question.
+        rc, out, drafts = self.run_main(["--about", "I do X."], reply=ECHOED_PROMPT)
+        self.assertFalse(drafts.exists(), "the prompt was written as a draft")
+        self.assertNotIn("drafted", out)
+        self.assertIn("not written", out)
+
+    def test_a_run_of_only_malformed_replies_is_not_a_success(self):
+        # Exiting 0 here would report a broken pipeline as a run that found nothing.
+        rc, _, _ = self.run_main(["--about", "I do X."], reply=ECHOED_PROMPT)
+        self.assertEqual(rc, 1)
+
+    def test_a_body_with_no_subject_is_not_written(self):
+        rc, out, drafts = self.run_main(["--about", "I do X."],
+                                       reply="A short body with no subject line.")
+        self.assertFalse(drafts.exists())
+        self.assertIn("Subject", out)
+
+    def test_a_good_reply_is_still_written_alongside_a_bad_one(self):
+        # The guard must not become a filter that discards real drafts: one lead
+        # qualifies in the fixture, so a good reply still has to reach the file.
+        rc, out, drafts = self.run_main(["--about", "I do X."],
+                                       reply="Subject: hi\n\nA short honest body.")
+        self.assertEqual(rc, 0)
+        self.assertIn("appended 1 draft", out)
+        self.assertIn("A short honest body.", drafts.read_text())
+
     def test_redo_is_needed_to_draft_the_same_lead_twice(self):
         leads = self.tmpdir() / "LEADS.md"
         drafts = self.tmpdir() / "OUTREACH_DRAFTS.md"
         leads.write_text(LEAD_FIXTURE)
         with patch.object(oa, "LEADS_FILE", leads), \
              patch.object(oa, "DRAFTS_FILE", drafts), \
+             patch.object(oa, "STATE_FILE", self.tmpdir() / ".herald_state.json"), \
              patch.object(oa, "complete", lambda prompt, model=None: "Subject: S\n\nB"):
             self.quiet(oa.main, ["--about", "I do X."])
             once = drafts.read_text()
@@ -541,6 +1084,7 @@ class TestOutreachMain(Base):
         leads.write_text(LEAD_FIXTURE)
         with patch.object(oa, "LEADS_FILE", leads), \
              patch.object(oa, "DRAFTS_FILE", drafts), \
+             patch.object(oa, "STATE_FILE", self.tmpdir() / ".herald_state.json"), \
              patch.object(oa, "complete", boom):
             rc, _ = self.quiet(oa.main, ["--about", "I do X."])
         self.assertEqual(rc, 1)
@@ -552,6 +1096,7 @@ class TestOutreachMain(Base):
         leads = self.tmpdir() / "LEADS.md"
         leads.write_text(LEAD_FIXTURE)
         with patch.object(oa, "LEADS_FILE", leads), \
+             patch.object(oa, "STATE_FILE", self.tmpdir() / ".herald_state.json"), \
              patch.object(oa, "complete", explode):
             rc, out = self.quiet(oa.main, ["--list"])
         self.assertEqual(rc, 0)

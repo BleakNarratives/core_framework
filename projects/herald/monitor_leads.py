@@ -44,9 +44,29 @@ actually gets posted, and the tag does the filtering: r/forhire requires a
   opposite of a lead, so it is excluded by name rather than left to a keyword.
 
   Contact details are extracted where the poster published them -- an email, an
-  external link, or an explicit "DM me" -- and recorded on the entry.
+external link, or an explicit "DM me" -- and recorded on the entry.
   `--require-contact` keeps only posts that have one. Expect it to discard a lot:
   most posters say "DM me", which is a route to a pseudonym, not an address.
+
+WHY A LINK IS NOT A CONTACT (same day, twice)
+  A route and a person are not the same thing, and treating them as one made the
+  headline number wrong in the flattering direction, twice.
+
+  First the forms: 55 of 62 entries were reported "contactable" while a large share
+  published nothing but an Ashby/Deel/Oracle application form -- structural intake
+  that files your details and routes them to somebody you never see. That took the
+  count to 45.
+
+  Then the homepages and job documents. Of those 45, 13 published no address and no
+  direct message at all, and what they actually published was a company domain
+  (`tether.io`, `openrent.co.uk`, `whistlerobotics.com`, `flowraaders.com`) or a
+  careers/job page. A homepage is a place, not a person. That took the count to 35.
+
+  So the rule is now positive rather than a list of exclusions: a hint reaches a
+  person only if it is an address, an explicit "DM me", or a **profile page on a
+  platform where a person can be messaged**. Everything else with a URL is a venue.
+  See `classify_link` for the classification and `reaches_a_person` for the single
+  predicate both readers use.
 
 WHAT THIS IS STILL NOT
   A pipeline. A `[HIRING]` post is a real person with real work and a real
@@ -126,6 +146,139 @@ HREF_RE = re.compile(r'href="([^"]+)"')
 # contact information -- it is the same thread again.
 REDDIT_URL_RE = re.compile(r"https?://(?:[a-z0-9-]+\.)*reddit\.com|https?://redd\.it",
                            re.I)
+
+# ── a form is not a person ───────────────────────────────────────────────────
+#
+# Both signals are needed, because either one alone is wrong. The host names the
+# platform, but a company's careers page lives on its own domain
+# (`careers.tether.io/o/...`), so host-matching alone misses it. The path finds a
+# posting or a listing, but a path rule alone would sweep up a *personal* page, and
+# `linkedin.com/in/<name>` or `github.com/<user>` is a real route to a human.
+#
+# The host list is derived from a census of what is actually in LEADS.md
+# (2026-09-17: 53 hosts across 144 link hints), not from a guess. The bulk were ATS:
+# jobs.ashbyhq.com (18), careers.tether.io (19), grnh.se (8),
+# greenzie.applytojob.com (5), careers.auroraer.com (5), jobs.deel.com (4),
+# egmn.fa.us2.oraclecloud.com (2), plus bamboohr, breezy.hr and a jotform.
+ATS_HOST_RE = re.compile(
+    r"(?:^|\.)("
+    r"ashbyhq\.com|grnh\.se|greenhouse\.io|lever\.co|workable\.com|"
+    r"smartrecruiters\.com|applytojob\.com|bamboohr\.com|breezy\.hr|"
+    r"myworkdayjobs\.com|workday\.com|icims\.com|recruitee\.com|teamtailor\.com|"
+    r"jobvite\.com|successfactors\.com|taleo\.net|oraclecloud\.com|"
+    r"deel\.com|join\.com|jotform\.com|recruiterbox\.com|jazzhr\.com|"
+    r"personio\.(?:de|com)|paylocity\.com|zoho\.com|bamboohr\.co"
+    r")$", re.I)
+
+# A single posting, a listing of postings, or an apply endpoint. `/hire` is not in
+# here on purpose: it is a substring of too many innocent paths.
+APPLY_PATH_RE = re.compile(
+    r"/(?:o|jobs?|apply|postings?|careers?|hiring|positions?|openings?|"
+    r"vacanc(?:y|ies)|job-details)\b", re.I)
+
+
+def is_application_form(url: str) -> bool:
+    """Is this a form that takes an application, rather than a way to reach a person?
+
+    Deliberately conservative, because a false positive silently marks a real lead
+    unreachable and nobody notices. A `mailto:` is never a form. A host that names
+    no ATS and a path like `/contact`, `/in/<name>` or `/<username>` is left alone.
+    """
+    text = (url or "").strip().rstrip(".,;")
+    if not text or text.lower().startswith("mailto:"):
+        return False
+    parts = urlsplit(text)
+    if ATS_HOST_RE.search(parts.netloc.lower().lstrip("www.")):
+        return True
+    return bool(APPLY_PATH_RE.search(parts.path))
+
+
+# A platform where a person can be messaged. An allowlist, not a ban list: the
+# question is what a hint *is*, so anything unclassified falls out as a venue by
+# default rather than being trusted until proven otherwise.
+#
+# Known limit, stated rather than hidden: the host says the URL is on a person-shaped
+# platform, and cannot say whether this particular profile belongs to a person or a
+# company (github.com/closeio is an organisation). The alternative is guessing from
+# the path, which would be worse.
+PROFILE_HOST_RE = re.compile(
+    r"(?:^|\.)(linkedin\.com|github\.com|gitlab\.com|x\.com|twitter\.com|"
+    r"bsky\.app|threads\.net|mastodon\.social)$", re.I)
+
+
+def classify_link(url: str) -> str:
+    """What kind of place is this URL: `apply`, `profile`, or `venue`?
+
+    A URL is a *place*. Only one of these three can be written to, and saying so is
+    the difference between a lead count you can act on and one that flatters itself.
+    """
+    text = (url or "").strip()
+    if is_application_form(text):
+        return "apply"
+    parts = urlsplit(text)
+    if PROFILE_HOST_RE.search(parts.netloc.lower().lstrip("www.")):
+        return "profile"
+    return "venue"
+
+
+def route_kind(hint: str) -> str:
+    """The kind of a stored hint: email, dm, profile, apply or venue.
+
+    Reads the *old* shape too. LEADS.md is append-only and holds hints written
+    before links were classified, where a homepage and a profile both sat under a
+    bare `link:`. Trusting the stored prefix would keep counting exactly what this
+    exists to stop counting, so the prefix is re-derived from the URL for those.
+    """
+    head, sep, rest = (hint or "").partition(":")
+    if not sep:
+        return "dm" if head.strip() == "dm" else "venue"
+    if head in ("email", "apply", "profile", "venue"):
+        return head
+    return classify_link(rest)          # a bare `link:` from an older run
+
+
+# Employment type as the post itself states it, read from the first line -- the HN
+# convention is `Company | Role | Location | Salary`, so it is usually there.
+#
+# This is a LABEL, not a filter, and that is a deliberate decision with a measurement
+# behind it. Over the 35 qualified leads on 2026-09-17: 18 say full-time in their own
+# first line, 13 say nothing at all, 4 mention part-time or contract and all 4 also
+# say full-time, and **not one is contract-only**. A "route contract offers away from
+# full-time posts" filter would therefore have hidden 18 real leads and produced no
+# match that was not already there. The label tells you what you are writing to; a
+# filter would have quietly shrunk the list, which is the bug this pipeline has spent
+# its whole history un-fixing.
+FULL_TIME_RE = re.compile(r"\bfull[\s-]?time\b|\bw2\b|\bpermanent\b|\bsalaried\b",
+                          re.I)
+CONTRACT_RE = re.compile(r"\bcontract(?:or|ing)?\b|\bfreelance\b|\bpart[\s-]?time\b|"
+                         r"\bfractional\b|\bhourly\b|\bc2c\b|\b1099\b", re.I)
+
+
+def employment_type(text: str) -> str:
+    """`full-time`, `contract`, `both` or `unstated`, from the post's own words.
+
+    Purely local and deterministic: no model call, so it cannot be wrong in an
+    interesting way. `unstated` is not a synonym for full-time -- 13 posts say nothing
+    and guessing on their behalf is how a count starts flattering itself again.
+    """
+    full = bool(FULL_TIME_RE.search(text or ""))
+    contract = bool(CONTRACT_RE.search(text or ""))
+    if full and contract:
+        return "both"
+    if full:
+        return "full-time"
+    if contract:
+        return "contract"
+    return "unstated"
+
+
+def reaches_a_person(hint: str) -> bool:
+    """Can this hint be addressed to somebody, rather than only visited?
+
+    Takes a *hint string* rather than an entry so that both readers -- the writers
+    in this module and `outreach_agent` -- apply exactly one rule.
+    """
+    return route_kind(hint) in ("email", "dm", "profile")
 
 HEADER = """# LEADS — posts with paid work, and what they published to reach them
 
@@ -234,15 +387,27 @@ def is_hiring(entry: dict) -> tuple[bool, str]:
 def contact_hints(entry: dict) -> list[str]:
     """Every way the poster published to reach them, best route first.
 
-    An email can be written to directly; an external link is a venue; an explicit
-    "DM me" reaches a pseudonym with no address at all. Reddit's own URLs are
-    dropped, because the permalink is already on the entry and a link back to the
-    same thread is not contact information.
+    Five kinds, and the prefix is the whole point of recording them separately:
+
+    - `email:` can be written to today.
+    - `dm` reaches a pseudonym with no address at all.
+    - `profile:` is a page on a platform where a person can be messaged.
+    - `venue:` is a homepage, a job document or a media link. A place, not a person.
+    - `apply:` is an application form: intake that files your details and routes
+      them to somebody you never see.
+
+    Only the first three count as reaching somebody; see `reaches_a_person`. All
+    five are recorded, because the draft needs to show what was published and the
+    absence of a route is itself a finding.
+
+    Reddit's own URLs are dropped, because the permalink is already on the entry, so
+    a link back to the same thread is not contact information.
     """
     body = entry.get("body", "")
     hints = [f"email:{address}" for address in sorted(set(EMAIL_RE.findall(body)))]
     links = {*(entry.get("links") or []), *URL_RE.findall(body)}
-    hints += [f"link:{link.rstrip('.,;')}" for link in sorted(links)
+    hints += [f"{classify_link(link)}:{link.rstrip('.,;')}"
+              for link in sorted(links)
               if link and not REDDIT_URL_RE.match(link)]
     if DM_RE.search(body):
         hints.append("dm")
@@ -344,16 +509,22 @@ def main(argv: list[str] | None = None) -> int:
             entry["matched"] = signal
             entry["contact"] = contact_hints(entry)
             kept.append(entry)
-        reachable = sum(1 for entry in kept if entry["contact"])
+        def reachable(entry: dict) -> bool:
+            return any(reaches_a_person(hint) for hint in entry["contact"])
+
+        reach_count = sum(1 for entry in kept if reachable(entry))
+        forms_only = sum(1 for entry in kept if entry["contact"]) - reach_count
         if args.require_contact:
-            kept = [entry for entry in kept if entry["contact"]]
+            kept = [entry for entry in kept if reachable(entry)]
         fresh = new_entries(kept, known)[: max(0, args.limit)]
         fresh_total += len(fresh)
         # Every count is reported separately: "0 new" and "0 hiring" mean very
         # different things, and "hiring but unreachable" is the number that
-        # decides whether this source is worth keeping at all.
+        # decides whether this source is worth keeping at all. "apply-form only"
+        # is its own number because it used to be counted as contactable.
         print(f"  {feed['name']}: {len(entries)} in feed, {len(kept)} hiring, "
-              f"{reachable} with contact, {len(fresh)} new")
+              f"{reach_count} reachable, {forms_only} apply-form only, "
+              f"{len(fresh)} new")
         if fresh:
             sections.append(render(feed["name"], fresh, now))
 

@@ -17,7 +17,8 @@ import json
 import os
 import sys
 
-HOME = "/home/bleaknarratives"
+# The workspace root is the user's home; resolving it beats pinning a username.
+HOME = os.path.expanduser("~")
 ARCHIVE = os.path.join(HOME, "._archive", "duplicates")
 # Noise to ignore when hashing a project tree.
 IGNORE_DIRS = {"node_modules", ".git", "__pycache__", "venv", ".venv", ".cache"}

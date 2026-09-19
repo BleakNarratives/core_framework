@@ -21,8 +21,8 @@ import os
 import re
 import sys
 
-CONFLICTS = (
-    "/home/bleaknarratives/NAT-Recovery-Kernel/intake/2026-08-21-samsung-a9-001/"
+CONFLICTS = os.path.expanduser(
+    "~/NAT-Recovery-Kernel/intake/2026-08-21-samsung-a9-001/"
     "android/root_2026/ModMind/nat_vcs/.nat/conflicts"
 )
 

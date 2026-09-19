@@ -29,7 +29,9 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-STATE_FILE = Path("/home/bleaknarratives/.agent_state.json")
+# Resolved from $HOME rather than pinned: this is per-machine coordination state,
+# and the handoff protocol names the file `.agent_state.json`, not a fixed path.
+STATE_FILE = Path.home() / ".agent_state.json"
 DEFAULT_TTL = 900  # seconds
 
 

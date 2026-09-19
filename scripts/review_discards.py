@@ -22,7 +22,7 @@ import json
 import sys
 from pathlib import Path
 
-HOME = Path("/home/bleaknarratives")
+HOME = Path.home()
 CONFLICTS = (HOME / "NAT-Recovery-Kernel/intake/2026-08-21-samsung-a9-001/"
              "android/root_2026/ModMind/nat_vcs/.nat/conflicts")
 TRIAGE = HOME / "FISH-VAG-SOS" / "root2025_triage_2026-09-15.json"

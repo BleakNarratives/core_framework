@@ -13,6 +13,14 @@
 # 4. AST inspection - syntax-level detection before execution
 # 5. Canary tokens - honeypots to detect data exfiltration
 
+# SCOPE WARNING - read before running
+# The harden functions below target /workspace, the root of a *different* sandbox,
+# not this checkout. That path does not exist on this machine, so running the script
+# here would create /workspace and then chown -R root:root it. The script also writes
+# a copy of itself into /workspace/scripts/, so those paths are not a plain
+# find-and-replace. Treat this file as the archived design of the hardening suite
+# until the target root is parameterized deliberately.
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -21,7 +29,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Setup logging
-LOG_FILE="/home/bleaknarratives/.security/emergency.log"
+LOG_FILE="${HOME}/.security/emergency.log"
 cat > $LOG_FILE <<'EOF'
 EMERGENCY SECURITY HARDENING LOG
 ================================

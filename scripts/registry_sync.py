@@ -18,7 +18,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-HOME = Path("/home/bleaknarratives")
+HOME = Path.home()
 MANIFEST = HOME / "FISH-VAG-SOS" / "meridian_manifest.json"
 LOCKOUT_DOC = HOME / "FISH-VAG-SOS" / "DELETION_LOCKOUT.md"
 ARCHIVE = HOME / "._archive" / "duplicates"

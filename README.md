@@ -7,7 +7,7 @@
 > Inert `SKILL.md` → autonomous, RAG-enabled execution runtime. No MCP server. No extension. One API call.
 
 <!-- METRICS:START -->
-[![Tests](https://img.shields.io/badge/tests-182%20passing-brightgreen)](#tests)
+[![Tests](https://img.shields.io/badge/tests-198%20passing-brightgreen)](#tests)
 <!-- METRICS:END -->
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](#install)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](#license)

@@ -3,13 +3,21 @@
 validate.py — recompilation guard for ribbon bundles.
 
 Checks:
-  1. spec.schema.json is valid JSON
-  2. ribbon.spec.json validates against required keys (no jsonschema dep — hand-rolled)
-  3. fixtures/*.json all pass the same contract
-  4. No duplicate ribbon ids, no zero-length paths
-  5. Emit analysis_report.json on failure (never pollute the bundle)
+  1. spec.schema.json and ribbon.spec.json parse as JSON
+  2. ribbon.spec.json satisfies the hand-rolled ribbon.v1 contract (no jsonschema dep)
+  3. fixtures/*.json all satisfy the same contract
+  4. Per ribbon: unique id matching ^[a-z0-9_-]+$, >=2 numeric [x,y] points,
+     a #RRGGBB stroke, a width within 0.5..32, and a valid easing/duration
+  5. Writes analysis_report.json on EVERY run, never rewrites the bundle
 
-Exit: 0 clean, 1 schema fail, 2 fixture fail, 75 guard rollback signal.
+fixtures_invalid/ is deliberately not scanned: it holds the negative fixtures
+that prove the guard trips, and leaving them out of the sweep is what lets this
+script stay green. tests/test_ribbon_validate.py asserts they are rejected, so
+that proof still runs in the suite.
+
+Exit: 0 clean, 1 bundle contract fail, 2 fixture fail.
+Exit 75 is the caller's convention for "schema fail -> roll back", owned by the
+recompile wrapper (see tools/guard/QRD.md); this script never exits 75.
 """
 import json, pathlib, re, sys
 ROOT = pathlib.Path(__file__).parent

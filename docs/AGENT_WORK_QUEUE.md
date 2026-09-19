@@ -124,17 +124,35 @@ commit as the work, so the queue cannot drift from reality.
   event to the live bus. The harness now overrides `ROOTBASE_DIR` /
   `ROOTBASE_BUS_DIR` and asserts the bus file lands under the redirected home; the
   live bus is unchanged across a run (1398 lines before and after).
-- [ ] **13. Make the Thoth bus honour `$HOME`.**
-  `thoth_orchestrator/agent_bus.py` hardcodes its default `ROOTBASE_DIR` to
-  `/home/bleaknarratives/RootBase`, so emitting an event writes into one specific
-  user's home no matter what `HOME` says. This is the actual defect item 11 tripped
-  over.
-  **Prove:** emitting with a redirected `$HOME` writes under that home by default.
+- [x] **13. Make the Thoth bus honour `$HOME`.** *(done 2026-09-19)*
+  `agent_bus.py` now defaults `ROOTBASE_DIR` to `$HOME/RootBase`, and an explicit
+  `ROOTBASE_DIR` / `ROOTBASE_BUS_DIR` / `ROOTBASE_EVENT_FILE` still wins.
+  **Proved:** `tests/test_thoth_bus_location.py`, **5 tests, OK** — the default lands
+  under a redirected `$HOME` and emits there, an explicit override still wins, and on
+  a normal `$HOME` the path is byte-identical to the old hardcoded one. Across two
+  consecutive full-suite runs the live bus gained **0** events.
+  **Caveat worth remembering:** `thoth_orchestrator/` is untracked, so the fix itself
+  is in no commit. The tests are the durable part; see `docs/PROJECT_MAP.md`.
+  Fixing this also exposed three leaks the session had been relying on the old default
+  to contain: the gate test appended real `molt.recursive.*` events (measured: 12 over
+  three runs — its in-process `_phase_execute` cases emit before HOME redirection can
+  matter), and the bridges and bridge-degradation harnesses each wrote
+  `~/.whorl/whorl.db` because `whorl.core.config` ignores `HOME`. All three now set
+  `ROOTBASE_*` / `WHORL_HOME` and assert the live bus is unmoved.
 - [ ] **14. Give the autoloop a quiet mode.**
   `RecursiveEngine.autoloop` calls `cycle(verbose=True)`, so `tick_instar_autoloop`
   writes progress to stdout unconditionally — a caller that wants machine-readable
   output has to strip it. Asserted in the bridges test rather than fixed there.
   **Prove:** a quiet run writes nothing to stdout, asserted in the same file.
+- [ ] **16. Give the suite one shared runtime sandbox.**
+  Containing runtime state is currently per-file and incomplete. Measured with mtime
+  markers (`touch $MARK` before a run, then `find ~/.whorl ~/RootBase -newer $MARK`):
+  `tests/test_providers_generated` writes 2 files under `~/.whorl` when run alone, and
+  full-suite runs flicker between 0 and 1 because `test_molt_triad`'s process-wide
+  `WHORL_HOME` masks later writers. The Thoth bus (`~/RootBase`) is now clean.
+  The fix is one place that points `HOME` / `WHORL_HOME` / `ROOTBASE_*` at a temp root
+  for the whole run, not more per-file patches.
+  **Prove:** a full-suite run leaves both directories byte-stable, twice in a row.
 - [ ] **15. Fix the mutation vault's misleading note.**
   With `store_last_cycle=False` the result carries `note: "journal absent"` even when
   the journal exists and the caller simply asked not to store. The message names the
@@ -156,6 +174,9 @@ commit as the work, so the queue cannot drift from reality.
 
 ## Needs Michael — never done autonomously
 
+- **Decide whether `thoth_orchestrator/` should be tracked.** It is ignored, yet
+  imported by tracked sovereign code, and its state paths are machine-pinned. Left
+  alone deliberately: allowlisting a whole ignored package is a boundary decision.
 - **Parameterize `scripts/emergency_hardening.sh`'s target root.** 40 functional
   `/workspace` paths point at a different sandbox. Running it here would create
   `/workspace` and then `chown -R root:root` it, and it embeds a copy of itself

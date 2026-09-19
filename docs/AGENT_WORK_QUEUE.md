@@ -39,11 +39,13 @@ commit as the work, so the queue cannot drift from reality.
   `@dataclass` dies with `AttributeError: 'NoneType' object has no attribute
   '__dict__'` — a loader bug that looks like a bug in the loaded file.
 
-- [ ] **4. Document the herald suite invocation in `AGENTS.md` §6.**
-  `tests/test_herald_suite_offline.py` now runs it, but §6 lists only the root and
-  Whorl commands, so the direct invocation still lives in a docstring comment.
-  Update the nearest doc, not the contract, if the wrapper is judged sufficient.
-  **Prove:** the documented command runs the 130 herald tests.
+- [x] **4. Document the herald suite invocation.** *(done 2026-09-19)*
+  Judged the wrapper sufficient, so the contract was left alone: `AGENTS.md` §6
+  needs no herald line because `python -m unittest discover -s tests` already runs
+  those tests through `tests/test_herald_suite_offline.py`. The nearest doc,
+  `docs/PROJECT_MAP.md`, now records that next to its `projects/lean/` entry
+  together with the direct invocation and the deliberately ignored lead data.
+  **Prove:** the documented root command reaches herald's suite.
 
 - [ ] **5. Commit the staged `docs/SYSTEM_DEPENDENCIES.md`.**
   317 lines, staged and uncommitted since before this session. It is a doc; commit

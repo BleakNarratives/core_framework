@@ -34,6 +34,14 @@ and local runtime state. Do not move or delete an entry based on its name alone.
   adding it would record a gitlink no clone could resolve -- so its files cannot
   be committed here as ordinary source. Test it from inside it:
   `cd projects/lean && python -m pytest tests/ -q` (79 tests, no network).
+- `projects/herald/` is not a nested repository, but its suite is nested: tests
+  live in `projects/herald/tests/` and need that directory as the top level, so
+  `python -m unittest discover -s tests` did not reach them. They are now covered
+  by `tests/test_herald_suite_offline.py`, which runs herald's own suite as a
+  subprocess — so the root command does count them. Run them directly with
+  `python -m unittest discover -s projects/herald/tests -t projects/herald`
+  (130 tests, offline). Its lead data (`LEADS.md`, `OUTREACH_DRAFTS.md`) is
+  deliberately ignored by `projects/herald/.gitignore`.
 - The current branch is `feature/ribbon-animation`. As of 2026-09-19 the working
   tree is committed apart from the untracked items catalogued above; this
   document describes the tree and does not imply ownership of anything in it.

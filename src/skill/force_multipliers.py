@@ -283,7 +283,7 @@ def fm_morph_suggest(ctx: Dict[str, Any]):
         ctx["_morph_hint"] = suggested
         # append to hydrated preview if requested
         if ctx.get("_include_morph_hint"):
-            ctx["_morph_banner"] = f"💡 Morph hint: this skill fits preset `{suggested}` — `morph_skill('{ctx.get('skill')}','{suggested}')`"
+            ctx["_morph_banner"] = f" Morph hint: this skill fits preset `{suggested}` — `morph_skill('{ctx.get('skill')}','{suggested}')`"
     return None
 
 

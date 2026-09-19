@@ -64,7 +64,7 @@ VOID_LABELS = {
     "discoverability": "Discoverability — can a human FIND it?",
     "cruelty": "Cruelty — does it ship without deleting?",
 }
-VOID_ICON = {"distribution":"🚚","monetization":"💰","trust":"🧪","retention":"🔁","scale":"📈","discoverability":"🗺️","cruelty":"💀"}
+VOID_ICON = {"distribution":"","monetization":"","trust":"","retention":"","scale":"","discoverability":"","cruelty":""}
 
 # market lens weights (you said market+scaleablity first, spelling lol fuck it — keeping it)
 MARKET_WEIGHTS = {

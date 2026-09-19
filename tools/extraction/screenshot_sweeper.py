@@ -401,10 +401,10 @@ def main():
             fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
             fh.flush()
             if rec.get("error"):
-                print(f"⚠ {rec['error'][:80]}")
+                print(f" {rec['error'][:80]}")
             else:
                 by_type[rec.get("type","other")].append(rec)
-                print(f"✓ {rec.get('type','other'):8s} · {len(rec.get('todos',[]))} todo — {rec.get('summary','')[:80]}")
+                print(f" {rec.get('type','other'):8s} · {len(rec.get('todos',[]))} todo — {rec.get('summary','')[:80]}")
             processed += 1
             if args.throttle and idx < len(to_scan):
                 time.sleep(args.throttle)

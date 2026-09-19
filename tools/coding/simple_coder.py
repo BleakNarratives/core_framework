@@ -186,13 +186,13 @@ def main():
     
     # Test generation
     result = coder.generate_python("user authentication system")
-    print("✅ Generated Python class")
+    print(" Generated Python class")
     
     # Save the file
     for filename, content in result["files"].items():
         with open(filename, 'w') as f:
             f.write(content)
-        print(f"📄 Saved: {filename}")
+        print(f" Saved: {filename}")
 
     # MOLT smoke test (no-op if no skill)
     if HAS_MOLT:

@@ -99,8 +99,8 @@ def organize_files():
 
     logging.info("--- FILE ORGANIZATION COMPLETE ---")
     print(f"\n--- Summary ---")
-    print(f"✅ Files Moved: {files_moved}")
-    print(f"❌ Files Skipped: {files_skipped}")
+    print(f" Files Moved: {files_moved}")
+    print(f" Files Skipped: {files_skipped}")
     print(f"Log saved to: {os.path.basename(log_file)}")
 
 

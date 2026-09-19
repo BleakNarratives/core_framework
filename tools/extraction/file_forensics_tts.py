@@ -16,7 +16,7 @@ class TalkingFileForensics:
     def scan_and_announce(self):
         """Scan with live commentary"""
         self.tts.speak("Starting file forensics scan")
-        print("🔍 Scanning file structure...")
+        print(" Scanning file structure...")
         
         # Simulate scanning process
         file_count = 0
@@ -34,14 +34,14 @@ def main():
     """Run talking forensic analysis"""
     forensics = TalkingFileForensics("/storage/68CC-9ED6/BleakDev/", tts_enabled=True)
     
-    print("🎤 TALKING FILE ANALYSIS STARTING...")
+    print(" TALKING FILE ANALYSIS STARTING...")
     file_count = forensics.scan_and_announce()
     
     # Summary announcement
     summary = f"Analysis complete. Your BleakDev project contains {file_count} Python files across multiple projects. Ready for refactoring."
     forensics.tts.speak(summary)
     
-    print(f"\n📊 {summary}")
+    print(f"\n {summary}")
 
 if __name__ == "__main__":
     main()

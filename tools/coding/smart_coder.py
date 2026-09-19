@@ -444,7 +444,7 @@ async def get_users():
 
 if __name__ == "__main__":
     import uvicorn
-    print("🚀 Starting API server on http://localhost:8000")
+    print(" Starting API server on http://localhost:8000")
     uvicorn.run(app, host="0.0.0.0", port=8000)
 """
             },

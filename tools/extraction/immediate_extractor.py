@@ -12,9 +12,9 @@ def speak(text):
     try:
         clean_text = text.replace('"', '\\"').replace('$', '\\$')
         subprocess.run(['espeak', '-s', '160', '-p', '50', clean_text])
-        print(f"🔊: {text}")
+        print(f": {text}")
     except Exception as e:
-        print(f"🔇: {e}")
+        print(f": {e}")
 
 def extract_code(text):
     """Extract code blocks from text"""
@@ -24,13 +24,13 @@ def extract_code(text):
 
 def main():
     speak("Code extractor ready for immediate action")
-    print("🎯 PASTE THE ENTIRE CHAT RESPONSE WITH CODE BLOCKS:")
+    print(" PASTE THE ENTIRE CHAT RESPONSE WITH CODE BLOCKS:")
     print("(Press Ctrl+D when done on empty line)\n")
     
     # Read ALL input until Ctrl+D
     full_input = sys.stdin.read()
     
-    print("🔍 EXTRACTING CODE BLOCKS...")
+    print(" EXTRACTING CODE BLOCKS...")
     code_blocks = extract_code(full_input)
     
     if code_blocks:
@@ -39,13 +39,13 @@ def main():
             filename = f"extracted_code_{i+1}.py"
             with open(filename, 'w') as f:
                 f.write(code)
-            print(f"💾 SAVED: {filename}")
+            print(f" SAVED: {filename}")
             speak(f"Saved code block {i+1}")
             
-        print(f"✅ SUCCESS: Extracted {len(code_blocks)} code files")
+        print(f" SUCCESS: Extracted {len(code_blocks)} code files")
         speak("Code extraction complete")
     else:
-        print("❌ NO CODE BLOCKS FOUND")
+        print(" NO CODE BLOCKS FOUND")
         speak("No code blocks detected in the response")
 
 if __name__ == "__main__":

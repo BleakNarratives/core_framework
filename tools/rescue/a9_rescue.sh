@@ -118,7 +118,7 @@ do_preflight() {
 
   local gb
   gb=$(disk_ok)
-  if (( gb < 2 )); then err "LOW DISK: ${gb}G free — free space before pulling! (need ~5-10G headroom)"; else log "Disk free: ${gb}G ✓"; fi
+  if (( gb < 2 )); then err "LOW DISK: ${gb}G free — free space before pulling! (need ~5-10G headroom)"; else log "Disk free: ${gb}G "; fi
 
   log ""
   info "USB (lsusb, shared into Crostini):"

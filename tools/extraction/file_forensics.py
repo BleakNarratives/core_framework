@@ -142,7 +142,7 @@ class FileForensics:
     
     def scan_current_structure(self) -> Dict:
         """Scan what actually exists"""
-        print(f"🔍 Scanning: {self.scan_path}")
+        print(f" Scanning: {self.scan_path}")
         
         all_files = {}
         
@@ -184,7 +184,7 @@ class FileForensics:
     
     def analyze_completeness(self):
         """Compare current structure vs expected"""
-        print("\n🎯 ANALYZING COMPLETENESS...")
+        print("\n ANALYZING COMPLETENESS...")
         
         # Flatten expected files for easier searching
         expected_files = {}
@@ -231,7 +231,7 @@ class FileForensics:
         """Generate comprehensive report"""
         report = []
         report.append("=" * 80)
-        report.append("📊 FILE FORENSICS REPORT - BLEAKDEV")
+        report.append(" FILE FORENSICS REPORT - BLEAKDEV")
         report.append("=" * 80)
         report.append(f"Scan Path: {self.scan_path}")
         report.append(f"Scan Date: {datetime.now().isoformat()}")
@@ -334,7 +334,7 @@ class FileForensics:
         """Save report to file"""
         output_path = self.scan_path / "bleakdev_analysis_report.txt"
         output_path.write_text(report, encoding='utf-8')
-        print(f"📄 Report saved: {output_path}")
+        print(f" Report saved: {output_path}")
 
 def main():
     """Run the forensic analysis"""

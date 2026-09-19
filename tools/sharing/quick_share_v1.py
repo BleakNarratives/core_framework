@@ -28,16 +28,16 @@ def create_ai_shareable_bundle(project_path):
                 zipf.write(file_path, arcname)
                 important_files.append(str(arcname))
     
-    print(f"🎯 Created AI review bundle with {len(important_files)} files")
-    print(f"📦 File: {output_zip}")
-    print(f"📏 Size: {os.path.getsize(output_zip) / 1024 / 1024:.2f} MB")
+    print(f" Created AI review bundle with {len(important_files)} files")
+    print(f" File: {output_zip}")
+    print(f" Size: {os.path.getsize(output_zip) / 1024 / 1024:.2f} MB")
     
     return output_zip
 
 def share_instructions(bundle_path):
     """Print sharing instructions"""
     print("\n" + "="*50)
-    print("🚀 HOW TO SHARE WITH AI:")
+    print(" HOW TO SHARE WITH AI:")
     print("="*50)
     print("1. UPLOAD TO CLOUD:")
     print("   - Google Drive: drive.google.com")
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     target_path = sys.argv[1] if len(sys.argv) > 1 else "."
     
     if not os.path.exists(target_path):
-        print(f"❌ Path not found: {target_path}")
+        print(f" Path not found: {target_path}")
         sys.exit(1)
     
     bundle = create_ai_shareable_bundle(target_path)

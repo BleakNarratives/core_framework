@@ -129,7 +129,7 @@ GLOBS = [
     },
     {
         "id": "fater",
-        "title": "Glob 5 — Fartographer (cartographer with heart 💨🗺️)",
+        "title": "Glob 5 — Fartographer (cartographer with heart )",
         "win": "In 15 min you'll meet fater (the map) and leave a map in one incubator folder.",
         "prompt": (
             "You are my Fartographer coach for 15 minutes. Walk me through the origin story, then do ONE map.\n\n"
@@ -402,7 +402,7 @@ def main(argv=None):
         print("┌─ Pooper globs — one 15-min bite at a time (Mikey portions) — civiliter mortuus, no KYC")
         for g in GLOBS:
             done = g["id"] in s.get("done", {})
-            marker = "✓" if done else "○"
+            marker = "" if done else "○"
             when = s["done"].get(g["id"], "")[:10] if done else ""
             print(f"│  {marker} {g['id']:<12} {g['title']:<48} {when}")
         print("│")

@@ -460,15 +460,15 @@ def theater_html(chain_path: Path = None):
 </style>
 </head><body>
 <div class="wrap">
-  <h1>🪞 Lookingglass <small>— diff theater · if this then that · chain breathes, not sprints</small></h1>
+  <h1> Lookingglass <small>— diff theater · if this then that · chain breathes, not sprints</small></h1>
   <div class="bar">
     <button class="btn" id="play">▶︎ breathe</button>
     <button class="btn" id="pause" aria-pressed="false">⏸︎ hold</button>
     <button class="btn" id="prev">◀︎ sipe</button>
     <button class="btn" id="next">sipe ▶︎</button>
-    <button class="btn" id="mirror">🪞 mirror</button>
-    <button class="btn" id="bgm" aria-pressed="false">♫ bgm</button>
-    <button class="btn" id="metal" aria-pressed="false" title="black / white — zen vs metalcore">☯ metal</button>
+    <button class="btn" id="mirror"> mirror</button>
+    <button class="btn" id="bgm" aria-pressed="false"> bgm</button>
+    <button class="btn" id="metal" aria-pressed="false" title="black / white — zen vs metalcore"> metal</button>
     <label class="k">speed <input id="speed" type="range" min="900" max="4200" value="2200" style="vertical-align:middle"> <span id="speedv">2.2s</span></label>
     <span class="k" id="status">loading…</span>
   </div>
@@ -586,7 +586,7 @@ $('#metal').onclick=()=>{
   metalOn=!metalOn;
   document.body.classList.toggle('metal', metalOn);
   $('#metal').setAttribute('aria-pressed', metalOn?'true':'false');
-  $('#metal').textContent = metalOn ? '🔥 BLEGH' : '☯ metal';
+  $('#metal').textContent = metalOn ? ' BLEGH' : ' metal';
   status.textContent = (metalOn ? 'metalcore — kersplosions + djent breakdowns' : 'zen — sipes + fades + mirror') + ` · seed ${data.seed} · ${data.rel}`;
   diffEl.classList.remove('sipe','fade','mirror','kersplode','djent'); void diffEl.offsetWidth;
   diffEl.classList.add(metalOn ? 'kersplode' : 'mirror');
@@ -724,7 +724,7 @@ def main(argv=None):
         import pathlib as _pl
         pop = max(8, min(args.arena, 1024))
         gens = max(1, min(args.generations, 5))
-        print(f"🪞 Lookingglass ARENA — fractal to {pop} → battle until 2 remain → breed (molt {gens} gens) — seed {args.seed} @ {root} (humane: archive not delete)")
+        print(f" Lookingglass ARENA — fractal to {pop} → battle until 2 remain → breed (molt {gens} gens) — seed {args.seed} @ {root} (humane: archive not delete)")
         chain = fractal_arena(root, args.seed, population=pop, generations=gens, depth=depth, branch=branch)
         out = _pl.Path(args.out).expanduser() if args.out else CHAINS / f"arena-{args.seed}-{root.name}-p{pop}g{gens}.json"
         write_chain(chain, out)
@@ -768,7 +768,7 @@ def main(argv=None):
             if s not in seen:
                 seen.add(s); uniq.append(_pl2.Path(s))
         uniq = uniq[:12]
-        print(f"🪞 Lookingglass concepts — sitting with {len(uniq)} concepts, one slow chain each (seed {args.seed})")
+        print(f" Lookingglass concepts — sitting with {len(uniq)} concepts, one slow chain each (seed {args.seed})")
         print(f"   This is the journey that makes it worthwhile — not speedy, just breathing. Ctrl+C to pause anytime.")
         all_chains=[]
         for idx, cr in enumerate(uniq):
@@ -797,7 +797,7 @@ def main(argv=None):
                 MRD_TCT.write_text(MRD_TCT.read_text(encoding="utf-8") + sig2, encoding="utf-8")
             except: pass
         return 0
-    print(f"🪞 Lookingglass — growing chain seed {args.seed} @ {root} depth {depth} branch {branch} (monitor: depth≤{MONITOR_RULES['max_depth']} branch≤{MONITOR_RULES['max_branch']} parallel≤{MONITOR_RULES['max_parallel']})")
+    print(f" Lookingglass — growing chain seed {args.seed} @ {root} depth {depth} branch {branch} (monitor: depth≤{MONITOR_RULES['max_depth']} branch≤{MONITOR_RULES['max_branch']} parallel≤{MONITOR_RULES['max_parallel']})")
     chain = grow_chain(root, args.seed, depth, branch)
     out = Path(args.out).expanduser() if args.out else CHAINS / f"chain-{args.seed}-{root.name}-d{depth}b{branch}.json"
     write_chain(chain, out)

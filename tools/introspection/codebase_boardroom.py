@@ -126,18 +126,18 @@ def analyze_py(path: Path):
 
 def classify(info, is_imported: bool):
     if info is None: return "UNKNOWN","?"
-    if info.get("parse_err"): return "BROKEN","🔴"
-    if info["is_stub"] and info["n_lines"]<10: return "STUB","🟡"
+    if info.get("parse_err"): return "BROKEN",""
+    if info["is_stub"] and info["n_lines"]<10: return "STUB",""
     score=0
     if info["has_guard"]: score+=4
     if info["has_argparse"]: score+=3
     if info["has_shebang"] if "has_shebang" in info else False: score+=1
     if info["n_lines"]>400: score-=1
-    if score>=4: return "ENTRYPOINT","🔵"
-    if is_imported: return "SUPPORTING","🟢"
-    if info["funcs"] or info["classes"]: return "SUPPORTING","🟢"
-    if score>=2: return "ENTRYPOINT","🔵"
-    return "ORPHAN","⚪"
+    if score>=4: return "ENTRYPOINT",""
+    if is_imported: return "SUPPORTING",""
+    if info["funcs"] or info["classes"]: return "SUPPORTING",""
+    if score>=2: return "ENTRYPOINT",""
+    return "ORPHAN",""
 
 def find_pys(root: Path, deep=True):
     pys=[]

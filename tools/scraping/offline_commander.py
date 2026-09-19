@@ -98,7 +98,7 @@ def handle_scan(self, command):
     
     def handle_bug(self, command):
         bug = command.replace("#bug", "").strip()
-        print(f"🐛 OFFLINE BUG FIX: {bug}")
+        print(f" OFFLINE BUG FIX: {bug}")
         
         # Create a bug investigation file
         bug_file = f"bug_{hash(bug) % 10000}.txt"
@@ -109,7 +109,7 @@ def handle_scan(self, command):
     
     def handle_feature(self, command):
         feature = command.replace("#feature", "").strip()
-        print(f"✨ OFFLINE FEATURE: {feature}")
+        print(f" OFFLINE FEATURE: {feature}")
         
         # Create a feature planning file
         feature_file = f"feature_{hash(feature) % 10000}.txt"
@@ -120,7 +120,7 @@ def handle_scan(self, command):
     
     def handle_project(self, command):
         project = command.replace("#project", "").strip()
-        print(f"📁 OFFLINE PROJECT: {project}")
+        print(f" OFFLINE PROJECT: {project}")
         
         # Create project directory
         project_dir = f"project_{hash(project) % 10000}"
@@ -136,7 +136,7 @@ def handle_scan(self, command):
         return {"status": "project_created", "project": project, "directory": project_dir}
     
     def handle_unknown(self, command):
-        print(f"❓ UNKNOWN COMMAND: {command}")
+        print(f" UNKNOWN COMMAND: {command}")
         return {"status": "unknown_command", "command": command}
 
 def main():
@@ -146,22 +146,22 @@ def main():
         # Process command from args
         command = " ".join(sys.argv[1:])
         result = commander.process_command(command)
-        print(f"✅ RESULT: {result['status']}")
+        print(f" RESULT: {result['status']}")
     else:
         # Interactive mode
-        print("🤖 OFFLINE COMMANDER READY!")
+        print(" OFFLINE COMMANDER READY!")
         print("Commands: #python, #react, #task, #bug, #feature, #project")
         print("Type 'exit' to quit")
         
         while True:
             try:
-                command = input("\n💬 Command: ").strip()
+                command = input("\n Command: ").strip()
                 if command.lower() in ['exit', 'quit']:
                     break
                 result = commander.process_command(command)
-                print(f"📦 Result: {result['status']}")
+                print(f" Result: {result['status']}")
             except KeyboardInterrupt:
-                print("\n👋 Goodbye!")
+                print("\n Goodbye!")
                 break
 
 if __name__ == "__main__":

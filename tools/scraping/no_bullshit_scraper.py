@@ -25,13 +25,13 @@ def extract_and_save_all_code(chat_text):
         with open(filename, 'w') as f:
             f.write(code.strip())
         saved_files.append(filename)
-        print(f"💾 SAVED: {filename}")
+        print(f" SAVED: {filename}")
     
     speak(f"Saved {len(saved_files)} code files")
     return saved_files
 
 # IMMEDIATE ACTION - NO PROMPTS
-print("🤖 DEEPSEEK CODE EXTRACTOR - PASTE RESPONSE NOW:")
+print(" DEEPSEEK CODE EXTRACTOR - PASTE RESPONSE NOW:")
 chat_response = input()
 extract_and_save_all_code(chat_response)
-print("✅ DONE - Check your files")
+print(" DONE - Check your files")

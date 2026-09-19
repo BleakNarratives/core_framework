@@ -117,7 +117,7 @@ def scan(target: str = typer.Option("bluetooth", help="What skill to execute")):
     """
     if target == "bluetooth":
         console.print("[bold red]>[/bold red] [purple]Initializing Bleak hardware scanner...[/purple]")
-        console.print("[green]✓[/green] Found 3 devices.")
+        console.print("[green][/green] Found 3 devices.")
 
 if __name__ == "__main__":
     app()

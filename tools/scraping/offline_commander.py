@@ -4,50 +4,76 @@ OFFLINE COMMANDER - Fixed version with working SmartCoder
 """
 import sys
 import os
+from pathlib import Path
+
+# smart_coder.py is a sibling *tool*, not a neighbour of this file: this module
+# lives in tools/scraping/ while smart_coder.py lives in tools/coding/. Put that
+# directory on sys.path, resolved from __file__ so the import works from any
+# working directory. This is what made the module unrunnable from its own folder.
+_CODING_DIR = Path(__file__).resolve().parents[1] / "coding"
+if str(_CODING_DIR) not in sys.path:
+    sys.path.insert(0, str(_CODING_DIR))
+
 from smart_coder import SmartCoder
-from project_memory import memory
+
+# project_memory has no first-party copy -- the only one in the tree is an
+# archive snapshot under UNPACKED/, which is not live source and must not be
+# depended on. smart_coder already treats it as optional; mirror that instead of
+# importing it unguarded. Call sites below check for None.
+try:
+    from project_memory import memory
+except ImportError:
+    memory = None
+
+# termux_voice is a Termux-only dependency and is not installed on every host.
+# It used to be imported *inside* __init__ as a local, which left handle_tts and
+# handle_scan referring to a name that was never bound in their own scope -- both
+# raised NameError the first time they ran. Bind it once at module level, and
+# fall back to a silent stand-in rather than taking the whole commander down on a
+# host without a speech backend.
+try:
+    from termux_voice import tts
+except ImportError:
+    class _SilentTTS:
+        """Stand-in for termux_voice.tts when no speech backend is installed."""
+
+        def speak(self, text):
+            print(f" [tts unavailable] {text}")
+
+    tts = _SilentTTS()
+
 
 class OfflineCommander:
     def __init__(self):
         self.coder = SmartCoder()
-        from termux_voice import tts
-
-# Then in the commands dictionary, add:
-  self.commands = {
-    "#python": self.handle_python,
-    "#react": self.handle_react,
-    "#task": self.handle_task, 
-    "#bug": self.handle_bug,
-    "#feature": self.handle_feature,
-    "#project": self.handle_project,
-    "#tts": self.handle_tts,  # ADD THIS LINE
-    "#scan": self.handle_scan,  # ADD THIS LINE
-}
-
-# Add these handler methods:
-def handle_tts(self, command):
-    text = command.replace("#tts", "").strip()
-    print(f"🔊 TTS COMMAND: {text}")
-    tts.speak(text)
-    return {"status": "tts_spoken", "text": text}
-
-def handle_scan(self, command):
-    path = command.replace("#scan", "").strip() or "."
-    print(f"🔍 SCAN COMMAND: {path}")
-    tts.speak(f"Scanning directory {path}")
-    # Add your directory scanning logic here
-    return {"status": "scanning", "path": path}
+        self.commands = {
             "#python": self.handle_python,
             "#react": self.handle_react,
             "#task": self.handle_task,
             "#bug": self.handle_bug,
             "#feature": self.handle_feature,
-            "#project": self.handle_project
+            "#project": self.handle_project,
+            "#tts": self.handle_tts,  # ADD THIS LINE
+            "#scan": self.handle_scan,  # ADD THIS LINE
         }
-    
+
+    # Add these handler methods:
+    def handle_tts(self, command):
+        text = command.replace("#tts", "").strip()
+        print(f" TTS COMMAND: {text}")
+        tts.speak(text)
+        return {"status": "tts_spoken", "text": text}
+
+    def handle_scan(self, command):
+        path = command.replace("#scan", "").strip() or "."
+        print(f" SCAN COMMAND: {path}")
+        tts.speak(f"Scanning directory {path}")
+        # Add your directory scanning logic here
+        return {"status": "scanning", "path": path}
+
     def process_command(self, command):
         """Process any command offline"""
-        print(f"💬 OFFLINE COMMAND: {command}")
+        print(f" OFFLINE COMMAND: {command}")
         
         for cmd_prefix, handler in self.commands.items():
             if command.startswith(cmd_prefix):
@@ -59,14 +85,15 @@ def handle_scan(self, command):
         description = command.replace("#python", "").strip()
         result = self.coder.generate_from_description(description, "python")
         
-        # Save to memory
-        memory.learn_pattern("python_generation", description, result)
+        # Save to memory (project_memory is optional; see the import note above)
+        if memory is not None:
+            memory.learn_pattern("python_generation", description, result)
         
         # Save files
         for filename, content in result["files"].items():
             with open(filename, 'w') as f:
                 f.write(content)
-            print(f"📄 Created: {filename}")
+            print(f" Created: {filename}")
         
         return {"status": "python_generated", "result": result}
     
@@ -74,20 +101,21 @@ def handle_scan(self, command):
         description = command.replace("#react", "").strip()
         result = self.coder.generate_from_description(description, "react")
         
-        # Save to memory
-        memory.learn_pattern("react_generation", description, result)
+        # Save to memory (project_memory is optional; see the import note above)
+        if memory is not None:
+            memory.learn_pattern("react_generation", description, result)
         
         # Save files
         for filename, content in result["files"].items():
             with open(filename, 'w') as f:
                 f.write(content)
-            print(f"📄 Created: {filename}")
+            print(f" Created: {filename}")
         
         return {"status": "react_generated", "result": result}
     
     def handle_task(self, command):
         task = command.replace("#task", "").strip()
-        print(f"🎯 OFFLINE TASK: {task}")
+        print(f" OFFLINE TASK: {task}")
         
         # Create a simple task file
         task_file = f"task_{hash(task) % 10000}.txt"

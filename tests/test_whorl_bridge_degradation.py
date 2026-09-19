@@ -85,11 +85,25 @@ print(json.dumps({
 '''
 
 
+# Runtime sandbox for the harness subprocesses. Whorl resolves its state directory
+# independently of HOME (`whorl.core.config`), and the Thoth bus defaults to its own
+# `ROOTBASE_DIR`, so importing the bridge from a checkout would otherwise create
+# `~/.whorl/whorl.db` and write bus events into the real home. HOME is redirected too,
+# so anything that does follow it is contained as well.
+_RUNTIME_TMP = tempfile.TemporaryDirectory(prefix="whorl-bridge-degradation-")
+
+
 def _run(script: str, cwd: Path, args: list[str], env_extra: dict | None = None):
     """Run a harness script, with PYTHONPATH stripped so imports are honest."""
+    home = Path(_RUNTIME_TMP.name) / "home"
+    home.mkdir(exist_ok=True)
     env = dict(os.environ)
     env.pop("PYTHONPATH", None)
     env["BUS_METHODS"] = ",".join(BUS_METHODS)
+    env["HOME"] = str(home)
+    env["WHORL_HOME"] = str(home / ".whorl")
+    env["ROOTBASE_DIR"] = str(home / "RootBase")
+    env["ROOTBASE_BUS_DIR"] = str(home / "RootBase" / "logs" / "shared")
     if env_extra:
         env.update(env_extra)
     return subprocess.run(

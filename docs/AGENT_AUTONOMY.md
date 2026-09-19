@@ -57,7 +57,8 @@ re-litigate permission every message.
 
 - Run the narrowest relevant test first, then the affected suite.
 - State the exact command and the exact result count in the handoff. "Tests pass" is
-  not a result; `Ran 197 tests` / `OK` is.
+  not a result; the exact `Ran <n> tests` / `OK` output is. (Deliberately not a
+  literal count: this line has gone stale twice already.)
 - If a dependency is missing, report that as a limitation. Do not substitute a
   different environment and call it equivalent.
 - Never claim a file changed, a test ran, or an integration exists without

@@ -9,10 +9,10 @@ into the checkout.
 Two groups of behaviour are pinned:
 
 1. The graceful paths: missing file, empty file, missing keys, missing payload.
-2. The paths that currently **raise** rather than degrade (malformed JSON, a
-   blank final line, a non-object entry, a non-object payload). These are pinned
-   as they are, not "fixed" — changing them is a behaviour change that belongs in
-   its own change. See `docs/AGENT_WORK_QUEUE.md`, item 2.
+2. The malformed paths, which report rather than raise: a truncated entry, a
+   non-object entry, a non-object payload. These were pinned as raising when this
+   file was first written, and turned into graceful placeholders under item 9 of
+   `docs/AGENT_WORK_QUEUE.md` — a status line that raises takes down the caller.
 """
 from __future__ import annotations
 
@@ -33,6 +33,7 @@ LIVE_HISTORY = ROOT / HISTORY_NAME
 
 WAITING = "[Boardroom: Waiting...]"
 EMPTY = "[Boardroom: Empty]"
+UNREADABLE = "[Boardroom: Unreadable]"
 
 
 def _load_visualizer():
@@ -88,6 +89,16 @@ class TestBoardroomStatusRendering(unittest.TestCase):
         with _history(""):
             self.assertEqual(visualizer.render_boardroom_status(), EMPTY)
 
+    def test_whitespace_only_file_is_empty(self):
+        with _history("   \n\n"):
+            self.assertEqual(visualizer.render_boardroom_status(), EMPTY)
+
+    def test_trailing_blank_line_is_tolerated(self):
+        # A file ending in "\n\n" has a blank final element in readlines(); that is
+        # not a damaged entry, so the last real one still renders.
+        with _history(_entry(persona="Ada", status="OK") + "\n"):
+            self.assertEqual(visualizer.render_boardroom_status(), "[Ada: OK]")
+
     def test_single_entry_renders_persona_and_status(self):
         with _history(_entry(persona="Ada", status="APPROVED")):
             self.assertEqual(visualizer.render_boardroom_status(), "[Ada: APPROVED]")
@@ -126,34 +137,35 @@ class TestBoardroomStatusRendering(unittest.TestCase):
             self.assertEqual(visualizer.render_boardroom_status(), "[Ærün ✓: OK]")
 
 
-class TestBoardroomStatusRaises(unittest.TestCase):
-    """Current raising behaviour, pinned so a change to it is deliberate."""
+class TestBoardroomStatusMalformedInput(unittest.TestCase):
+    """Damaged input reports itself; nothing here is allowed to raise."""
 
-    def test_malformed_json_raises(self):
+    def test_truncated_entry_reports_unreadable(self):
         with _history('{"sanitized_payload": {"persona": "Ada"\n'):
-            with self.assertRaises(json.JSONDecodeError):
-                visualizer.render_boardroom_status()
+            self.assertEqual(visualizer.render_boardroom_status(), UNREADABLE)
 
-    def test_trailing_blank_line_raises(self):
-        # readlines() yields "\n" for the blank tail, and json.loads("\n") fails.
-        with _history(_entry(persona="Ada", status="OK") + "\n"):
-            with self.assertRaises(json.JSONDecodeError):
-                visualizer.render_boardroom_status()
-
-    def test_top_level_array_raises_attribute_error(self):
+    def test_top_level_array_reports_unreadable(self):
         with _history(json.dumps([{"sanitized_payload": {}}]) + "\n"):
-            with self.assertRaises(AttributeError):
-                visualizer.render_boardroom_status()
+            self.assertEqual(visualizer.render_boardroom_status(), UNREADABLE)
 
-    def test_null_payload_raises_attribute_error(self):
+    def test_top_level_string_reports_unreadable(self):
+        with _history(json.dumps("not an entry") + "\n"):
+            self.assertEqual(visualizer.render_boardroom_status(), UNREADABLE)
+
+    def test_null_payload_falls_back_to_placeholders(self):
         with _history(json.dumps({"sanitized_payload": None}) + "\n"):
-            with self.assertRaises(AttributeError):
-                visualizer.render_boardroom_status()
+            self.assertEqual(visualizer.render_boardroom_status(), "[Unknown: UNKNOWN]")
 
-    def test_string_payload_raises_attribute_error(self):
+    def test_string_payload_falls_back_to_placeholders(self):
         with _history(json.dumps({"sanitized_payload": "Ada:OK"}) + "\n"):
-            with self.assertRaises(AttributeError):
-                visualizer.render_boardroom_status()
+            self.assertEqual(visualizer.render_boardroom_status(), "[Unknown: UNKNOWN]")
+
+    def test_a_damaged_last_line_does_not_fall_back_to_an_earlier_entry(self):
+        # Earlier entries may be perfectly readable, but reporting a stale status as
+        # current would hide the damage instead of surfacing it.
+        contents = _entry(persona="Ada", status="OK") + '{"truncated"\n'
+        with _history(contents):
+            self.assertEqual(visualizer.render_boardroom_status(), UNREADABLE)
 
 
 class TestBoardroomStatusIsolation(unittest.TestCase):

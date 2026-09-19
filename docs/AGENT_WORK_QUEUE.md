@@ -124,6 +124,12 @@ commit as the work, so the queue cannot drift from reality.
 
 ## Needs Michael — never done autonomously
 
+- **Parameterize `scripts/emergency_hardening.sh`'s target root.** 40 functional
+  `/workspace` paths point at a different sandbox. Running it here would create
+  `/workspace` and then `chown -R root:root` it, and it embeds a copy of itself
+  under `/workspace/scripts/`, so it is not a find-and-replace. A scope warning now
+  sits in its header; the rewrite changes a guardrail, so it stays a decision.
+
 - **Vendor `projects/lean/`.** Its 3 commits are unrecoverable if `.git` is removed.
   Left untracked, ignored, and documented in `docs/PROJECT_MAP.md`.
 - **Delete `tools/inference/syntaxbuff.py.bak`.** Its blob is in no commit; the copy

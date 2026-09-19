@@ -27,11 +27,17 @@ commit as the work, so the queue cannot drift from reality.
   turn a bad log entry into a traceback instead of `[Boardroom: ...]`. Left as a
   separate change on purpose.
 
-- [ ] **3. Test the degradation claim in `src/skill/whorl_polyglot_bridge.py`.**
-  1006 lines and no test. Its docstring promises "zero-network, degrades gracefully
-  if Whorl/MOLT missing". That is a testable import-time property, not a runtime
-  hope.
-  **Prove:** importing it with Whorl/MOLT absent succeeds, and the suite stays green.
+- [x] **3. Test the degradation claim in `src/skill/whorl_polyglot_bridge.py`.** *(done 2026-09-19)*
+  Done: `tests/test_whorl_bridge_degradation.py`, **12 tests, OK**. The claim is
+  asserted in a subprocess where `src.skill.*` genuinely cannot be imported, with
+  the premise checked (the repo must *not* be on `sys.path`) and the other
+  direction checked too, so the flag cannot pass as a hardcoded constant. The stub
+  fallback is exercised, not merely imported: five bus methods, `send`/`status`
+  returns, and the frontmatter parser's declared keys.
+  Found while writing it: a module loaded by `spec_from_file_location` must be
+  registered in `sys.modules` **before** `exec_module`, or the first module-level
+  `@dataclass` dies with `AttributeError: 'NoneType' object has no attribute
+  '__dict__'` — a loader bug that looks like a bug in the loaded file.
 
 - [ ] **4. Document the herald suite invocation in `AGENTS.md` §6.**
   `tests/test_herald_suite_offline.py` now runs it, but §6 lists only the root and

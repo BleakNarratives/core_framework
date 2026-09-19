@@ -52,12 +52,19 @@ commit as the work, so the queue cannot drift from reality.
   it as its own docs commit unless it contradicts the tree.
   **Prove:** file content matches what is documented as installed.
 
-- [ ] **6. Check the metrics generator's undeclared dependency.**
-  `tools/README_metrics_generator.py` shells out to `pytest`, which is not in
-  `package.json` or any requirements file. It works here because pytest 9.1.1 is
-  installed by hand. Record that, or make the failure mode explicit.
-  **Prove:** the documented install path can run the badge workflow, or the
-  limitation is written down.
+- [x] **6. Check the metrics generator's undeclared dependency.** *(done 2026-09-19)*
+  Done both, not either: the dependency is recorded in the generator's docstring
+  (pytest on `PATH`, installed here at `~/bin/pytest`, named in no manifest), and the
+  failure mode is explicit. A missing pytest now returns `status: error` naming the
+  cause instead of an unhandled `FileNotFoundError`, and `scripts/update-readme.sh`
+  refuses to publish a badge from a failed run — it exits 1 with
+  `README.md left unchanged`.
+  **Proved:** with `PATH=/usr/bin:/bin` the workflow printed the named error, exited
+  1, and left README byte-identical to a backup taken beforehand. With pytest
+  present it reported `status: success, passing_tests: 182`.
+  Note: the badge counts pytest (`182 passed`), while the root `unittest` command
+  reports `Ran 181 tests` — different tools, and `integration_test.py` is collected
+  only by pytest.
 
 - [ ] **7. Decide the shape of `src/skill/run_retry_task.py`.**
   It reads its task from `/tmp/molt_task2/retry.txt`, so it only works where that

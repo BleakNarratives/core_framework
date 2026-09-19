@@ -3,6 +3,16 @@
 # Generate metrics
 python3 tools/README_metrics_generator.py
 
+# A failed metrics run carries no counts, so writing a badge from it would publish
+# a fabricated number. Stop before touching README.md instead.
+STATUS=$(python3 -c "import json; print(json.load(open('metrics.json')).get('status', 'success'))")
+if [ "$STATUS" != "success" ]; then
+    MESSAGE=$(python3 -c "import json; print(json.load(open('metrics.json')).get('message', 'unknown'))")
+    echo "ERROR: metrics generation failed: $MESSAGE" >&2
+    echo "README.md left unchanged." >&2
+    exit 1
+fi
+
 # Read metrics
 PASSING=$(python3 -c "import json; print(json.load(open('metrics.json'))['passing_tests'])")
 FAILING=$(python3 -c "import json; print(json.load(open('metrics.json'))['failing_tests'])")

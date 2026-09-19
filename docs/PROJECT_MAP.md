@@ -14,6 +14,7 @@ and local runtime state. Do not move or delete an entry based on its name alone.
 | **MOLT** | [`projects/MOLT/README.md`](../projects/MOLT/README.md) | Living Markdown runtime, marketplace bundles, Scout/Oracle/Governor lifecycle | Primary tracked project in this repository |
 | **MOLT runtime** | [`src/skill/`](../src/skill/) and [`src/sovereign/`](../src/sovereign/) | Core runtime and recursive/sovereign extensions | Shared source for this repository; do not duplicate into project folders |
 | **Whorl** | [`Whorl/README.md`](../Whorl/README.md) | Field intelligence and agent deployment workbench | Separate nested Git repository; keep independently testable |
+| **lean** | [`projects/lean/README.md`](../projects/lean/README.md) | Keyboard-only client for the local AI gateway | Separate nested Git repository (3 commits, no remote); deliberately not tracked here |
 | **Vertical AI Boardroom** | [`The-Werkz/Official-Vertical-AI-Boardroom/README.md`](../The-Werkz/Official-Vertical-AI-Boardroom/README.md) | Multi-agent debate, chairman synthesis, simulation, genetics, outreach | Main boardroom candidate; path is referenced by shell aliases and runtime artifacts |
 | **Vertical AI outreach** | [`vertical_ai/README.md`](../vertical_ai/README.md) · [`manifest.json`](../vertical_ai/manifest.json) | Local-business review and outreach workflow | Separate workspace; relationship to Boardroom needs validation before merging |
 | **Vertical Local** | [`vertical_local/README.md`](../vertical_local/README.md) · [`manifest.json`](../vertical_local/manifest.json) | Model-agnostic local/API FastAPI wrapper and UI | Separate application; deterministic debate dry run is available |
@@ -28,9 +29,14 @@ and local runtime state. Do not move or delete an entry based on its name alone.
   `tests/`, and `tools/`.
 - `Whorl/` has its own `.git` directory. Changes inside it must be treated as a
   separate repository operation.
-- The current branch is `feature/ribbon-animation` and the working tree already
-  contains unrelated modifications and untracked files. This catalog does not
-  imply ownership of those changes.
+- `projects/lean/` is also a nested repository: own `.git`, branch `main`, three
+  commits, and no remote. This repository deliberately does not track it --
+  adding it would record a gitlink no clone could resolve -- so its files cannot
+  be committed here as ordinary source. Test it from inside it:
+  `cd projects/lean && python -m pytest tests/ -q` (79 tests, no network).
+- The current branch is `feature/ribbon-animation`. As of 2026-09-19 the working
+  tree is committed apart from the untracked items catalogued above; this
+  document describes the tree and does not imply ownership of anything in it.
 - `projects/whorl_ecosystem/` is reserved for a future mapped migration. Nothing
   should be moved there without a source-to-destination inventory.
 

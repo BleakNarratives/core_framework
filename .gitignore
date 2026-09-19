@@ -30,6 +30,11 @@
 !/README.md
 !/AGENTS.md
 
+# — nested repositories —
+# Their own .git, deliberately not tracked by this one: recording them would
+# create a gitlink no clone could resolve. See docs/PROJECT_MAP.md.
+projects/lean/
+
 # — ephemeral everywhere (even inside src/tools) —
 __pycache__/
 *.pyc
@@ -39,9 +44,15 @@ venv/
 node_modules/
 .DS_Store
 *.log
+# syntaxbuff.py.bak holds a revision that exists in no committed blob, so it is
+# ignored rather than deleted -- nothing in git could restore it.
+*.bak
 # MOLT: keep RAG sidecars + instar state, ignore raw audits & gamed telemetry
 rag_storage/governor_audit.jsonl
 rag_storage/*.tmp
+# StateSnapshotter output from named smoke runs is runtime state, not the sidecar
+# or instar data this allowlist exists for.
+rag_storage/molt_state/
 .pytest_cache/
 .coverage
 coverage.xml

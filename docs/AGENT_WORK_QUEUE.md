@@ -9,13 +9,12 @@ commit as the work, so the queue cannot drift from reality.
 
 ## Open
 
-- [ ] **1. Make `scripts/emergency_hardening.sh` parse.**
-  `bash -n` fails at line 65: `[[ "$path" =~ [:|*?%&$@!\\] ]]` — the metacharacters
-  need escaping inside a bash regex, so the script dies before doing any hardening.
-  It is a security guardrail, so the fix is not cosmetic: prove the class still
-  matches what it matched before.
-  **Prove:** `bash -n scripts/emergency_hardening.sh` exits 0, *and* a check that
-  `safe/path` does not match while `a&b`, `a|b`, `a$b`, `a!b`, `a*b` all still do.
+- [x] **1. Make `scripts/emergency_hardening.sh` parse.** *(done 2026-09-19)*
+  Done: the class is now escaped, `bash -n` exits 0, and the function was run
+  verbatim — `a&b`, `a|b`, `a*b`, `a:b` still hit the metacharacter rule and
+  `../etc/passwd` still hits traversal. `session_start.sh` and `update-readme.sh`
+  still parse.
+
 
 - [ ] **2. Cover `src/ui/visualizer.py`.**
   24 lines, no test. It renders the last boardroom entry from

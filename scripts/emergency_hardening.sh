@@ -61,8 +61,12 @@ check_path() {
         return 1
     fi
     
-    # Block shell metacharacters
-    if [[ "$path" =~ [:|*?%&$@!\\] ]]; then
+    # Block shell metacharacters.
+    # Every metacharacter in the class is backslash-escaped deliberately: inside
+    # an unquoted [[ =~ ]] pattern bash tries to parse `&`, `|`, `$`, `!` and the
+    # rest as operators, and the unescaped form is a syntax error that stops the
+    # whole script before it hardens anything.
+    if [[ "$path" =~ [:\|\*\?%\&\$\@\!\\] ]]; then
         error "BLOCKED: Shell metacharacters in path: $path"
         return 1
     fi

@@ -193,16 +193,96 @@ class TestRibbonRuleCoverage(unittest.TestCase):
         del self.ribbon["animation"]
         self.assertEqual(_errors(self.bundle), [])
 
-    def test_current_coverage_boundary_ignores_schema_only_rules(self):
-        """The hand-rolled validator is narrower than `spec.schema.json`.
-
-        `style.opacity` bounds and `path.closed` typing are declared in the
-        schema but not enforced by `validate_bundle`. Pinning that here keeps a
-        future narrowing or widening of coverage a deliberate change.
-        """
-        self.ribbon["style"]["opacity"] = 5
-        self.ribbon["path"]["closed"] = "yes"
+    def test_path_closed_must_be_boolean(self):
+        self.ribbon["path"]["closed"] = True
         self.assertEqual(_errors(self.bundle), [])
+
+        for closed in ("yes", 1, 0, None):
+            with self.subTest(closed=closed):
+                self.bundle = _valid_bundle()
+                self.bundle["ribbons"][0]["path"]["closed"] = closed
+                self._expect_error("path.closed must be boolean")
+
+    def test_style_opacity_range_is_inclusive_at_the_edges(self):
+        for opacity in (0, 1, 0.5, 0.95):
+            with self.subTest(opacity=opacity):
+                self.bundle = _valid_bundle()
+                self.bundle["ribbons"][0]["style"]["opacity"] = opacity
+                self.assertEqual(_errors(self.bundle), [])
+
+        for opacity in (-0.1, 1.1, 5, "0.5", True):
+            with self.subTest(opacity=opacity):
+                self.bundle = _valid_bundle()
+                self.bundle["ribbons"][0]["style"]["opacity"] = opacity
+                self._expect_error("style.opacity must be 0..1")
+
+    def test_style_dash_must_be_a_numeric_array(self):
+        for dash in ([4, 2], [1], [], [0.5, 1.5]):
+            with self.subTest(dash=dash):
+                self.bundle = _valid_bundle()
+                self.bundle["ribbons"][0]["style"]["dash"] = dash
+                self.assertEqual(_errors(self.bundle), [])
+
+        for dash in ("4", 4, [4, "2"], [True], {"a": 1}, [None]):
+            with self.subTest(dash=dash):
+                self.bundle = _valid_bundle()
+                self.bundle["ribbons"][0]["style"]["dash"] = dash
+                self._expect_error("style.dash must be an array of numbers")
+
+    def test_animation_direction_enum(self):
+        for direction in ("forward", "reverse", "alternate"):
+            with self.subTest(direction=direction):
+                self.bundle = _valid_bundle()
+                self.bundle["ribbons"][0]["animation"]["direction"] = direction
+                self.assertEqual(_errors(self.bundle), [])
+
+        self.bundle["ribbons"][0]["animation"]["direction"] = "sideways"
+        self._expect_error("animation.direction invalid")
+
+    def test_animation_loop_must_be_boolean(self):
+        for loop in (True, False):
+            with self.subTest(loop=loop):
+                self.bundle = _valid_bundle()
+                self.bundle["ribbons"][0]["animation"]["loop"] = loop
+                self.assertEqual(_errors(self.bundle), [])
+
+        for loop in (1, 0, "true", None):
+            with self.subTest(loop=loop):
+                self.bundle = _valid_bundle()
+                self.bundle["ribbons"][0]["animation"]["loop"] = loop
+                self._expect_error("animation.loop must be boolean")
+
+    def test_booleans_are_not_accepted_as_numbers(self):
+        """JSON Schema's `number` excludes booleans, but Python's bool is an int."""
+        cases = (
+            (lambda b: b["ribbons"][0]["style"].__setitem__("width", True), "style.width must be 0.5..32"),
+            (lambda b: b["ribbons"][0]["path"].__setitem__("points", [[True, 0], [1, 1]]), "must be [x,y] numbers"),
+        )
+        for mutate, fragment in cases:
+            with self.subTest(fragment=fragment):
+                self.bundle = _valid_bundle()
+                mutate(self.bundle)
+                self._expect_error(fragment)
+
+    def test_malformed_shapes_are_reported_not_raised(self):
+        """A raised exception would never reach analysis_report.json.
+
+        Each of these previously crashed the gate with TypeError/AttributeError
+        instead of returning an error list.
+        """
+        cases = (
+            ("ribbon is a string", lambda b: b["ribbons"].__setitem__(0, "nope"), "ribbon must be an object"),
+            ("ribbon is a number", lambda b: b["ribbons"].__setitem__(0, 7), "ribbon must be an object"),
+            ("path is a string", lambda b: b["ribbons"][0].__setitem__("path", "abc"), "path must be an object"),
+            ("style is a string", lambda b: b["ribbons"][0].__setitem__("style", "red"), "style must be an object"),
+            ("animation is a number", lambda b: b["ribbons"][0].__setitem__("animation", 5), "animation must be an object"),
+            ("animation is a string", lambda b: b["ribbons"][0].__setitem__("animation", "ease-in"), "animation must be an object"),
+        )
+        for label, mutate, fragment in cases:
+            with self.subTest(case=label):
+                self.bundle = _valid_bundle()
+                mutate(self.bundle)
+                self._expect_error(fragment)
 
 
 class TestRibbonCliGate(unittest.TestCase):

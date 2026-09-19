@@ -7,7 +7,7 @@
 - `ribbon.spec.json` — canonical bundle (hero-ribbon, 4 points, #7c5cff)
 - `ribbon.css` — `.ribbon-wrap/.ribbon-svg/.ribbon-path` + `@keyframes ribbon-draw` + `prefers-reduced-motion`
 - `ribbon.js` — reads `.ribbon-wrap[data-ribbon]` JSON, creates `<svg><path>` per ribbon, sets `--len/--dur/--easing`, adds `.animate`
-- `validate.py` — zero-dep gate: duplicate id, #RRGGBB, width 0.5..32, ≥2 points, easing enum — failures → `analysis_report.json` only, bundle untouched
+- `validate.py` — zero-dep gate: duplicate id, #RRGGBB, width 0.5..32, ≥2 points, easing enum, opacity 0..1, dash numeric array, `path.closed` boolean, `direction` enum, `loop` boolean — failures → `analysis_report.json` only, bundle untouched. Malformed shapes (a ribbon, `path`, `style`, or `animation` that isn't an object) are reported as errors rather than raised, so every failure still reaches the report.
 - `fixtures/{single,double,precise-width}.json` — must PASS
 - `fixtures_invalid/empty.json` — must FAIL (proves guard trips)
 - `demo.html` — file:// safe, no server needed

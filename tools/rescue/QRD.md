@@ -44,6 +44,6 @@ Snapshots must stay out of the busy loop — tar only the ship globs, never `~`.
 # QRD — Ribbon (spec-bound animation)
 
 `src/ui/ribbon/` — `spec.schema.json` + `ribbon.spec.json` (canonical bundle) + `ribbon.css` + `ribbon.js` + `validate.py` + `fixtures/` + `fixtures_invalid/` + `demo.html`.
-Contract is `ribbon.v1` (hand-rolled validator, no `jsonschema` dep): duplicate ids, stroke `#RRGGBB`, width 0.5..32, ≥2 points, easing enum — all enforced. Failures go ONLY to `analysis_report.json` (companion), bundle never touched.
+Contract is `ribbon.v1` (hand-rolled validator, no `jsonschema` dep): duplicate ids, stroke `#RRGGBB`, width 0.5..32, ≥2 points, easing enum, opacity 0..1, `dash` numeric array, `closed` boolean, `direction` enum, `loop` boolean — all enforced. Malformed shapes are reported as errors, not raised, so failures always reach `analysis_report.json` (companion); the bundle is never touched.
 `ribbon.css` is the fallback (`@keyframes ribbon-draw` + `prefers-reduced-motion`); `ribbon.js` upgrades to `getTotalLength()` → `--len/--dur/--easing` for exact loops. `demo.html` is file://-safe.
 `fixtures/empty.json` is knowingly invalid in `fixtures_invalid/` — proves the guard trips.

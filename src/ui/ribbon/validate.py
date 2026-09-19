@@ -32,6 +32,12 @@ def load_json(p):
     except Exception as e:
         return {"__error": str(e)}
 
+def _is_number(v):
+    # JSON Schema's `number`/`integer` types exclude booleans, and in Python
+    # True satisfies isinstance(v, (int, float)) -- so width/opacity/points would
+    # otherwise accept `true` as 1.
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
 def validate_bundle(bundle, schema):
     errs = []
     # top-level
@@ -45,32 +51,63 @@ def validate_bundle(bundle, schema):
         return errs
     seen = set()
     for idx, r in enumerate(ribbons):
+        # A malformed shape must be reported, not raised: this gate's contract is
+        # that failures arrive as a list and land in analysis_report.json.
+        if not isinstance(r, dict):
+            errs.append(f"[{idx}]: ribbon must be an object, got {type(r).__name__}")
+            continue
         rid = r.get("id", f"[{idx}]")
         if rid in seen:
             errs.append(f"ribbon id duplicate: {rid!r}")
         seen.add(rid)
         if not re.match(r"^[a-z0-9_-]+$", rid or ""):
             errs.append(f"ribbon id {rid!r} must match ^[a-z0-9_-]+$")
-        pts = ((r.get("path") or {}).get("points"))
+        path = r.get("path")
+        if path is None:
+            path = {}
+        elif not isinstance(path, dict):
+            errs.append(f"{rid}: path must be an object, got {type(path).__name__}")
+            path = {}
+        pts = path.get("points")
         if not isinstance(pts, list) or len(pts) < 2:
             errs.append(f"{rid}: path.points must have >=2 points")
         else:
             for j, pt in enumerate(pts):
-                if not (isinstance(pt, list) and len(pt) == 2 and all(isinstance(x, (int, float)) for x in pt)):
+                if not (isinstance(pt, list) and len(pt) == 2 and all(_is_number(x) for x in pt)):
                     errs.append(f"{rid}: points[{j}] must be [x,y] numbers, got {pt!r}")
-        style = r.get("style") or {}
+        if "closed" in path and not isinstance(path["closed"], bool):
+            errs.append(f"{rid}: path.closed must be boolean, got {path['closed']!r}")
+        style = r.get("style")
+        if style is None:
+            style = {}
+        elif not isinstance(style, dict):
+            errs.append(f"{rid}: style must be an object, got {type(style).__name__}")
+            style = {}
         stroke = style.get("stroke")
         if not (isinstance(stroke, str) and re.match(r"^#[0-9a-fA-F]{6}$", stroke)):
             errs.append(f"{rid}: style.stroke must be #RRGGBB, got {stroke!r}")
         w = style.get("width")
-        if not (isinstance(w, (int, float)) and 0.5 <= w <= 32):
+        if not (_is_number(w) and 0.5 <= w <= 32):
             errs.append(f"{rid}: style.width must be 0.5..32, got {w!r}")
+        dash = style.get("dash")
+        if dash is not None and not (isinstance(dash, list) and all(_is_number(d) for d in dash)):
+            errs.append(f"{rid}: style.dash must be an array of numbers, got {dash!r}")
+        opacity = style.get("opacity")
+        if opacity is not None and not (_is_number(opacity) and 0 <= opacity <= 1):
+            errs.append(f"{rid}: style.opacity must be 0..1, got {opacity!r}")
         anim = r.get("animation")
         if anim is not None:
-            if "easing" in anim and anim["easing"] not in ("linear","ease-in","ease-out","ease-in-out"):
-                errs.append(f"{rid}: animation.easing invalid {anim['easing']!r}")
-            if "duration_ms" in anim and not (isinstance(anim["duration_ms"], int) and anim["duration_ms"] >= 100):
-                errs.append(f"{rid}: animation.duration_ms must be >=100 int")
+            if not isinstance(anim, dict):
+                errs.append(f"{rid}: animation must be an object, got {type(anim).__name__}")
+            else:
+                if "easing" in anim and anim["easing"] not in ("linear","ease-in","ease-out","ease-in-out"):
+                    errs.append(f"{rid}: animation.easing invalid {anim['easing']!r}")
+                if "duration_ms" in anim and not (isinstance(anim["duration_ms"], int) and not isinstance(anim["duration_ms"], bool) and anim["duration_ms"] >= 100):
+                    errs.append(f"{rid}: animation.duration_ms must be >=100 int")
+                if "loop" in anim and not isinstance(anim["loop"], bool):
+                    errs.append(f"{rid}: animation.loop must be boolean, got {anim['loop']!r}")
+                if "direction" in anim and anim["direction"] not in ("forward","reverse","alternate"):
+                    errs.append(f"{rid}: animation.direction invalid {anim['direction']!r}")
     return errs
 
 def main():

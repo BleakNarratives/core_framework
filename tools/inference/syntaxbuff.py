@@ -49,11 +49,17 @@ SESSION_LOG = HOME / ".syntaxbuff_session.jsonl"
 MODELS = {
     # ── Primary ──────────────────────────────────────────────────────────────
     "anchor":    {"provider": "puter", "id": "claude-sonnet-4-6",    "role": "memory+reasoning"},
-    "deepseek":  {"provider": "puter", "id": "deepseek-chat",         "role": "code+architecture"},
+    "deepseek":  {"provider": "openai_compatible", "id": "deepseek-chat", "base_url": "https://api.deepseek.com/v1", "role": "code+architecture"},
     "glm":       {"provider": "puter", "id": "glm-4",                 "role": "lateral+weird"},
     "luna":      {"provider": "puter", "id": "luna",                  "role": "creative+synthesis"},
     "gemini":    {"provider": "puter", "id": "gemini-2.0-flash",      "role": "long-context"},
     "gpt4o":     {"provider": "puter", "id": "gpt-4o",                "role": "general"},
+    # ── New Providers ────────────────────────────────────────────────────────
+    "cohere":    {"provider": "openai_compatible", "id": "command-r-plus", "base_url": "https://api.cohere.com/v2", "role": "reasoning"},
+    "eleven":    {"provider": "media_api", "id": "eleven-turbo", "role": "tts"},
+    "stability": {"provider": "media_api", "id": "stable-diffusion-3", "role": "image"},
+    "samba":     {"provider": "openai_compatible", "id": "llama3-70b", "base_url": "https://api.sambanova.ai/v1", "role": "fast-reasoning"},
+    "aimlapi":   {"provider": "openai_compatible", "id": "meta-llama/Llama-3-70b-Instruct-Turbo", "base_url": "https://api.aimlapi.com/v1", "role": "general"},
     # ── Fallback (OpenRouter direct) ─────────────────────────────────────────
     "qwen":      {"provider": "openrouter", "id": "qwen/qwen3-235b-a22b:free", "role": "fallback"},
     "groq":      {"provider": "groq",       "id": "openai/gpt-oss-120b",      "role": "fast-fallback"},
@@ -147,7 +153,7 @@ def scry_bus(limit=3):
             d = json.loads(f.read_text())
             out.append(f"[{d.get('agent','?')}] {d.get('insight','no insight')[:120]}")
             if d.get('flag'):
-                out.append(f"  ⚠ FLAG: {d['flag']}")
+                out.append(f" FLAG: {d['flag']}")
         except:
             out.append(f"[unreadable] {f.name}")
     return "\n".join(out)
@@ -261,6 +267,30 @@ def call_groq(prompt, model_id, system=None):
     with urllib.request.urlopen(req, timeout=60) as r:
         return json.loads(r.read())["choices"][0]["message"]["content"]
 
+def call_openai_compatible(prompt, model_id, base_url, system=None):
+    """Generic OpenAI-compatible API call."""
+    # Derive API key env name based on model ID or provider prefix
+    provider_prefix = model_id.split('-')[0].split('/')[0].upper()
+    api_key = os.environ.get(f"{provider_prefix}_API_KEY") or os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError(f"API key not set for {model_id} (Expected {provider_prefix}_API_KEY)")
+    
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
+    data = json.dumps({"model": model_id, "messages": messages}).encode()
+    
+    # Append chat/completions endpoint suffix
+    endpoint = f"{base_url.rstrip('/')}/chat/completions"
+    req = urllib.request.Request(endpoint, data=data, headers=headers)
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return json.loads(r.read())["choices"][0]["message"]["content"]
+
 # ─────────────────────────────────────────────────────────────────────────────
 # MAIN INFERENCE DISPATCHER (FORCE MULTIPLIER HOOK #5)
 # Add new providers here. Model router above auto-selects.
@@ -279,6 +309,13 @@ def dispatch(prompt, model_key=DEFAULT_MODEL, system=None, inject_persona=False)
     try:
         if provider == "puter":
             return call_puter(prompt, model_id, system)
+        elif provider == "media_api":
+            raise NotImplementedError(
+                f"Model '{model_id}' is an audio/image model and is not supported in the chat-focused SyntaxBuff interface."
+            )
+        elif provider == "openai_compatible":
+            base_url = model.get("base_url")
+            return call_openai_compatible(prompt, model_id, base_url, system)
         elif provider == "openrouter":
             return call_openrouter(prompt, model_id, system)
         elif provider == "groq":

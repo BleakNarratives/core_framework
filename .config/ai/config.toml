@@ -24,7 +24,7 @@ default_model = "auto"
 default = "auto"
 auto = "auto"
 fast = "mistral::mistral-small-latest"
-code = "openrouter::z-ai/glm-5.2:free"
+code = "openrouter::nvidia/nemotron-3-super-120b-a12b:free"
 big = "openai::gpt-4o-mini"
 # gemini-2.5-* is refused for this key and gemini-3.5-flash hangs; the
 # -latest alias is the one that actually answers (~2.7s, verified live).
@@ -35,3 +35,26 @@ gemini = "gemini::gemini-flash-latest"
 # Keep replies terse so a traceback fix can be applied without reading an essay.
 system = "You are a terse senior engineer. Answer with the fix, not a lecture. Prefer exact code and exact commands."
 max_chars = 6000
+
+# ── provenance traces ──────────────────────────────────────────────────
+# The gateway appends one JSONL record per call to
+# ~/.local/state/ai/traces/YYYY-MM-DD.jsonl, then `ai --spend` reads it back.
+#
+# Redaction runs INSIDE record(), on the way to disk -- there is no path that
+# writes raw prompt text. A trace already on disk cannot be un-leaked, so the
+# filter is not a cleanup pass.
+#   off       write nothing at all
+#   redacted  (default) strip PII and credentials from prompt/response
+#   raw       store unredacted -- debug only, puts customer data on disk
+[trace]
+enabled = true
+capture = "redacted"
+# dir = "~/.local/state/ai/traces"
+# max_field_chars = 8000
+
+# Optional real rates so cost stops reporting "unknown".
+# Substring-matched against the model id, { input, output } per 1M tokens.
+# Free tiers (groq, cerebras, gemini, puter, any ":free" model) are priced 0.0
+# automatically -- only add entries for providers you actually pay.
+# [prices]
+# "deepseek-chat" = [0.27, 1.10]

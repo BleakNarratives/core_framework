@@ -19,6 +19,7 @@ Zero-bloat: if no skill name is passed, bridge is a plain passthrough.
 import os
 import sys
 import json
+import re
 import subprocess
 import urllib.request
 import urllib.parse
@@ -33,6 +34,66 @@ try:
     HAS_BUFF = True
 except Exception:
     HAS_BUFF = False
+
+# ── Bitchwork Guardrail ──────────────────────────────────────────
+SYSTEM_BITCHWORK_SUFFIX = """
+[EXECUTION CONTRACT]
+Perform your full persona-based architectural review.
+At the very end of your response, output a final JSON decision block enclosed in ```json ... ```:
+
+{
+   "persona": "<PersonaName>",
+   "status": "APPROVED | REJECTED | WARNING",
+   "code": "NONE | ERR_SCHEMA_VIOLATION | ERR_SCHEMA_FAIL | ERR_SECURITY_SINK | ERR_MARGIN_EXCEEDED",
+   "patch": "<git diff string or null>"
+}
+"""
+
+def sanitize_persona_output(raw_output: str, persona_name: str) -> dict:
+    """
+    Enforces machine-readable parsing on agent output.
+    Separates the persona's internal monologue from the clean JSON contract.
+    Returns a dict containing both the full trace for logging and clean payload.
+    """
+    import json
+    import re
+
+    try:
+        # 1. Extract explicit ```json ... ``` block
+        json_match = re.search(r'```json\s*(\{.*?\})\s*```', raw_output, re.DOTALL)
+        
+        # 2. Fallback: scan for last valid raw JSON object matching schema
+        if not json_match:
+            json_match = re.search(r'(\{[\s\S]*?"persona"[\s\S]*?\})', raw_output)
+
+        if not json_match:
+            raise ValueError("No valid JSON execution block detected in persona output.")
+
+        payload = json.loads(json_match.group(1))
+
+        # 3. Verify required keys
+        required_keys = {"persona", "status", "code", "patch"}
+        if not required_keys.issubset(payload.keys()):
+            raise ValueError("Missing required schema keys in extracted payload.")
+
+        return {
+            "raw_trace": raw_output,
+            "sanitized_payload": payload,
+            "status": "OK"
+        }
+
+    except Exception as e:
+        return {
+            "raw_trace": raw_output,
+            "sanitized_payload": {
+                "persona": persona_name,
+                "status": "REJECTED",
+                "code": "ERR_SCHEMA_VIOLATION",
+                "patch": None,
+                "error_detail": f"Model breached Bitchwork Protocol: {str(e)}"
+            },
+            "status": "SCHEMA_ERROR"
+        }
 
 # ── Core one-shot ────────────────────────────────────────────────
 def molt_hydrate(skill_name: str, user_query: str,
@@ -69,6 +130,11 @@ def molt_one_shot(skill_name: str, user_query: str,
     messages = molt_hydrate(skill_name, user_query, oomf_level=oomf_level,
                             system_prefix=system_prefix,
                             gambit=gambit, user_id=user_id)
+    
+    # Inject Bitchwork Guardrail into the system prompt
+    if messages:
+        messages[0]["content"] += f"\n\n{SYSTEM_BITCHWORK_SUFFIX}"
+
     if dry_run:
         # Return hydrated system + user concat for inspection
         return json.dumps(messages, indent=2, ensure_ascii=False)
@@ -96,6 +162,21 @@ def molt_one_shot(skill_name: str, user_query: str,
         "No inference backend available. Set OPENROUTER_API_KEY/GROQ_API_KEY or ensure "
         "SyntaxBuff Puter bridge is configured. Use dry_run=True to inspect hydrated prompt."
     )
+
+def molt_one_shot_sanitized(skill_name: str, user_query: str, **kwargs) -> Dict[str, Any]:
+    """Wrapper that enforces Bitchwork Protocol on the output.
+
+    Persists the sanitized envelope, not just the raw text. The raw-only
+    record made src/ui/visualizer.py unreadable: it looks up
+    `sanitized_payload` on the last line, which never appeared there.
+    """
+    raw_output = molt_one_shot(skill_name, user_query, **kwargs)
+    result = sanitize_persona_output(raw_output, skill_name)
+    Path(".boardroom_history.jsonl").parent.mkdir(parents=True, exist_ok=True)
+    with open(".boardroom_history.jsonl", "a", encoding="utf-8") as f:
+        # `raw` kept alongside the envelope so earlier readers keep working.
+        f.write(json.dumps({"skill": skill_name, "raw": raw_output, **result}) + "\n")
+    return result
 
 
 def _call_openrouter_generic(messages: List[Dict[str, str]], api_key: str,

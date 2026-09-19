@@ -110,11 +110,36 @@ commit as the work, so the queue cannot drift from reality.
   Make it targeted or configurable and record the choice in the cycle record.
   **Prove:** a cycle runs a named subset, proven by the mocked call arguments.
 
-- [ ] **11. Cover `src/sovereign/bridges.py` and `daemons.py`.**
-  266 + 126 lines, untested. `akasha_store_evidence` falls back to writing under
-  `$HOME`; `endempts_gate` decides `commit`/`hold`/`kill` and can unlink a kill file.
-  Both are boundary decisions worth pinning with `$HOME` redirected.
-  **Prove:** new tests pass and no file outside the repo is touched.
+- [x] **11. Cover `src/sovereign/bridges.py` and `daemons.py`.** *(done 2026-09-19)*
+  Done: `tests/test_sovereign_bridges.py`, **18 tests, OK**. Pinned: `endempts_gate`'s
+  three verdicts (SHIP commits, HOLD caps recorded violations at five, KILL deletes
+  the file it was handed and tolerates a missing one), the Akasha fallback store's
+  content addressing, and the daemons' degraded paths.
+  **Found while writing it, and worth the whole exercise:** redirecting `$HOME` is not
+  enough to contain the Thoth bus. `thoth_orchestrator/motherbrain.py:36` inserts its
+  own directory onto `sys.path` at import time, so a later top-level `import agent_bus`
+  resolves against the real `~/thoth_orchestrator`; and `agent_bus` defaults
+  `ROOTBASE_DIR` to a hardcoded `/home/bleaknarratives/RootBase` that ignores `$HOME`.
+  The first draft of this test consequently appended one real `molt.merkaba.route`
+  event to the live bus. The harness now overrides `ROOTBASE_DIR` /
+  `ROOTBASE_BUS_DIR` and asserts the bus file lands under the redirected home; the
+  live bus is unchanged across a run (1398 lines before and after).
+- [ ] **13. Make the Thoth bus honour `$HOME`.**
+  `thoth_orchestrator/agent_bus.py` hardcodes its default `ROOTBASE_DIR` to
+  `/home/bleaknarratives/RootBase`, so emitting an event writes into one specific
+  user's home no matter what `HOME` says. This is the actual defect item 11 tripped
+  over.
+  **Prove:** emitting with a redirected `$HOME` writes under that home by default.
+- [ ] **14. Give the autoloop a quiet mode.**
+  `RecursiveEngine.autoloop` calls `cycle(verbose=True)`, so `tick_instar_autoloop`
+  writes progress to stdout unconditionally — a caller that wants machine-readable
+  output has to strip it. Asserted in the bridges test rather than fixed there.
+  **Prove:** a quiet run writes nothing to stdout, asserted in the same file.
+- [ ] **15. Fix the mutation vault's misleading note.**
+  With `store_last_cycle=False` the result carries `note: "journal absent"` even when
+  the journal exists and the caller simply asked not to store. The message names the
+  wrong cause. Pinned as-is by the new test.
+  **Prove:** the note distinguishes "no journal" from "not asked to store".
 
 - [ ] **12. Decide whether the engine's import-time `mkdir` under `$HOME` is acceptable.**
   `recursive_engine.py` creates `~/RootBase/logs/shared/` at import time, and

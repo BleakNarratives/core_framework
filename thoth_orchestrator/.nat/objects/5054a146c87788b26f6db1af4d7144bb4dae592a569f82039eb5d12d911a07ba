@@ -1,0 +1,59 @@
+import os
+import subprocess
+import json
+import sys
+from nostr_poster import poster
+
+class HigginsAdapter:
+    """Wraps the Mrs. Higgins passive income pipeline."""
+    BASE_PATH = os.getenv(
+        "MRS_HIGGINS_PATH",
+        "/data/data/com.termux/files/home/RootBase/mrs_higgins_saas",
+    )
+
+    def _run_script(self, script_name, args=None):
+        script_path = os.path.join(self.BASE_PATH, script_name)
+        if not os.path.exists(script_path):
+            fallback = os.path.join(self.BASE_PATH, "saas", script_name)
+            if os.path.exists(fallback):
+                script_path = fallback
+        cmd = [sys.executable or "python3", script_path]
+        if args:
+            cmd.extend(args)
+
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.BASE_PATH)
+        return {
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "exit_code": result.returncode
+        }
+
+    def generate_promo_copy(self, package_name, platform="Nostr"):
+        """Uses copywriter.py to generate a sales pitch."""
+        return self._run_script("copywriter.py", ["--platform", platform])
+
+    def route_packages(self, platform_filter=None):
+        """Uses front_desk_lady.py to create invoices and route to platforms."""
+        args = []
+        if platform_filter:
+            args.extend(["--platform", platform_filter])
+        return self._run_script("front_desk_lady.py", args)
+
+    def post_to_nostr(self, content):
+        """Directly posts generated copy to Nostr."""
+        return poster.post(content)
+
+    def reconcile_payments(self):
+        """Uses bookkeeper.py to check who paid."""
+        return self._run_script("bookkeeper.py")
+
+    def chase_leads(self):
+        """Uses the_closer.py to fire follow-ups."""
+        return self._run_script("the_closer.py")
+
+    def get_ledger_stats(self):
+        """Uses the_ledger.py to see what's profitable."""
+        return self._run_script("the_ledger.py")
+
+# Singleton for Thoth to use
+higgins = HigginsAdapter()

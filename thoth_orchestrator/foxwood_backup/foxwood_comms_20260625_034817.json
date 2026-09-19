@@ -1,0 +1,125 @@
+{
+  "version": "1.0",
+  "system": "Thoth Swarm Coordination",
+  "agents": [
+    {
+      "id": "vibe",
+      "role": "Primary Coordinator",
+      "capabilities": [
+        "code_analysis",
+        "task_decomposition",
+        "agent_orchestration"
+      ],
+      "status": "active",
+      "last_update": "2026-06-23T23:14:35.996494Z"
+    },
+    {
+      "id": "gemini",
+      "role": "Creative Synthesis",
+      "capabilities": [
+        "content_generation",
+        "idea_synthesis",
+        "multimodal_processing"
+      ],
+      "status": "active",
+      "last_update": "2026-06-23T23:14:35.996631Z"
+    },
+    {
+      "id": "syntax",
+      "role": "Code Execution Bridge",
+      "capabilities": [
+        "code_execution",
+        "language_translation",
+        "api_bridging"
+      ],
+      "status": "active",
+      "last_update": "2026-06-23T23:14:35.996709Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_015",
+      "description": "Integration: Map all available SaaS packages from `mrs_higgins_saas/saas_packages/` into `PivotCity/charter.py` governance structure.",
+      "status": "completed",
+      "assigned_to": "vibe",
+      "priority": "critical",
+      "dependencies": [],
+      "created_at": "2026-06-24T02:30:00.000000Z",
+      "updated_at": "2026-06-25T03:48:17.296448Z"
+    },
+    {
+      "id": "task_016",
+      "description": "Orchestration: Initialize Hermes swarm handoff to `propagated_node/swarm_node/hermes.sh` to begin clearing project backlog.",
+      "status": "pending",
+      "assigned_to": "syntax",
+      "priority": "high",
+      "dependencies": [],
+      "created_at": "2026-06-24T02:31:00.000000Z",
+      "updated_at": "2026-06-24T02:31:00.000000Z"
+    },
+    {
+      "id": "task_003",
+      "description": "Automate Ollama model creation and management",
+      "status": "pending",
+      "assigned_to": "syntax",
+      "priority": "high",
+      "dependencies": [
+        "task_002"
+      ],
+      "created_at": "2026-06-25T03:48:17.272960Z",
+      "updated_at": "2026-06-25T03:48:17.273113Z"
+    }
+  ],
+  "communication_protocol": {
+    "file_based": {
+      "path": "foxwood_comms.json",
+      "update_frequency": "continuous",
+      "conflict_resolution": "last_write_wins",
+      "backup_location": "foxwood_backup"
+    },
+    "agent_responsibilities": {
+      "read": [
+        "all"
+      ],
+      "write": [
+        "assigned_tasks",
+        "status_updates",
+        "task_completion"
+      ],
+      "coordinate": [
+        "vibe"
+      ]
+    }
+  },
+  "automation_rules": {
+    "task_assignment": {
+      "strategy": "capability_based",
+      "fallback": "round_robin"
+    },
+    "priority_handling": {
+      "critical": "immediate_execution",
+      "high": "next_available_agent",
+      "medium": "queue_based",
+      "low": "background_processing"
+    },
+    "error_handling": {
+      "max_retries": 3,
+      "escalation_path": [
+        "syntax",
+        "vibe",
+        "gemini"
+      ],
+      "timeout": "300s"
+    }
+  },
+  "performance_metrics": {
+    "tracked": [
+      "task_completion_time",
+      "agent_response_time",
+      "error_rate",
+      "resource_utilization"
+    ],
+    "reporting_frequency": "real_time",
+    "storage": "foxwood_metrics.json"
+  }
+}

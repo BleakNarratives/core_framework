@@ -1,0 +1,4 @@
+python higgins_adapter.py
+
+# Bardilio Note:
+Polyglot chaos detected. Enjoy merging contexts. (Bardildo: harsh truth incoming)

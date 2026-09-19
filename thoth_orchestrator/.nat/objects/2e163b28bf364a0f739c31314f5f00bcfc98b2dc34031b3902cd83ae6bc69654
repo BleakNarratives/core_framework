@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "name": "thoth_orchestrator",
+    "path": "/storage/emulated/0/RootBase/thoth_orchestrator",
+    "languages": {
+      "python": 12,
+      "javascript": 1
+    },
+    "entrypoints": [
+      "higgins_adapter.py"
+    ],
+    "package_json": false,
+    "requirements": 0,
+    "readme_excerpt": "",
+    "last_modified": "2026-06-22T04:09:47.338504"
+  },
+  "runbook": {
+    "commands": [
+      "python higgins_adapter.py"
+    ],
+    "env": [],
+    "notes": []
+  },
+  "bard_note": "Polyglot chaos detected. Enjoy merging contexts. (Bardildo: harsh truth incoming)"
+}

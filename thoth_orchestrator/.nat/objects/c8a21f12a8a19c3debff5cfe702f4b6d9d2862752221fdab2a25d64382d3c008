@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+"""
+Local JSONL event bus for the RootBase agent ecosystem.
+
+This stays entirely on-device and is safe for simple hooks, triggers, and
+cross-repo coordination without requiring a network service.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Tuple
+
+ROOTBASE_DIR = Path(os.environ.get(
+    "ROOTBASE_DIR",
+    "/data/data/com.termux/files/home/RootBase",
+))
+BUS_DIR = Path(os.environ.get(
+    "ROOTBASE_BUS_DIR",
+    str(ROOTBASE_DIR / "logs" / "shared"),
+))
+BUS_FILE = Path(os.environ.get(
+    "ROOTBASE_EVENT_FILE",
+    str(BUS_DIR / "agent_events.jsonl"),
+))
+
+
+def ensure_bus() -> Path:
+    BUS_DIR.mkdir(parents=True, exist_ok=True)
+    BUS_FILE.touch(exist_ok=True)
+    return BUS_FILE
+
+
+def bus_state_path() -> Path:
+    return BUS_DIR / "agent_bus_state.json"
+
+
+def current_line_count() -> int:
+    ensure_bus()
+    with BUS_FILE.open("r", encoding="utf-8") as handle:
+        return sum(1 for _ in handle)
+
+
+def emit_event(
+    event_type: str,
+    payload: Dict[str, Any] | None = None,
+    *,
+    source: str = "thoth",
+    origin: str | None = None,
+    channel: str = "local",
+    tags: Iterable[str] | None = None,
+) -> Dict[str, Any]:
+    ensure_bus()
+    event = {
+        "event_id": uuid.uuid4().hex,
+        "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "event_type": event_type,
+        "payload": payload or {},
+        "source": source,
+        "origin": origin or source,
+        "channel": channel,
+        "tags": list(tags or []),
+    }
+    with BUS_FILE.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(event, separators=(",", ":")) + "\n")
+    return event
+
+
+def read_events(offset: int = 0, limit: int | None = None) -> Tuple[List[Dict[str, Any]], int]:
+    ensure_bus()
+    events: List[Dict[str, Any]] = []
+    next_offset = offset
+    with BUS_FILE.open("r", encoding="utf-8") as handle:
+        for index, line in enumerate(handle):
+            if index < offset:
+                continue
+            if limit is not None and len(events) >= limit:
+                break
+            line = line.strip()
+            if not line:
+                next_offset = index + 1
+                continue
+            try:
+                events.append(json.loads(line))
+            except json.JSONDecodeError:
+                events.append({
+                    "event_type": "bus.decode_error",
+                    "payload": {"line_index": index, "raw": line[:200]},
+                    "source": "agent_bus",
+                    "origin": "agent_bus",
+                    "channel": "local",
+                    "tags": ["decode_error"],
+                })
+            next_offset = index + 1
+    return events, next_offset
+
+
+def write_state(state: Dict[str, Any]) -> None:
+    BUS_DIR.mkdir(parents=True, exist_ok=True)
+    with bus_state_path().open("w", encoding="utf-8") as handle:
+        json.dump(state, handle, indent=2)
+
+
+def read_state() -> Dict[str, Any]:
+    path = bus_state_path()
+    if not path.exists():
+        return {}
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)

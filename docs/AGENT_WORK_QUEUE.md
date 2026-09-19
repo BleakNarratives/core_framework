@@ -82,6 +82,46 @@ commit as the work, so the queue cannot drift from reality.
   **Proved:** `python3 -m src.skill.run_retry_task` exits 0 and prints `PASS`, and
   `git status --short` shows no tracked file changed by the run.
 
+- [x] **8. Cover the sovereign engine's Governor gate.** *(done 2026-09-19)*
+  `src/sovereign/recursive_engine.py` (628 lines) claimed "Security: Oracle +
+  Governor gate every mutation … No clause in this loop bypasses that" with no test.
+  Now `tests/test_sovereign_governor_gate.py`, **13 tests, OK**: a write plan under a
+  non-elevated governor is `blocked`, applies nothing, and reaches no subprocess at
+  all; elevation stages intent without rewriting the file; an unsupplied governor
+  resolves a real one and denies (the default is **deny, not allow**); and a full
+  `cycle()` rolls back to `HOLD` with its journal under `$HOME`, which the test
+  redirects to a temp directory. Phase 4's `unittest discover` is mocked so the test
+  cannot re-enter this suite — the call count is asserted instead (0 when blocked).
+
+- [x] **9. Make the boardroom status line degrade instead of raising.** *(done 2026-09-19)*
+  Done in `src/ui/visualizer.py`: a truncated entry or a non-object entry returns
+  `[Boardroom: Unreadable]`; a null, absent, or non-object `sanitized_payload` falls
+  back to `[Unknown: UNKNOWN]`; blank lines are dropped so a trailing newline or a
+  whitespace-only file is no longer read as damage. A damaged final line deliberately
+  does **not** fall back to an earlier entry — reporting a stale status as current
+  would hide the damage rather than surface it.
+  **Proved:** `tests/test_visualizer.py` **21 tests, OK** (was 18; the five raising
+  cases became placeholder assertions), and `python3 src/ui/visualizer.py` from the
+  repo root still prints `[Boardroom: Waiting...]` with exit 0.
+
+- [ ] **10. Bound the sovereign engine's phase-4 test run.**
+  Every `cycle()` shells out to `python3 -m unittest discover -s tests` with a 30s
+  timeout: the whole suite per cycle, and it cannot see the nested herald suite.
+  Make it targeted or configurable and record the choice in the cycle record.
+  **Prove:** a cycle runs a named subset, proven by the mocked call arguments.
+
+- [ ] **11. Cover `src/sovereign/bridges.py` and `daemons.py`.**
+  266 + 126 lines, untested. `akasha_store_evidence` falls back to writing under
+  `$HOME`; `endempts_gate` decides `commit`/`hold`/`kill` and can unlink a kill file.
+  Both are boundary decisions worth pinning with `$HOME` redirected.
+  **Prove:** new tests pass and no file outside the repo is touched.
+
+- [ ] **12. Decide whether the engine's import-time `mkdir` under `$HOME` is acceptable.**
+  `recursive_engine.py` creates `~/RootBase/logs/shared/` at import time, and
+  `bridges.py` / `daemons.py` compute the same path. Importing a module should not
+  write outside the repository without a written reason.
+  **Prove:** the write moves to first use, or the reason is recorded next to it.
+
 ## Needs Michael — never done autonomously
 
 - **Vendor `projects/lean/`.** Its 3 commits are unrecoverable if `.git` is removed.

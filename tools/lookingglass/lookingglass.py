@@ -733,11 +733,11 @@ def main(argv=None):
             print(f"  {r['pair']:18s} winner {r['winner']:8s} fitness {r['fitness']} → {r['molt_note'][:50]}")
         print(f"  humane: {chain['arena']['humane_guarantee'][:90]}")
         th = theater_html(out)
-        print(f"Theater: {th} — flip ☯ metal → 🔥 BLEGH (zen vs metalcore, same ethic)")
+        print(f"Theater: {th} — flip metal → BLEGH (zen vs metalcore, same ethic)")
         if not args.no_mrd and MRD_TCT.exists():
             try:
                 import datetime
-                sig = f"\n### {datetime.datetime.now().isoformat()} — lookingglass ARENA p{pop}g{gens} seed {args.seed} — {root.name} — champions {chain['arena']['champions']} — rounds {chain['arena']['rounds']}\n- Arena: `{out.relative_to(HOME) if str(out).startswith(str(HOME)) else out}` — fractal {pop} → battle to 2 → breed — humane\n- Theater: `tools/lookingglass/theater/theater.html` — ☯ metal toggle\n"
+                sig = f"\n### {datetime.datetime.now().isoformat()} — lookingglass ARENA p{pop}g{gens} seed {args.seed} — {root.name} — champions {chain['arena']['champions']} — rounds {chain['arena']['rounds']}\n- Arena: `{out.relative_to(HOME) if str(out).startswith(str(HOME)) else out}` — fractal {pop} → battle to 2 → breed — humane\n- Theater: `tools/lookingglass/theater/theater.html` — metal toggle\n"
                 MRD_TCT.write_text(MRD_TCT.read_text(encoding="utf-8") + sig, encoding="utf-8")
             except: pass
         return 0
@@ -786,10 +786,10 @@ def main(argv=None):
                 all_chains.append(str(out))
                 import time as _t; _t.sleep(0.35)
             except Exception as e:
-                print(f"   ✗ {cr.name}: {e}")
+                print(f" {cr.name}: {e}")
         if all_chains:
             th = theater_html(_pl2.Path(all_chains[-1]))
-            print(f"\nConcepts theater: {th} — {len(all_chains)} chains, flip ☯ metal for BLEGH")
+            print(f"\nConcepts theater: {th} — {len(all_chains)} chains, flip metal for BLEGH")
         if not args.no_mrd and MRD_TCT.exists():
             try:
                 import datetime

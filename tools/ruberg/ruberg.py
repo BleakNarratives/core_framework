@@ -194,7 +194,7 @@ JANUS: deposit_sediment("ruberg","PATCH", "{root.name}", "spec→patch", {{"seed
         "chains": [str(p1), str(p2), str(p3)], "mode": "zen" if "zen" in skin else "metalcore",
         "ts": datetime.now(timezone.utc).isoformat(),
         "humane": "archive not delete — losers intact",
-        "next": "open theater: lookingglass --theater → flip ☯ metal → 🔥 BLEGH"
+        "next": "open theater: lookingglass --theater → flip metal → BLEGH"
     }
     p4 = write(THEATER / f"trigger-{seed}-{root.name}.json", json.dumps(vibe, indent=2))
     # also nudge lookingglass theater.json if exists — add vibe as latest event
@@ -212,7 +212,7 @@ JANUS: deposit_sediment("ruberg","PATCH", "{root.name}", "spec→patch", {{"seed
     # MRD receipt
     if MRD.exists():
         try:
-            MRD.write_text(MRD.read_text(encoding="utf-8") + f"\n### {datetime.now().isoformat()} — ruberg tip seed {seed} — {root.name} — {void} CR{cr} → {wedge[:64]}\n- Boardroom: constraint `{constraint[:72]}` kill `{kill[:72]}` cites [{evidence}]\n- Tip: `{p1.relative_to(HOME)}` → `{p2.relative_to(HOME)}` → `{p3.relative_to(HOME)}` → `{p4.relative_to(HOME)}`\n- Theater: `tools/lookingglass/theater/theater.html` + `tools/ruberg/inbox/tip-{seed}-{root.name}.md`\n- Next: `cat {p2.relative_to(HOME)}` then `lookingglass --theater` (flip ☯ metal)\n", encoding="utf-8")
+            MRD.write_text(MRD.read_text(encoding="utf-8") + f"\n### {datetime.now().isoformat()} — ruberg tip seed {seed} — {root.name} — {void} CR{cr} → {wedge[:64]}\n- Boardroom: constraint `{constraint[:72]}` kill `{kill[:72]}` cites [{evidence}]\n- Tip: `{p1.relative_to(HOME)}` → `{p2.relative_to(HOME)}` → `{p3.relative_to(HOME)}` → `{p4.relative_to(HOME)}`\n- Theater: `tools/lookingglass/theater/theater.html` + `tools/ruberg/inbox/tip-{seed}-{root.name}.md`\n- Next: `cat {p2.relative_to(HOME)}` then `lookingglass --theater` (flip metal)\n", encoding="utf-8")
         except: pass
 
     return {"wish": wish, "files": [str(p1), str(p2), str(p3), str(p4)], "root": str(root), "seed": seed, "void": void, "wedge": wedge}
@@ -245,13 +245,13 @@ def main(argv=None):
     # default boardroom root if nothing given
     concept = args.concept or ("~/tools" if not args.glob else "")
     res = tip(args.seed, concept, args.glob, args.arena)
-    print(f"🌀 Ruberg tipped — seed {res['seed']} @ {Path(res['root']).name} — void {res['void']} → {res['wedge'][:72]}")
+    print(f" Ruberg tipped — seed {res['seed']} @ {Path(res['root']).name} — void {res['void']} → {res['wedge'][:72]}")
     print(f"   1-spark → {res['files'][0].replace(str(HOME)+'/', '~/')}")
     print(f"   2-spec  → {res['files'][1].replace(str(HOME)+'/', '~/')}")
     print(f"   3-patch → {res['files'][2].replace(str(HOME)+'/', '~/')}")
     print(f"   4-theater → {res['files'][3].replace(str(HOME)+'/', '~/')}")
     print(f"   Inbox: ~/tools/ruberg/inbox/tip-{res['seed']}-{Path(res['root']).name}.md")
-    print(f"   Theater: ~/tools/lookingglass/theater/theater.html  (xor: lookingglass --theater → ☯ metal → 🔥 BLEGH)")
+    print(f" Theater: ~/tools/lookingglass/theater/theater.html (xor: lookingglass --theater → metal → BLEGH)")
     if args.arena and args.arena >= 8:
         # grow arena after tip so you see both
         import subprocess

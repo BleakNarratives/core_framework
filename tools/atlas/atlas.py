@@ -278,7 +278,7 @@ def render_dungeon_text(items, seed, root_label):
     lines=[]
     lines.append(f"┌─ GAP ATLAS — seed {seed} — {root_label} — reproducible dungeon (market+scale first)")
     lines.append(f"│  7 voids scored together (novel lens: affordance, not just coverage). CR = market-weighted. Loot = one close. Boss = highest CR.")
-    lines.append(f"│  Icons: 🚚 distribution 💰 monetization 🧪 trust 🔁 retention 📈 scale 🗺️ discoverability 💀 cruelty")
+    lines.append(f"│ Icons: distribution monetization trust retention scale discoverability cruelty")
     lines.append(f"│  Scale top = survives 10→100. Market = TAM×pain×reach (Jerry bench = low TAM, high pain → still a boss).")
     lines.append(f"│  Re-run: atlas --seed {seed} — same seed = same deck. Creative but reproducible.")
     lines.append(f"│")

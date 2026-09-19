@@ -267,7 +267,7 @@ def render_terminal(root: Path, write=False):
             count = len(list(d.glob("*.py"))) + len(list(d.glob("**/*.py")))
             # peek curator
             has_cur = (d / "CURATOR.md").exists()
-            tag = "📖 CURATOR" if has_cur else "  "
+            tag = " CURATOR" if has_cur else " "
             # quick one-liner
             b = readme_blurb(d)[:55] if d else ""
             if not b:
@@ -308,16 +308,16 @@ def render_terminal(root: Path, write=False):
     dupes=[(k,v) for k,v in stems.items() if len(v)>1]
     if dupes:
         print("│")
-        print("│  ⚡ FORCE MULTIPLIER — dupe stems found (humane_cannibal can graft):")
+        print("│ FORCE MULTIPLIER — dupe stems found (humane_cannibal can graft):")
         for k,v in dupes[:3]:
             print(f"│     {k}: {', '.join(v[:4])} → hc --dry-run to preview graft")
     print("│")
     print("│  TRY:  sherpa --write   (leave CURATOR.md so you remember after sleep)")
     print("│       where-was-i       (today\'s trail so you don\'t have to remember)")
     print("│       c                 (short for sherpa)")
-    print("│       sherpa --egg      (fartographer + loomy live here 🥚)")
+    print("│ sherpa --egg (fartographer + loomy live here )")
     if write and files:
-        print("│  ✓ CURATOR.md written below (folder now remembers for you)")
+        print("│ CURATOR.md written below (folder now remembers for you)")
 
 def write_curator_md(root: Path):
     root=root.resolve()
@@ -388,11 +388,11 @@ def write_curator_md(root: Path):
         md.append("## Where to cd next")
         md.append("")
         for d in subdirs[:15]:
-            has_cur = "📖" if (d / "CURATOR.md").exists() else "·"
+            has_cur = "" if (d / "CURATOR.md").exists() else "·"
             b = readme_blurb(d)[:90] or "(no blurb yet)"
             md.append(f"- `{d.name}/` {has_cur} — {b}")
         md.append("")
-    md.append("## ⚡ Force multiplier (extra innings)")
+    md.append("## Force multiplier (extra innings)")
     md.append("")
     md.append("- `hc --dry-run` — preview humane merge (winner grafted, losers archived — never deleted)")
     md.append("- `cm` — codemap stats right here, no html/browser")

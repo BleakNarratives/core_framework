@@ -571,7 +571,7 @@ const Navigation: React.FC = () => {
                         className="nav-toggle"
                         onClick={() => setIsOpen(!isOpen)}
                     >
-                        ☰
+
                     </button>
                 </div>
                 
@@ -696,15 +696,15 @@ def main():
     ]
     
     for cmd in test_commands:
-        print(f"\n🧪 Testing: {cmd}")
+        print(f"\n Testing: {cmd}")
         result = coder.generate_from_description(cmd)
-        print(f"✅ Generated: {result['type']}")
+        print(f" Generated: {result['type']}")
         
         # Save files
         for filename, content in result["files"].items():
             with open(filename, 'w') as f:
                 f.write(content)
-            print(f"   📄 Created: {filename}")
+            print(f" Created: {filename}")
 
     # MOLT smoke test
     try:

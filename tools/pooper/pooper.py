@@ -61,13 +61,13 @@ GLOBS = [
             "GOAL: Run `sherpa` (or `c`) in my Codebuff terminal and understand ENTRYPOINT vs SUPPORTING.\n\n"
             "STEPS (do one, then wait for me):\n"
             "1. Tell me to type: `c` and tell me what you see (paste first 10 lines)\n"
-            "2. Explain: 🔵 ENTRYPOINT = I RUN it (has --help), 🟢 SUPPORTING = others import it, ⚪ ORPHAN = solo, 🟡 STUB = tiny, 🔴 BROKEN = fix first\n"
+            "2. Explain: ENTRYPOINT = I RUN it (has --help), SUPPORTING = others import it, ORPHAN = solo, STUB = tiny, BROKEN = fix first\n"
             "3. Have me run: `c ~/Official-Vertical-AI-Boardroom | head -n 30` — name the hub file and why it matters\n"
-            "4. Have me run: `sherpa --egg` and smile — fartographer lives there 💨\n\n"
+            "4. Have me run: `sherpa --egg` and smile — fartographer lives there \n\n"
             "RULES: One step at a time. Ask me to paste output before continuing. If I get lost, say `where-was-i`. End with: 'You just did Sherpa. Next bite is council, or say poop again.'\n"
             "Start with step 1 now."
         ),
-        "checks": ["I typed `c` and saw 🔵/🟢/⚪", "`c ~/Official-Vertical-AI-Boardroom` — I can name the hub", "I did `sherpa --egg`"],
+        "checks": ["I typed `c` and saw //", "`c ~/Official-Vertical-AI-Boardroom` — I can name the hub", "I did `sherpa --egg`"],
         "follow": "Next: `pooper --glob council` (the board that SEES your code)",
     },
     {
@@ -82,7 +82,7 @@ GLOBS = [
             "2. Explain one role hard-catting me (e.g., TIME_ALCHEMIST) and what [E#] it cited\n"
             "3. Have me read: SYNTHESIS verdict (conditional / go / no-go) + kill_test in plain English\n"
             "4. Have me read: SIMS — downside/base/upside hours (burnout 1.35x). Ask: does base feel honest?\n"
-            "5. Bonus: `fartographer ~/Official-Vertical-AI-Boardroom --rounds 1` — same council, 💨 wink\n\n"
+            "5. Bonus: `fartographer ~/Official-Vertical-AI-Boardroom --rounds 1` — same council, wink\n\n"
             "RULES: One step at a time. Cite [E#] when you claim. End with: 'Next bite is screenshots or humane cannibal.'\n"
             "Start with step 1 now."
         ),
@@ -98,14 +98,14 @@ GLOBS = [
             "GOAL: Sweep 5 Chromebook screenshots into TODO.md vs MEMORIES.md — checkable, private, humane.\n\n"
             "STEPS:\n"
             "1. Explain: sweeper OCRs /mnt/shared/MyFiles/Downloads/Screenshot*.png via Gemini pool → writes ~/screenshots_scan/{TODO.md,MEMORIES.md,SUMMARY.md,raw_ocr.jsonl}. Private: ~/screenshots_scan/.gitignore = * so nothing pushes. Deep personal chats → MEMORIES.md (never a TODO, never auto-pruned unless file deleted).\n"
-            "2. Have me run: `python3 ~/tools/extraction/screenshot_sweeper.py --limit 5 --throttle 2.0` and paste the 5 lines that say ✓ type + todos\n"
+            "2. Have me run: `python3 ~/tools/extraction/screenshot_sweeper.py --limit 5 --throttle 2.0` and paste the 5 lines that say type + todos\n"
             "3. Have me run: `cat ~/screenshots_scan/TODO.md | head -n 30` — check one box `[x]` with `nano ~/screenshots_scan/TODO.md`, then re-run same command and show check survived\n"
             "4. Have me run: `cat ~/screenshots_scan/MEMORIES.md | head -n 30` — confirm memories are NOT todos\n"
             "5. Privacy check: `cat ~/screenshots_scan/.gitignore` — confirm * and explain why `gh` is napping (soft pillow)\n\n"
             "RULES: Emphasize privacy — verbatim stays local. Never tell me to push screenshots_scan. End with: 'Want a 2nd bite today? Say pooper again — next is bardildo/history.'\n"
             "Start with step 1 now."
         ),
-        "checks": ["Ran sweeper --limit 5 and saw 5 ✓", "Checked a TODO box and it survived re-run", "Saw MEMORIES.md separate + .gitignore = *"],
+        "checks": ["Ran sweeper --limit 5 and saw 5 ", "Checked a TODO box and it survived re-run", "Saw MEMORIES.md separate + .gitignore = *"],
         "follow": "Next: `pooper --glob bardildo` (history)",
     },
     {
@@ -139,10 +139,10 @@ GLOBS = [
             "2. Have me run: `fartographer ~/tools/introspection --rounds 1 | head -n 50` and point out EVIDENCE + worst-day grenade\n"
             "3. Have me run: `sherpa ~/p_recovery/project_incubator --write` and `cat ~/p_recovery/project_incubator/CURATOR.md | head -n 30`\n"
             "4. Ask: which incubator slice feels most alive? (PivotCity? Praudit? feral-swarm?) — suggest sherpa there next\n\n"
-            "RULES: Tender, funny. Fater isn't a joke — it's the map that remembered when everything else forgot. End with: 'Fater salutes you 💨 — next bite is the poop ritual itself.'\n"
+            "RULES: Tender, funny. Fater isn't a joke — it's the map that remembered when everything else forgot. End with: 'Fater salutes you — next bite is the poop ritual itself.'\n"
             "Start with step 1 now."
         ),
-        "checks": ["Ran `fartographer` and saw council output with 💨", "Left CURATOR.md in project_incubator"],
+        "checks": ["Ran `fartographer` and saw council output with ", "Left CURATOR.md in project_incubator"],
         "follow": "Next: `pooper --glob ritual` (the 15-min habit)",
     },
 
@@ -155,7 +155,7 @@ GLOBS = [
             "GOAL: Run Jerry's Ears bench (jerry.html) — Hearing Test → Live Assist, Lone Ranger stage, save his preset.\n\n"
             "STEPS:\n"
             "1. Have me run: `xdg-open ~/tools/jerry-hearing/jerry.html` (or double-click in Files) — paste what I see\n"
-            "2. Explain the 2 modes: HEARING TEST (beep + audiogram) and LIVE ASSIST (mic→EQ→earbuds). Show I can flip to 🤠 JERRY'S VIEW (big button, horse runs, catch outlaws) and pop it to a new window to face him.\n"
+            "2. Explain the 2 modes: HEARING TEST (beep + audiogram) and LIVE ASSIST (mic→EQ→earbuds). Show I can flip to JERRY'S VIEW (big button, horse runs, catch outlaws) and pop it to a new window to face him.\n"
             "3. Run beeps: `250→500→1000→2000→4000→6000→8000` — wired earbuds, LEVEL from -48 up, SPACE or big I HEARD IT button = catch + hat tip + tumbleweed (every 3rd wheelie!). SAVE threshold each, 1000Hz first. Keep LIMITER ON.\n"
             "4. Hit `← apply test dots → EQ` → switch to LIVE ASSIST → START MIC → read him a paragraph (between rounds), let him say clearer vs muddy, nudge 3.5k knob, keep Fletcher-Munson gentle (~22), VU in gold not red.\n"
             "5. When he says 'that's it' → name Jerry-Speech-1 → SAVE preset → show NOTES box for his ear story. Done.\n"
@@ -233,7 +233,7 @@ GLOBS = [
             "1. Have me run: `lookingglass --seed 42 ~/tools --depth 2 --branch 2 --no-mrd` — paste the chain (7 nodes) + board cites [E#]\n"
             "2. Explain: each link = prompt → board (6 hard cats) → eventuality (downside/base/upside to eventuality) → diff mirror (what future-you sees)\n"
             "3. Have me run: `lookingglass --seed 42 ~/tools --depth 2 --branch 2 --arena 16 --no-mrd | tail -n 20` — fractal 16 → battle to 2 → breed with molt (humane: losers archived as __from_* , no deletion)\n"
-            "4. Have me run: `xdg-open ~/tools/lookingglass/theater/theater.html` (or double-click) — hit ▶︎ breathe, then ♫ bgm, then ☯ metal → 🔥 BLEGH — sipes/fades/mirror vs kersplode/djent + horse breathes\n"
+            "4. Have me run: `xdg-open ~/tools/lookingglass/theater/theater.html` (or double-click) — hit ▶︎ breathe, then bgm, then metal → BLEGH — sipes/fades/mirror vs kersplode/djent + horse breathes\n"
             "5. Teach if-this-then-that: `lookingglass --seed 42 --if-this \"close trust void\" --then-that --no-mrd` — one mirror, no arena\n"
             "RULES: Monitor guards every fork (depth 5, branch 3, parallel 2, forbidden rm -rf). Praise breathing over speed. Ethic: garden, not slaughter — you felt the cruelty and named it, that's the monitor.\n"
             "Start with step 1 now."
@@ -252,7 +252,7 @@ GLOBS = [
             "1. Have me run: `ruberg --status` — paste the 4 inboxes + MRD tail\n"
             "2. Have me run: `ruberg --seed 42 --concept ~/p_recovery --watch | head -n 20` — paste seed → spec → patch → theater paths\n"
             "3. Have me run: `cat ~/tools/ruberg/2-spec/spec-42-p_recovery.md` — point out [E#] + target file + 10-line diff + py_compile gate\n"
-            "4. Have me run: `xdg-open ~/tools/lookingglass/theater/theater.html` — hit ▶︎ breathe, flip ☯ metal → 🔥 BLEGH, then `cat ~/tools/ruberg/inbox/tip-42-p_recovery.md`\n"
+            "4. Have me run: `xdg-open ~/tools/lookingglass/theater/theater.html` — hit ▶︎ breathe, flip metal → BLEGH, then `cat ~/tools/ruberg/inbox/tip-42-p_recovery.md`\n"
             "RULES: One wedge, one file appears, next agent wakes. Monitor: humane only (no rm -rf), must cite [E#]. Same seed = same tip.\n"
             "Start with step 1 now."
         ),
@@ -335,7 +335,7 @@ def least_recent_glob():
 def render_glob(g, to_file: Path = None, mark: bool = False):
     # Build paste-ready markdown glob
     lines = []
-    lines.append(f"# 💩 {g['title']}")
+    lines.append(f"# {g['title']}")
     lines.append(f"*{g['win']}*  — civiliter mortuus friendly, no KYC, no bank, just prompts.")
     lines.append("")
     lines.append(f"**Time:** 15 min max. One paste into Claude app / Gemini app. One bite.")
@@ -369,10 +369,10 @@ def render_glob(g, to_file: Path = None, mark: bool = False):
     lines.append("glob sherpa       # same as pooper --glob sherpa")
     lines.append("c                 # sherpa short")
     lines.append("council . --rounds 1   # board that sees")
-    lines.append("fartographer . --rounds 1  # same with 💨")
+    lines.append("fartographer . --rounds 1 # same with ")
     lines.append("```")
     lines.append("")
-    lines.append(f"*Glob `{g['id']}` • generated {datetime.now().isoformat()} • `.pooper/state.json` remembers so you don't have to • gh napping 💤, private stays private*")
+    lines.append(f"*Glob `{g['id']}` • generated {datetime.now().isoformat()} • `.pooper/state.json` remembers so you don't have to • gh napping , private stays private*")
     text = "\n".join(lines)
     if to_file:
         to_file.parent.mkdir(parents=True, exist_ok=True)
@@ -415,7 +415,7 @@ def main(argv=None):
         print("┌─ Pooper status")
         print(f"│  started: {s.get('started','not yet')} • done {len(done)}/{len(GLOBS)} • last: {s.get('last','none')}")
         for gid, ts in sorted(done.items(), key=lambda kv: kv[1]):
-            print(f"│   ✓ {gid} — {ts[:16]}")
+            print(f"│ {gid} — {ts[:16]}")
         remaining = [g["id"] for g in GLOBS if g["id"] not in done]
         if remaining:
             print(f"│  remaining: {', '.join(remaining)}")

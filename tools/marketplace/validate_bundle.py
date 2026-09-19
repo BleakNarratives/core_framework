@@ -111,12 +111,12 @@ def validate_one(bundle: Path) -> tuple[bool, list[str]]:
 
     ok = len(errs) == 0
     msgs = []
-    for e in errs: msgs.append(f"  ✗ {e}")
-    for w in warns: msgs.append(f"  ⚠ {w}")
+    for e in errs: msgs.append(f" {e}")
+    for w in warns: msgs.append(f" {w}")
     if ok and not warns:
-        msgs.append("  ✓ all checks passed")
+        msgs.append(" all checks passed")
     elif ok:
-        msgs.append("  ✓ valid (warnings only)")
+        msgs.append(" valid (warnings only)")
     return ok, msgs
 
 def main():

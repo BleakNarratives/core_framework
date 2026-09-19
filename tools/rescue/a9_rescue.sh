@@ -195,7 +195,7 @@ adb_pull() {
   # list-first probe
   if ! adb shell ls -d "$src" 2>&1 | grep -qv "No such"; then warn "  source not found on device: $src"; return 1; fi
   # actual pull
-  if adb pull "$src" "$dst" 2>&1 | tee -a "$LOG_FILE"; then log "  ✓ $label pulled"; return 0; else warn "  ✗ pull failed for $label"; return 1; fi
+  if adb pull "$src" "$dst" 2>&1 | tee -a "$LOG_FILE"; then log " $label pulled"; return 0; else warn " pull failed for $label"; return 1; fi
 }
 
 adb_pull_termux() {

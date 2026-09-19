@@ -242,63 +242,63 @@ class FileForensics:
         total_missing = sum(len(files) for files in self.missing_files.values())
         total_incomplete = sum(len(files) for files in self.incomplete_files.values())
         
-        report.append("📈 EXECUTIVE SUMMARY:")
-        report.append(f"  • 📂 Total Files Found: {total_found}")
-        report.append(f"  • ❌ Core Files Missing: {total_missing}")
-        report.append(f"  • 🔧 Incomplete Files: {total_incomplete}")
-        report.append(f"  • 📊 Your Stats: 124 Python, 13 TS, 88 TSX, 15 JSON files")
+        report.append(" EXECUTIVE SUMMARY:")
+        report.append(f" • Total Files Found: {total_found}")
+        report.append(f" • Core Files Missing: {total_missing}")
+        report.append(f" • Incomplete Files: {total_incomplete}")
+        report.append(f" • Your Stats: 124 Python, 13 TS, 88 TSX, 15 JSON files")
         report.append("")
         
         # Found files - show top level only
-        report.append("✅ KEY FILES FOUND:")
+        report.append(" KEY FILES FOUND:")
         report.append("-" * 40)
         
         # Show root level files first
         if '.' in self.found_files:
-            report.append("\n📁 ROOT LEVEL:")
+            report.append("\n ROOT LEVEL:")
             for file_info in self.found_files['.']:
                 if file_info['path'] in ['chat_demon.py', 'forge_executor.py', 'stream_setup.py', 'install_plugins.py']:
-                    status = "✅" if file_info['lines'] > 10 else "🔄"
+                    status = "" if file_info['lines'] > 10 else ""
                     report.append(f"  {status} {file_info['path']} ({file_info['lines']} lines)")
         
         # Show important directories
         important_dirs = ['modmind-brains', 'modmind-mask', 'forge_actual_output']
         for dir_name in important_dirs:
             if dir_name in self.found_files:
-                report.append(f"\n📁 {dir_name.upper()}:")
+                report.append(f"\n {dir_name.upper()}:")
                 for file_info in self.found_files[dir_name][:5]:  # First 5 files
-                    report.append(f"  📄 {file_info['path']}")
+                    report.append(f" {file_info['path']}")
         
         report.append("")
         
         # Missing files - prioritized
-        report.append("❌ PRIORITY MISSING FILES:")
+        report.append(" PRIORITY MISSING FILES:")
         report.append("-" * 40)
         
         priority_categories = ['LAUNCHERS_CORE', 'CORE_ENGINE', 'PLUGINS_voice_commands']
         for category in priority_categories:
             if category in self.missing_files and self.missing_files[category]:
-                report.append(f"\n🎯 {category.replace('_', ' ').title()}:")
+                report.append(f"\n {category.replace('_', ' ').title()}:")
                 for file in self.missing_files[category][:3]:  # Top 3 per category
-                    report.append(f"  ⚠️  {file}")
+                    report.append(f" {file}")
         
         report.append("")
         
         # Incomplete files
-        report.append("🔄 INCOMPLETE FILES (NEEDS WORK):")
+        report.append(" INCOMPLETE FILES (NEEDS WORK):")
         report.append("-" * 40)
         if self.incomplete_files:
             for category, files in self.incomplete_files.items():
                 if files:
-                    report.append(f"\n📁 {category}:")
+                    report.append(f"\n {category}:")
                     for file_info in files[:5]:  # First 5
-                        report.append(f"  🔧 {file_info['path']} (only {file_info['lines']} lines)")
+                        report.append(f" {file_info['path']} (only {file_info['lines']} lines)")
         else:
-            report.append("  🎉 No incomplete files found!")
+            report.append(" No incomplete files found!")
         report.append("")
         
         # Project analysis
-        report.append("🏗️ PROJECTS DETECTED:")
+        report.append(" PROJECTS DETECTED:")
         report.append("-" * 40)
         projects = [
             "IDEal", "odds-of-the-gods", "sinister_agents_v1", "ShipWrekD-OS", 
@@ -311,19 +311,19 @@ class FileForensics:
             if project_path.exists():
                 py_files = list(project_path.rglob("*.py"))
                 tsx_files = list(project_path.rglob("*.tsx"))
-                report.append(f"  📦 {project}: {len(py_files)} Python, {len(tsx_files)} TSX files")
+                report.append(f" {project}: {len(py_files)} Python, {len(tsx_files)} TSX files")
         
         report.append("")
         
         # Recommendations
-        report.append("💡 ACTION PLAN:")
+        report.append(" ACTION PLAN:")
         report.append("-" * 40)
-        report.append("1. 🎯 COMPLETE CORE: Finish chat_demon.py & forge_executor.py")
-        report.append("2. 🚀 SETUP PLUGINS: Add voice_commands and gamification plugins")
-        report.append("3. 📦 CONSOLIDATE: Use code_miner.py to clean up AI Studio projects")
-        report.append("4. 🔧 FIX INCOMPLETE: Complete the empty/small files first")
+        report.append("1. COMPLETE CORE: Finish chat_demon.py & forge_executor.py")
+        report.append("2. SETUP PLUGINS: Add voice_commands and gamification plugins")
+        report.append("3. CONSOLIDATE: Use code_miner.py to clean up AI Studio projects")
+        report.append("4. FIX INCOMPLETE: Complete the empty/small files first")
         report.append("")
-        report.append("🎪 NEXT STEPS:")
+        report.append(" NEXT STEPS:")
         report.append("• Run: python quick_share.py .  (to create shareable bundle)")
         report.append("• Run: python code_miner.py IDEal/  (clean AI Studio projects)")
         report.append("• Focus on ONE project at a time")

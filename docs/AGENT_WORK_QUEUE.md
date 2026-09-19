@@ -47,10 +47,17 @@ commit as the work, so the queue cannot drift from reality.
   together with the direct invocation and the deliberately ignored lead data.
   **Prove:** the documented root command reaches herald's suite.
 
-- [ ] **5. Commit the staged `docs/SYSTEM_DEPENDENCIES.md`.**
-  317 lines, staged and uncommitted since before this session. It is a doc; commit
-  it as its own docs commit unless it contradicts the tree.
-  **Prove:** file content matches what is documented as installed.
+- [ ] **5. Commit the staged `docs/SYSTEM_DEPENDENCIES.md`.** *(verified 2026-09-19; awaiting a decision)*
+  The Herald system-dependencies doc, staged since before this session. Its claims
+  were checked against this machine and hold: `python3 --version` is **3.13.5**;
+  `bin/ai`, `bin/ai_lib.py`, `bin/ai_gateway.py`, `bin/vault-env` all exist; herald's
+  imports are stdlib-only (no `requests`/`feedparser`); its own documented command
+  `python3 -m pytest projects/herald/tests -q` reports **130 passed**; and
+  `LEADS.md`, `OUTREACH_DRAFTS.md`, `.herald_state.json` are ignored at
+  `projects/herald/.gitignore:3,4,7` as the doc states.
+  **Blocked deliberately:** it is Michael's staged file and he asked for it to be
+  left staged as it was. Committing it is his call, not mine — nothing contradicts
+  the tree, so "commit it" is safe the moment he says so.
 
 - [x] **6. Check the metrics generator's undeclared dependency.** *(done 2026-09-19)*
   Done both, not either: the dependency is recorded in the generator's docstring

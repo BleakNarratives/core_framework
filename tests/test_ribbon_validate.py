@@ -78,14 +78,6 @@ class TestRibbonShippedArtifacts(unittest.TestCase):
             with self.subTest(fixture=path.name):
                 self.assertEqual(_errors(_read_bundle(path)), [])
 
-    def test_shipped_invalid_fixture_is_rejected(self):
-        """The documented guard proof, which the CLI itself never runs."""
-        path = FIXTURES_INVALID_DIR / "empty.json"
-        self.assertTrue(path.is_file(), f"missing guard fixture: {path}")
-        errs = _errors(_read_bundle(path))
-        self.assertTrue(errs, "empty ribbon array must not validate")
-        self.assertIn("ribbons must be non-empty array", errs)
-
 
 class TestRibbonRuleCoverage(unittest.TestCase):
     """Rule-by-rule checks against a copy of the shipped bundle."""
@@ -373,6 +365,55 @@ class TestRibbonCliGate(unittest.TestCase):
             any("version must be 'ribbon.v1'" in e for e in report["errors"]),
             report["errors"],
         )
+
+
+# One negative fixture per rule. Each entry must trip exactly one rule, so a
+# failing corpus case names a single cause instead of a pile of noise.
+INVALID_FIXTURES = {
+    "empty.json": "ribbons must be non-empty array",
+    "bad-version.json": "version must be 'ribbon.v1'",
+    "bad-kind.json": "kind must be 'ribbon'",
+    "duplicate-id.json": "ribbon id duplicate",
+    "bad-id.json": "must match ^[a-z0-9_-]+$",
+    "too-few-points.json": "path.points must have >=2 points",
+    "bad-point.json": "must be [x,y] numbers",
+    "bad-stroke.json": "style.stroke must be #RRGGBB",
+    "bad-width.json": "style.width must be 0.5..32",
+    "bad-easing.json": "animation.easing invalid",
+    "bad-duration.json": "animation.duration_ms must be >=100 int",
+    "bad-opacity.json": "style.opacity must be 0..1",
+    "bad-closed.json": "path.closed must be boolean",
+    "bad-dash.json": "style.dash must be an array of numbers",
+    "bad-direction.json": "animation.direction invalid",
+    "bad-loop.json": "animation.loop must be boolean",
+    "ribbon-not-object.json": "ribbon must be an object",
+}
+
+
+class TestRibbonInvalidFixtures(unittest.TestCase):
+    """The documented guard proof, which the CLI itself never runs.
+
+    validate.py deliberately skips this directory (keeping it out of the sweep
+    is what lets the script stay green), so before this class the shipped
+    negative fixtures were executed by nothing at all.
+    """
+
+    def test_every_invalid_fixture_is_rejected_by_exactly_one_rule(self):
+        for name, fragment in INVALID_FIXTURES.items():
+            with self.subTest(fixture=name):
+                path = FIXTURES_INVALID_DIR / name
+                self.assertTrue(path.is_file(), f"missing guard fixture: {path}")
+                errs = _errors(_read_bundle(path))
+                self.assertEqual(
+                    len(errs), 1,
+                    f"{name} should trip exactly one rule, got {errs}",
+                )
+                self.assertIn(fragment, errs[0])
+
+    def test_fixture_corpus_and_expectations_stay_in_step(self):
+        """A new file here without an expectation, or vice versa, fails loudly."""
+        on_disk = {path.name for path in FIXTURES_INVALID_DIR.glob("*.json")}
+        self.assertEqual(on_disk, set(INVALID_FIXTURES))
 
 
 if __name__ == "__main__":

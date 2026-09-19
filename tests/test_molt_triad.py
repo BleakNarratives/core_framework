@@ -13,6 +13,15 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 
+# Contain the Whorl bus for this module. `Governor` dispatches an audit event through
+# `WhorlBusDispatcher`, which falls back to `$HOME/.whorl`; measured, this suite was
+# appending 3 files to the real bus on every run. `whorl.core.config` resolves the
+# directory at import time, so this is set before any `src.` import below, and
+# setdefault means an explicit WHORL_HOME still wins.
+_WHORL_TMP = tempfile.TemporaryDirectory(prefix="molt-triad-whorl-")
+os.environ.setdefault("WHORL_HOME", _WHORL_TMP.name)
+
+
 # ── Governor ─────────────────────────────────────────────────────
 class TestGovernor(unittest.TestCase):
     def setUp(self):

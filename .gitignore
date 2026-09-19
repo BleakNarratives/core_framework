@@ -22,10 +22,13 @@
 !/projects/**
 !/rag_storage
 !/rag_storage/**
+!/scripts
+!/scripts/**
 !/.gitignore
 !/package.json
 !/package-lock.json
 !/README.md
+!/AGENTS.md
 
 # — ephemeral everywhere (even inside src/tools) —
 __pycache__/

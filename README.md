@@ -1,9 +1,14 @@
 # MOLT — Markdown Originated Living Triad
 
 > **Static markdown molts into living runtime.**  
+>
+> **Workspace navigation:** start with [`docs/PROJECT_MAP.md`](docs/PROJECT_MAP.md) before browsing the surrounding Molt, Whorl, and Vertical AI workspaces.
+
 > Inert `SKILL.md` → autonomous, RAG-enabled execution runtime. No MCP server. No extension. One API call.
 
-[![Tests](https://img.shields.io/badge/tests-70%20passing-brightgreen)](#tests)
+<!-- METRICS:START -->
+[![Tests](https://img.shields.io/badge/tests-79%20passing-brightgreen)](#tests)
+<!-- METRICS:END -->
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](#install)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](#license)
 
@@ -172,7 +177,7 @@ RepurposingEngine().morph_skill("triage-base", "sports_broadcast")   # permissiv
 ```bash
 pip install pyyaml requests   # only runtime deps (both optional — degrades without)
 python3 -m src.skill.inference_bridge --list-skills
-python3 -m unittest discover -s tests -v   # 70 tests, all green
+python3 -m unittest discover -s tests -v   # repository test suite
 ```
 
 ## Zero-Bloat CLI Contract
@@ -184,6 +189,28 @@ These flags are **additive**. Unknown flags are ignored — existing tools see n
 - `--elevate-ttl 3600` — custom TTL
 
 Works: Vibe CLI, Codebuff, Gemini CLI, VS Code — all via `src/skill/inference_bridge.py`.
+
+## Workspace verification
+
+The surrounding Vertical AI workspaces have dependency manifests and a safe,
+network-free verifier. It parses Python syntax and local imports, and runs only
+the deterministic `vertical_local` debate smoke test; it does not read secrets,
+contact providers, start servers, or invoke live LLMs:
+
+```bash
+python scripts/verify_vertical_ai.py
+```
+
+Project manifests:
+
+- [`vertical_ai/manifest.json`](vertical_ai/manifest.json) — outreach prototype
+- [`vertical_local/manifest.json`](vertical_local/manifest.json) — local wrapper
+- [`vertical_radar/manifest.json`](vertical_radar/manifest.json) — radar prototype
+- [`vertical_ai_engine/manifest.json`](vertical_ai_engine/manifest.json) — Coach Bleak legacy engine
+
+The full relationship map and migration gates live in
+[`docs/PROJECT_MAP.md`](docs/PROJECT_MAP.md) and
+[`docs/VERTICAL_AI_MIGRATION.md`](docs/VERTICAL_AI_MIGRATION.md).
 
 ---
 

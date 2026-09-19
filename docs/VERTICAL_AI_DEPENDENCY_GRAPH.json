@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-17",
+  "mode": "offline",
+  "secret_values_included": false,
+  "projects": {
+    "vertical_ai": {
+      "scripts": [
+        "scrape_google_reviews.py",
+        "automate_outreach.py"
+      ],
+      "python_files": 3,
+      "imports": [
+        "__future__",
+        "bs4",
+        "csv",
+        "email",
+        "json",
+        "pathlib",
+        "requests",
+        "smtplib",
+        "time",
+        "typing"
+      ],
+      "outputs": [
+        "businesses_without_websites.csv",
+        "local dry-run handoff JSON"
+      ],
+      "environment": [
+        "CONCIERGE_VAULT"
+      ],
+      "verification": {
+        "syntax_only": true,
+        "offline_imports": [],
+        "dry_run": "not_available: entrypoints perform live HTTP or SMTP operations"
+      }
+    },
+    "vertical_local": {
+      "scripts": [
+        "app.py",
+        "run_boardroom.sh",
+        "debate_engine.py"
+      ],
+      "python_files": 11,
+      "imports": [
+        "curses",
+        "debate_engine",
+        "debate_router",
+        "dotenv",
+        "fastapi",
+        "json",
+        "openai",
+        "os",
+        "personas_router",
+        "presets_router",
+        "providers",
+        "pydantic",
+        "random",
+        "reports",
+        "requests",
+        "scout_sandbox",
+        "subprocess",
+        "swarm_client",
+        "thoth_client",
+        "time",
+        "typing",
+        "urllib",
+        "uuid",
+        "uvicorn"
+      ],
+      "outputs": [
+        "web/",
+        "data/",
+        "temporary service logs and pid files"
+      ],
+      "environment": [
+        "OPENAI_API_KEY",
+        "HF_API_KEY",
+        "HOST",
+        "PORT"
+      ],
+      "verification": {
+        "syntax_only": true,
+        "offline_imports": [
+          "app",
+          "debate_engine"
+        ],
+        "dry_run": "direct FastAPI route handlers plus deterministic debate with seeded personas; no provider, network, or server"
+      }
+    },
+    "vertical_radar": {
+      "scripts": [
+        "src/radar/main.py"
+      ],
+      "python_files": 5,
+      "imports": [
+        "datetime",
+        "duckduckgo_search",
+        "langchain",
+        "langchain_google_genai",
+        "langchain_ollama",
+        "os",
+        "src",
+        "time",
+        "trafilatura"
+      ],
+      "outputs": [
+        "src/data/report_<client>_<timestamp>.txt"
+      ],
+      "environment": [
+        "GOOGLE_API_KEY",
+        "OLLAMA_HOST"
+      ],
+      "verification": {
+        "syntax_only": true,
+        "offline_imports": [],
+        "dry_run": "not_available: imports and entrypoint require optional LLM/search dependencies and live services"
+      }
+    },
+    "vertical_radar_dupe": {
+      "scripts": [],
+      "python_files": 1,
+      "imports": [
+        "duckduckgo_search",
+        "langchain",
+        "time",
+        "trafilatura"
+      ],
+      "outputs": [],
+      "environment": [],
+      "verification": {}
+    },
+    "vertical_ai_engine": {
+      "scripts": [
+        "foia_cli.py"
+      ],
+      "python_files": 18,
+      "imports": [
+        "app",
+        "argparse",
+        "asyncio",
+        "collections",
+        "config",
+        "datetime",
+        "google",
+        "jinja2",
+        "json",
+        "logging",
+        "modules",
+        "os",
+        "pytest",
+        "random",
+        "re",
+        "requests",
+        "spacy",
+        "string",
+        "sys",
+        "tempfile",
+        "tika",
+        "unittest",
+        "uuid",
+        "weasyprint"
+      ],
+      "outputs": [
+        "application logs",
+        "processed document storage configured at runtime"
+      ],
+      "environment": [
+        "GEMINI_API_KEY"
+      ],
+      "verification": {
+        "syntax_only": true,
+        "offline_imports": [],
+        "dry_run": "not_available: application imports optional services and document tooling"
+      }
+    }
+  }
+}

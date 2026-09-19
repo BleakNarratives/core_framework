@@ -16,12 +16,16 @@ commit as the work, so the queue cannot drift from reality.
   still parse.
 
 
-- [ ] **2. Cover `src/ui/visualizer.py`.**
-  24 lines, no test. It renders the last boardroom entry from
-  `.boardroom_history.jsonl` and guards missing/empty/malformed input. Pure
-  string-in/string-out, so it is cheap to pin — including the malformed-JSON case,
-  which currently raises rather than degrading.
-  **Prove:** new test in `tests/` passes and the case count is reported.
+- [x] **2. Cover `src/ui/visualizer.py`.** *(done 2026-09-19)*
+  Done: `tests/test_visualizer.py`, **18 tests, OK**. Ten graceful cases
+  (missing file, zero-byte file, last-entry-wins, partial keys, missing payload,
+  non-string values, non-ASCII) and five that pin the raising paths as they are
+  (malformed JSON, blank trailing line, top-level array, null payload, string
+  payload), plus isolation cases proving no write to the render directory and no
+  `.boardroom_history.jsonl` created in the repo root.
+  Still open: the five raising cases are a real weakness for a status line — they
+  turn a bad log entry into a traceback instead of `[Boardroom: ...]`. Left as a
+  separate change on purpose.
 
 - [ ] **3. Test the degradation claim in `src/skill/whorl_polyglot_bridge.py`.**
   1006 lines and no test. Its docstring promises "zero-network, degrades gracefully

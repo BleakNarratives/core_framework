@@ -3,6 +3,18 @@
 Tiny, composable, removable hooks that multiply the human×doc tandem.
 They don't change the MOLT spec — they make the existing path faster, safer, more retentive.
 
+> **Scope, so this file doesn't overpromise.** Every entry here optimizes the
+> **hydrate path** — caching, chunk truncation, an Oracle preflight gate, receipts,
+> retention manifests. **None of them touch a buyer, a price, or a channel.**
+> There is no revenue multiplier in this registry, and adding an eleventh local
+> optimization will not move any money. The "human×doc tandem" in the line above
+> means one operator reading one document faster — not a market.
+>
+> This is a deliberate note, not a disclaimer: the registry is genuinely useful
+> and genuinely complete *for what it is*. It was written down because the file's
+> framing invited the wrong expectation, and "where is the missing force
+> multiplier?" is a question that recurred without an answer in the repo.
+
 - **Where they fire:** `pre_hydrate` → `post_hydrate` → `pre_inject` (Oracle on RAG) → `on_progress`
 - **Registry:** `src/skill/force_multipliers.py` → `FM_REGISTRY`
 - **All are additive.** Disable any with `toggle("hydrate_cache", False)`.

@@ -178,7 +178,18 @@ alias tour='sherpa'
 
 # === Soft Pillow — gh naps, git (Linus) stays, checkout hell fixed ===
 # gh is Microsoft's social layer — bricked softly; `command gh` still works if you need it
-alias gh='echo "💤 gh is napping — soft pillow active. Use: council / sherpa / git go / git back. Wake with: command gh" >&2; false'
+# gh copilot has to reach the real gh, so this is a function rather than a plain
+# alias: the nap stays the default, and copilot is the one pass-through.
+# Without this, `gh copilot` printed the nap message and exited non-zero, so the
+# extension was installed but unreachable from an interactive shell.
+gh() {
+  if [ "$1" = "copilot" ]; then
+    command gh "$@"
+  else
+    echo "💤 gh is napping — soft pillow active. Use: council / sherpa / git go / git back. Wake with: command gh  (gh copilot passes through)" >&2
+    return 1
+  fi
+}
 # checkout was 3 tools in 1 — split so you never guess again
 git config --global alias.go "switch" 2>/dev/null
 git config --global alias.gcb "switch -c" 2>/dev/null
@@ -232,6 +243,28 @@ keys() {
   esac
 }
 
-# === fix — hand a failing command to errfix without leaving the terminal ===
-# errfix is on PATH; this is just the short name.
+# === fix / trace — tracebacks diagnose themselves (2026-09-15) ===
+# fix   : hand the LAST traceback you already have to errfix, e.g.
+#           python x.py 2>&1 | fix --stdin
+#         or just:  fix python x.py
+# trace : run a command and ONLY if it fails, auto-diagnose it. On success it
+#         behaves like running the command normally (output passes straight
+#         through), so wrapping something never changes what you see.
+#           trace npm test
+#           trace python thing.py
+# Disable the auto-diagnosis for one run with ERRFIX_AUTO=0.
 alias fix='errfix'
+trace() {
+  if [ $# -eq 0 ]; then echo "usage: trace <command> [args...]" >&2; return 2; fi
+  local log rc
+  log="$(mktemp -t errfix.XXXXXX)"
+  "$@" 2> >(tee "$log" >&2)
+  rc=$?
+  if [ $rc -ne 0 ] && [ "${ERRFIX_AUTO:-1}" != 0 ]; then
+    if command -v errfix >/dev/null 2>&1; then
+      errfix --file "$log" >&2
+    fi
+  fi
+  rm -f "$log"
+  return $rc
+}

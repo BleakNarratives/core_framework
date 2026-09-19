@@ -1,13 +1,19 @@
 # Aider config — routed through the local rotating gateway, not a single key.
 #
-# WHY: this used to pin `groq/openai/gpt-oss-120b` with one unrotated key. All
-# six Groq keys in the vault are now rejected with HTTP 403, so aider died on
-# every run and the five other providers were never touched.
+# WHY: this used to pin `groq/openai/gpt-oss-120b` against one unrotated key, so
+# a single 429 ended the run and the other pools were never reached. Pinning the
+# default to one key is the failure this file exists to avoid — it dies the same
+# way whether that key is rate-limited or revoked.
 #
-# bin/ai_gateway.py is an OpenAI-compatible endpoint that walks the live vault
-# pools (OpenRouter, Mistral, Gemini, OpenAI first) and rotates on rate limits.
-# bin/gateway-ensure/`vault-launch` start it on demand, so `aider` alone is
-# enough — the gateway does not need to be started by hand.
+# bin/ai_gateway.py is an OpenAI-compatible endpoint that walks the vault pools
+# in AUTO_CHAIN order (groq, swarms, then the paid and flaky free tiers) and
+# rotates on rate limits. bin/gateway-ensure and bin/vault-launch start it on
+# demand, so `aider` alone is enough; it does not need to be started by hand.
+#
+# Re-probed 2026-09-16 with one real chat call per pool: groq, swarms and
+# openrouter answer; mistral, orcarouter, cerebras, bazaar, puter, openai,
+# zenmux, gemini and sageox do not — for account or upstream reasons, not
+# because the keys are wrong. Per-pool detail: docs/PROVIDER_ENDPOINTS.md.
 #
 # Keys are never hardcoded here; they are read from ~/.concierge/vault.json by
 # the gateway process.

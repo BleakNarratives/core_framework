@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 """
-Utility script to execute the retry task described in /tmp/molt_task2/retry.txt.
+One-off post-reorganization hardening probe for the MOLT runtime.
+
+This is not a general utility: it takes no arguments and the skill name and probe
+query in `main()` are hardcoded to the boardroom post-reorg check it was written
+for. It was paraphrased from a task file under `/tmp`, which it does **not** read —
+the inputs are in the source. Read the final PASS/FAIL line.
 
 It performs:
-1. A dry‑run one‑shot inference using the "git-state-snapshotter" skill,
-   printing the chosen skill and a 300‑character preview of the hydrated
-   prompt (JSON messages).
-2. Takes a snapshot of a test skill via StateSnapshotter, prints the
-   snapshot version/label and the most recent log entries.
+1. A dry-run one-shot inference using the "git-state-snapshotter" skill,
+   printing the chosen skill and a 300-character preview of the hydrated
+   prompt (JSON messages). `dry_run=True` returns before any provider dispatch,
+   so this makes no network call and needs no API key.
+2. Takes a snapshot of a test skill via StateSnapshotter, printing the snapshot
+   version/label and the most recent log entries. This writes runtime state under
+   `rag_storage/molt_state/`, which is ignored by Git.
 3. Reports PASS/FAIL based on whether any step raised an exception.
 
 Usage:

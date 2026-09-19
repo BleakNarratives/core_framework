@@ -66,11 +66,15 @@ commit as the work, so the queue cannot drift from reality.
   reports `Ran 181 tests` — different tools, and `integration_test.py` is collected
   only by pytest.
 
-- [ ] **7. Decide the shape of `src/skill/run_retry_task.py`.**
-  It reads its task from `/tmp/molt_task2/retry.txt`, so it only works where that
-  file exists — a one-off dressed as a utility. Either take a path argument, or say
-  in its docstring that it is a one-off.
-  **Prove:** running it without the /tmp file produces a clear message, not a traceback.
+- [x] **7. Decide the shape of `src/skill/run_retry_task.py`.** *(done 2026-09-19)*
+  Premise corrected: it never reads `/tmp/molt_task2/retry.txt`. `grep -rn` found
+  that path only in the docstring (and in `.aider.chat.history.md`), so the code
+  cannot fail for a missing file. Chosen shape: say in the docstring that it is a
+  one-off — no arguments, hardcoded probe inputs, `dry_run=True` returning before
+  any provider dispatch so it needs no key, and runtime state written under the
+  Git-ignored `rag_storage/molt_state/`.
+  **Proved:** `python3 -m src.skill.run_retry_task` exits 0 and prints `PASS`, and
+  `git status --short` shows no tracked file changed by the run.
 
 ## Needs Michael — never done autonomously
 

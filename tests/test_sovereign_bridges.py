@@ -110,6 +110,7 @@ except Exception as exc:
     out["agent_bus_bus_file"] = None
     out["agent_bus_error"] = "%s: %s" % (type(exc).__name__, exc)
 
+out["whorl_dir"] = os.environ.get("WHORL_HOME")
 out["home"] = str(home)
 out["home_files"] = sorted(
     os.path.relpath(os.path.join(d, f), home)
@@ -127,6 +128,17 @@ def _parse_report(stdout: str) -> dict:
         except json.JSONDecodeError:
             continue
     return {}
+
+
+LIVE_BUS = Path.home() / "RootBase" / "logs" / "shared" / "agent_events.jsonl"
+
+
+def _live_bus_lines() -> int | None:
+    """Line count of the real bus, so a contained run can be proved not to touch it."""
+    try:
+        return len(LIVE_BUS.read_text(encoding="utf-8").splitlines())
+    except OSError:
+        return None
 
 
 def _git_porcelain() -> str | None:
@@ -155,7 +167,12 @@ class SovereignBridgesTest(unittest.TestCase):
         # that was noticed; these overrides are what keep it contained.
         env["ROOTBASE_DIR"] = str(Path(cls._home.name) / "RootBase")
         env["ROOTBASE_BUS_DIR"] = str(Path(cls._home.name) / "RootBase" / "logs" / "shared")
+        # The Whorl bus needs its own override: `whorl.core.config` resolves its
+        # directory independently of HOME, so the daemons' bus dispatch was creating
+        # `~/.whorl/whorl.db` in the real home even with HOME redirected.
+        env["WHORL_HOME"] = str(Path(cls._home.name) / ".whorl")
         cls.before = _git_porcelain()
+        cls.live_bus_before = _live_bus_lines()
         cls.proc = subprocess.run(
             [sys.executable, "-c", HARNESS],
             cwd=str(ROOT),
@@ -165,6 +182,7 @@ class SovereignBridgesTest(unittest.TestCase):
             timeout=300,
         )
         cls.out = _parse_report(cls.proc.stdout)
+        cls.live_bus_after = _live_bus_lines()
         cls.home = cls._home.name
 
     @classmethod
@@ -286,6 +304,16 @@ class SovereignBridgesTest(unittest.TestCase):
         # caller that expects machine-readable output must allow for it.
         self.assertGreater(self.out.get("daemon_stdout_lines", 0), 0)
 
+    def test_the_whorl_bus_is_inside_the_redirected_home(self):
+        # Only the bus files this harness knows about are asserted by name; the point
+        # is that no path it reported escapes HOME.
+        resources = self.out.get("whorl_dir")
+        if resources is not None:
+            self.assertTrue(
+                str(resources).startswith(self.home),
+                f"the Whorl bus escaped the redirected HOME: {resources}",
+            )
+
     def test_every_file_written_stayed_under_the_redirected_home(self):
         files = self.out.get("home_files") or []
         self.assertTrue(files, "the daemons wrote nothing at all")
@@ -296,6 +324,13 @@ class SovereignBridgesTest(unittest.TestCase):
         self.assertTrue(
             any(f.endswith(str(Path("recursive_engine") / "cycles.jsonl")) for f in files),
             f"no cycle journal under HOME: {files}",
+        )
+
+    def test_running_the_bridges_does_not_append_to_the_live_bus(self):
+        self.assertEqual(
+            self.live_bus_before,
+            self.live_bus_after,
+            f"the live bus moved during a contained run: {LIVE_BUS}",
         )
 
     def test_running_the_bridges_does_not_touch_the_worktree(self):

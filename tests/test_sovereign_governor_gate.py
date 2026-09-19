@@ -59,16 +59,38 @@ class _FakeGovernor:
         return bool(self.elevated)
 
 
+class _InertBus:
+    """Stand-in for the Whorl bus: the in-process cases must not write anywhere."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        pass
+
+    def send(self, *args, **kwargs):
+        return {"inert": True}
+
+
 def _execute(plan: dict, governor):
-    """Run `_phase_execute` with subprocess captured instead of executed."""
+    """Run `_phase_execute` with every live side effect disabled.
+
+    `_phase_execute` finishes by emitting a Thoth event and depositing on the Whorl
+    bus. In its subprocess caller both are contained by ROOTBASE_* plus a redirected
+    HOME; these cases run **in-process**, where the real `~/RootBase` and `~/.whorl`
+    are reachable — which is how this file appended real `molt.recursive.execute`
+    events before that was noticed. The emit and the bus dispatch are therefore
+    patched out here; the subprocess cycle test is what covers them.
+    """
     calls: list = []
 
     def fake_run(*args, **kwargs):
         calls.append(args[0] if args else None)
         return _FakeRun()
 
-    with mock.patch.object(engine.subprocess, "run", fake_run):
-        result = engine._phase_execute(plan, bus=None, governor=governor)
+    import src.skill.whorl_bus as whorl_bus
+
+    with mock.patch.object(engine.subprocess, "run", fake_run), mock.patch.object(
+        engine, "emit_event", None
+    ), mock.patch.object(whorl_bus, "WhorlBusDispatcher", _InertBus):
+        result = engine._phase_execute(plan, bus=_InertBus(), governor=governor)
     return result, calls
 
 
@@ -185,6 +207,17 @@ print(json.dumps({
 '''
 
 
+LIVE_BUS = Path.home() / "RootBase" / "logs" / "shared" / "agent_events.jsonl"
+
+
+def _live_bus_lines() -> int | None:
+    """Line count of the real bus, so a contained run can be proved not to touch it."""
+    try:
+        return len(LIVE_BUS.read_text(encoding="utf-8").splitlines())
+    except OSError:
+        return None
+
+
 def _git_porcelain() -> str | None:
     if shutil.which("git") is None:
         return None
@@ -203,6 +236,16 @@ class TestCycleRollsBackByDefault(unittest.TestCase):
         env = dict(os.environ)
         env["HOME"] = cls._home.name
         env["PYTHONPATH"] = str(ROOT)
+        # A cycle emits to the Thoth bus, and the bus must not land in the real home.
+        # The library default now follows $HOME (see tests/test_thoth_bus_location.py),
+        # but these overrides keep this file contained even on a checkout where that
+        # default is still the old hardcoded path -- which is how this file appended
+        # real `molt.recursive.*` events to the live bus before it was noticed.
+        env["ROOTBASE_DIR"] = str(Path(cls._home.name) / "RootBase")
+        env["ROOTBASE_BUS_DIR"] = str(Path(cls._home.name) / "RootBase" / "logs" / "shared")
+        # Same for the Whorl bus: `whorl.core.config` does not follow HOME.
+        env["WHORL_HOME"] = str(Path(cls._home.name) / ".whorl")
+        cls.live_bus_before = _live_bus_lines()
         cls.proc = subprocess.run(
             [sys.executable, "-c", CYCLE_HARNESS],
             cwd=str(ROOT),
@@ -212,6 +255,7 @@ class TestCycleRollsBackByDefault(unittest.TestCase):
             timeout=300,
         )
         cls.result = json.loads(cls.proc.stdout) if cls.proc.stdout.strip() else {}
+        cls.live_bus_after = _live_bus_lines()
 
     @classmethod
     def tearDownClass(cls):
@@ -247,6 +291,13 @@ class TestCycleRollsBackByDefault(unittest.TestCase):
         self.assertTrue(
             any(f.endswith(str(JOURNAL_SUFFIX)) for f in self.result.get("home_files", [])),
             f"journal not found under HOME: {self.result.get('home_files')}",
+        )
+
+    def test_running_a_cycle_does_not_append_to_the_live_bus(self):
+        self.assertEqual(
+            self.live_bus_before,
+            self.live_bus_after,
+            f"the live bus moved during a contained run: {LIVE_BUS}",
         )
 
     def test_running_a_cycle_does_not_touch_the_worktree(self):

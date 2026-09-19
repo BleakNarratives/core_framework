@@ -147,6 +147,13 @@ commit as the work, so the queue cannot drift from reality.
   write outside the repository without a written reason.
   **Prove:** the write moves to first use, or the reason is recorded next to it.
 
+## Settled 2026-09-19
+
+- `tests/fixtures/mock_responses.py` is committed **with** a 20-case test that uses
+  it, so it is no longer orphaned code; `tests/fixtures/__init__.py` came with it.
+- `tools/inference/syntaxbuff.py.bak` is versioned behind a `.gitignore` allowlist
+  rather than deleted. Its blob was in no commit, so it was the only copy.
+
 ## Needs Michael — never done autonomously
 
 - **Parameterize `scripts/emergency_hardening.sh`'s target root.** 40 functional
@@ -157,10 +164,6 @@ commit as the work, so the queue cannot drift from reality.
 
 - **Vendor `projects/lean/`.** Its 3 commits are unrecoverable if `.git` is removed.
   Left untracked, ignored, and documented in `docs/PROJECT_MAP.md`.
-- **Delete `tools/inference/syntaxbuff.py.bak`.** Its blob is in no commit; the copy
-  on disk is the only one. One `rm` if that is what you want.
-- **`tests/fixtures/mock_responses.py`** (staged, 484 lines) is imported by nothing.
-  Committing it lands code no test exercises.
 - **Anything visual.** The ribbon MRD sign-off block still has five unchecked boxes.
 
 ## Out of scope for this repository

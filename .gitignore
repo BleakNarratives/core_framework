@@ -44,9 +44,12 @@ venv/
 node_modules/
 .DS_Store
 *.log
-# syntaxbuff.py.bak holds a revision that exists in no committed blob, so it is
-# ignored rather than deleted -- nothing in git could restore it.
+# *.bak is noise by default. The one deliberate exception is syntaxbuff.py.bak:
+# its content exists in no committed blob, and it differs from the tracked file, so
+# leaving it ignored meant the only copy lived in one working tree. Versioned so a
+# lost checkout is recoverable.
 *.bak
+!tools/inference/syntaxbuff.py.bak
 # MOLT: keep RAG sidecars + instar state, ignore raw audits & gamed telemetry
 rag_storage/governor_audit.jsonl
 rag_storage/*.tmp

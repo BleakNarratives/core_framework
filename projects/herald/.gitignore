@@ -2,6 +2,7 @@
 # repository is not the right place to keep a list of strangers' emails.
 LEADS.md
 OUTREACH_DRAFTS.md
+OUTREACH_DRAFTS_SESSION_*.md
 # Verdict per lead from previous runs, so a batch resumes instead of repeating. It
 # is per-machine state, not part of the project, and deleting it only re-opens leads.
 .herald_state.json

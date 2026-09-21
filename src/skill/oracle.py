@@ -23,7 +23,18 @@ SEV_LOW = "low"
 
 # ── Exploit / injection signatures ──────────────────────────────────
 INJECTION_PATTERNS = [
-    (r"ignore\s+previous\s+instructions", "prompt_injection", SEV_CRITICAL),
+    # Instruction override, as a family rather than one literal. The original pattern
+    # was `ignore\s+previous\s+instructions`, which one inserted word walks past:
+    # "Ignore all previous instructions." scored a clean pass. Found by attacking the
+    # Foxwood output gate with the variant, not by reading this list.
+    (r"(?:ignore|disregard|forget)\s+(?:all\s+|any\s+|the\s+)?"
+     r"(?:previous|prior|above|earlier|preceding)\s+instructions",
+     "prompt_injection", SEV_CRITICAL),
+    (r"(?:new|updated|revised)\s+instructions?\s*:", "prompt_injection", SEV_CRITICAL),
+    (r"override\s+(?:your\s+|the\s+)?(?:instructions|rules|guidelines)",
+     "prompt_injection", SEV_CRITICAL),
+    (r"reveal\s+(?:your\s+|the\s+)?(?:system\s+prompt|api[_\s-]?key|secrets?)",
+     "prompt_injection", SEV_CRITICAL),
     (r"system\s*:\s*you\s+are\s+now", "prompt_injection", SEV_CRITICAL),
     (r"<\s*script[^>]*>", "xss_injection", SEV_HIGH),
     (r"javascript\s*:", "xss_injection", SEV_HIGH),
@@ -129,7 +140,13 @@ class Oracle:
             if re.search(pattern, mutation_text, re.IGNORECASE):
                 findings.append(Finding(rule=rule, severity=sev,
                                         message=f"Blocked pattern '{rule}' in mutation payload",
-                                        evidence=pattern[:80]))
+                                        # The whole pattern, not a display excerpt. It was
+                                        # truncated to 80 characters, which made `evidence`
+                                        # an unterminated regex: any caller that re-ran it
+                                        # to ask *where* the rule fired got a parse error.
+                                        # A caller cannot use a clipped rule, so a clipped
+                                        # rule is worse than none -- it looks usable.
+                                        evidence=pattern))
 
         # 2) Privilege drift per op
         for idx, op in enumerate(ops):

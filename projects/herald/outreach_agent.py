@@ -54,15 +54,47 @@ WHY A REPLY IS NOW CHECKED BEFORE IT IS WRITTEN (measured 2026-09-17)
   calls land on a model that behaves this way. Pin `--model` before comparing any
   two offers, or the comparison measures pool selection.
 
+WHY A DRAFT CAN NOW POINT AT SOMETHING (2026-09-21)
+  ABOUT.md ends with "code you can read" and gives nowhere to read it, which
+  ABOUT_EVIDENCE.md itself calls the weakest line in the pitch. So a draft may now
+  carry a bounded list of public artifacts, read from a Foxwood research ledger:
+
+      outreach_agent --about-file ABOUT.md --evidence-ledger ~/foxwood_data/ledger
+
+  Two things about this are deliberate.
+
+  One, the evidence does NOT become new material about the offer. ABOUT.md is still
+  the only place a claim about me may come from; the ledger lines only say what the
+  existing claims rest on. A draft that leaned on the artifacts to say something
+  *new* about me would be the same lie as an invented client list, told with better
+  citations.
+
+  Two, this is where a rule stops being prose. The last line of ABOUT_EVIDENCE.md's
+  may-not-claim list says no ScholarScout-derived or quarantined material may be used
+  as Foxwood evidence. That was a wish until this path existed; now every source is
+  admitted through the repository's PROVENANCE.md registry before it can reach a
+  prompt, and a refusal is fatal to the run rather than a quiet downgrade to "no
+  evidence available". A requested ledger that cannot be read is a broken pipe, and
+  herald already has a measured scar about what a broken pipe looks like when it is
+  reported as a good number.
+
 Usage:
     outreach_agent --list                       who qualifies, and who does not
     outreach_agent --about-file ABOUT.md             draft for everyone qualified
     outreach_agent --about-file ABOUT.md --dry-run   show prompts; call nothing
     outreach_agent --about-file ABOUT.md --limit 3   cap drafts this run
     outreach_agent --about-file ABOUT.md --redo      re-draft already-drafted leads
+    outreach_agent --about-file ABOUT.md \
+        --evidence-ledger DIR                        cite real artifacts in the draft
+    outreach_agent --about-file ABOUT.md \
+        --evidence-ledger DIR --evidence-claim claim-abc123   cite exactly one thing
 
   --about is required for drafting on purpose. It is your one paragraph of what
   you actually offer; the model tailors it per lead but may not invent beyond it.
+
+  Evidence is the same rule one level down: changing the ledger, or which claims are
+  selected from it, changes what a lead is being asked under, so it needs --redo for
+  the same reason a new --about paragraph does.
 """
 
 from __future__ import annotations
@@ -72,6 +104,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.parse
 from datetime import datetime, timezone
@@ -93,6 +126,12 @@ DRAFTS_FILE = HERE / "OUTREACH_DRAFTS.md"
 # answers given to the old offer will stand in for the new one and nothing will be
 # re-asked. Measured 2026-09-17: two offers that looked similar drafted 9 leads and 0.
 STATE_FILE = HERE / ".herald_state.json"
+
+# Evidence is bounded the same way the Scout payloads are: a draft may rest on a few
+# artifacts or none, and never on an unbounded bundle. The cap is on lines, and each
+# line is clipped, so the prompt cannot grow a second half nobody reads.
+EVIDENCE_LIMIT_DEFAULT = 4
+EVIDENCE_TEXT_CAP = 240
 
 # The apply-form rule lives in monitor_leads and is imported rather than
 # reimplemented. Two copies of "what counts as contact" is how the number drifted
@@ -125,6 +164,194 @@ def find_ai() -> Path:
 # key handling to drift. It is also a repo-level dependency rather than a
 # project-local one, which is why the search above walks upward.
 AI = find_ai()
+
+
+def find_repo_root() -> Path | None:
+    """Walk up to the repository root: PROVENANCE.md plus src/foxwood_research.
+
+    Both are required, not either. PROVENANCE.md alone is the classification
+    registry and lives at the root; src/foxwood_research alone could be a vendored
+    copy. Needing both is what makes this the root rather than a directory that
+    happens to look like one.
+    """
+    for parent in (HERE, *HERE.parents):
+        if (parent / "PROVENANCE.md").is_file() \
+                and (parent / "src" / "foxwood_research").is_dir():
+            return parent
+    return None
+
+
+def _import_foxwood():
+    """Import Foxwood lazily, only on the path that asked for evidence.
+
+    Herald has to run on a checkout where Foxwood is absent -- it is a project in
+    this repository, not a dependency of it -- so the import lives here rather than
+    at module scope. No import, no cost, and no new way for herald to fail to start.
+    """
+    root = find_repo_root()
+    if root is None:
+        raise RuntimeError(
+            "no repository root found above "
+            f"{HERE} (looking for PROVENANCE.md and src/foxwood_research); "
+            "--evidence-ledger needs both")
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
+    try:
+        from src.foxwood_research import RegistryGate, ResearchLedger
+    except Exception as exc:
+        raise RuntimeError(f"Foxwood is not importable from {root}: {exc}") from exc
+    return RegistryGate, ResearchLedger
+
+
+def _evidence_row(claim, source, kind: str) -> dict:
+    """One prompt-ready line. `kind` is what the framing keys on.
+
+    `artifact` is something the operator made and the offer rests on; `thread` is
+    something a stranger posted and the draft is answering. They must not be framed
+    the same way -- a lead's post described as "my artifact" would have the model
+    tell the prospect about their own job ad. `claim` is empty on the thread path
+    for the reason `load_evidence` gives below.
+    """
+    return {
+        "claim_id": claim.claim_id if claim else "",
+        "claim": claim.text[:EVIDENCE_TEXT_CAP] if claim else "",
+        "confidence": claim.confidence if claim else "",
+        "kind": kind,
+        "source_id": source.source_id,
+        "title": source.title,
+        "url": source.url,
+        "publisher": source.publisher,
+        "content_hash": source.content_hash,
+        "license_note": source.license_note,
+    }
+
+
+def load_evidence(ledger_dir, claim_ids=(),
+                  limit: int = EVIDENCE_LIMIT_DEFAULT,
+                  source_ids=()) -> list[dict]:
+    """Bounded, registry-admitted evidence from a Foxwood ledger.
+
+    This is the enforcement point for a rule that until now was prose. The last
+    bullet of ABOUT_EVIDENCE.md's may-not-claim list says no ScholarScout-derived or
+    quarantined material may be used as Foxwood evidence; reading the registry gate
+    here means that holds even when the operator forgets it.
+
+    Raises rather than returning nothing. A ledger that was asked for and cannot be
+    read is a broken pipe, and it must not present itself as "no evidence available,
+    carrying on" -- that is the shape of failure this pipeline already recorded once,
+    when six echoed prompts were written out as six drafts.
+
+    Selection is explicit or bounded, never editorial: either the operator names the
+    claims, or the most recent `limit` of them are taken. This tool does not know
+    which of your artifacts answer a stranger's job post, and a guess dressed up as
+    relevance is how a pitch starts inventing things.
+
+    `source_ids` selects sources by name instead of by claim, and it is the lead
+    path. A lead's post is evidence in its own right, so demanding a claim before it
+    can be cited would mean inventing a claim about a stranger. Nothing on that path
+    reads `ledger.claims`, which is what lets a ledger of seeded leads work at all --
+    and why the no-claims check below sits *after* the branch rather than in front
+    of it.
+    """
+    RegistryGate, ResearchLedger = _import_foxwood()
+    path = Path(ledger_dir).expanduser()
+    if not path.is_dir():
+        raise RuntimeError(f"no ledger directory at {path}")
+    ledger = ResearchLedger(path)
+
+    # One gate for the whole run, built once: it parses the registry, and a refusal
+    # must be visible here rather than surfacing later as an unexplained empty list.
+    gate = RegistryGate()
+
+    named = [sid.strip() for sid in (source_ids or ()) if sid and sid.strip()]
+    if named:
+        rows: list[dict] = []
+        for source_id in named:
+            try:
+                source = ledger.get_source(source_id)
+            except Exception as exc:
+                raise RuntimeError(f"{exc}") from exc
+            gate.admit(source.origin, source.url)
+            rows.append(_evidence_row(None, source, "thread"))
+        return rows
+
+    if not ledger.claims:
+        raise RuntimeError(f"{path} holds no claims, so there is nothing to support an offer with")
+
+    wanted = [cid.strip() for cid in (claim_ids or ()) if cid and cid.strip()]
+    if wanted:
+        try:
+            claims = [ledger.get_claim(cid) for cid in wanted]
+        except Exception as exc:
+            raise RuntimeError(f"{exc}") from exc
+    else:
+        claims = list(ledger.claims)[-max(1, int(limit)):]
+    if not claims:
+        raise RuntimeError("no claims selected from the ledger")
+
+    rows = []
+    for claim in claims:
+        for source_id in claim.source_ids:
+            source = ledger.get_source(source_id)
+            # Re-admit stored evidence, not just new evidence. A ledger written
+            # before the registry gate existed is still graded by the rule that
+            # exists now -- the same stance this reader already takes on leads whose
+            # file predates the contact rule.
+            gate.admit(source.origin, source.url)
+            rows.append(_evidence_row(claim, source, "artifact"))
+    return rows
+
+
+def evidence_block(evidence) -> str:
+    """The prompt fragment, or "" when there is no evidence.
+
+    Empty really means empty: the no-evidence prompt is byte-for-byte the prompt
+    this tool sent before evidence existed, so nothing about the existing behaviour
+    is being reinterpreted by this feature.
+
+    Two kinds of row arrive here and they get opposite framings, which is why they
+    are rendered as separate sections rather than one list. An `artifact` is the
+    operator's and a draft may point at it; a `thread` is a stranger's and a draft is
+    answering it. One shared sentence -- "these are MY artifacts" -- would have the
+    model tell a prospect about their own job ad, and the two cases are one word
+    apart in the prompt and nothing alike in the world.
+    """
+    rows = list(evidence or ())
+    if not rows:
+        return ""
+    artifacts = [row for row in rows if row.get("kind") != "thread"]
+    threads = [row for row in rows if row.get("kind") == "thread"]
+    sections: list[str] = []
+    if artifacts:
+        lines = ["Public artifacts the offer above rests on, and the only things you may point at:"]
+        for row in artifacts:
+            lines.append(
+                f"  [{row['source_id']}] {row['title']} \u2014 {row['url']} "
+                f"(license: {row['license_note']}; sha256 {row['content_hash'][:12]})")
+        lines += [
+            "How to use that list, and it is not optional:",
+            "- These are MY artifacts. Never say or imply they exist inside their system.",
+            "- Do not claim anything about them beyond the title and the line above.",
+            "- Name one only if it directly answers something in their post. If none fits,",
+            "  name none and let the offer stand on its own.",
+        ]
+        sections.append("\n".join(lines))
+    if threads:
+        lines = ["The post I am replying to, linked so I can open it myself:"]
+        for row in threads:
+            lines.append(f"  [{row['source_id']}] {row['title']} \u2014 {row['url']} "
+                         f"(sha256 {row['content_hash'][:12]})")
+        lines += [
+            "How to use that, and it is not optional:",
+            "- That is THEIR post, not mine. Never call it mine, never imply I made it.",
+            "- I can see the title and the link, not the thread. Do not claim to have read",
+            "  anything past what is written above, and do not describe their setup.",
+            "- Do not quote it back at length or explain their own problem to them.",
+            "- If the title does not say enough to know what they want, ask the one thing",
+            "  I would need to know rather than guessing at it.",
+        ]
+        sections.append("\n".join(lines))
+    return "\n" + "\n\n".join(sections) + "\n"
 
 # `* **[author]** title` starts an entry; an indented `- Key: value` adds a field.
 # Both shapes appear in LEADS.md: the old scanner wrote `URL:`, monitor_leads
@@ -270,7 +497,7 @@ def not_an_email(subject: str, body: str) -> str:
     return ""
 
 
-def build_prompt(entry: dict, about: str) -> str:
+def build_prompt(entry: dict, about: str, evidence=()) -> str:
     """The whole prompt, and the constraints are the interesting part.
 
     Three of these rules exist because a model writing sales copy will otherwise
@@ -278,6 +505,10 @@ def build_prompt(entry: dict, about: str) -> str:
     post asked for something it did not. The last rule is the important one -- it
     gives the model permission to say the two of you do not match, which is the
     answer you actually want on most of these.
+
+    `evidence` is optional and defaults to empty, which reproduces the previous
+    prompt exactly. See `evidence_block` for why the artifacts are framed as
+    citations for the offer rather than as more to say about it.
     """
     return f"""Write one short outreach email from me to someone who posted about work.
 
@@ -290,7 +521,7 @@ What I actually offer, and the only thing you may claim about me:
 \"\"\"
 {about.strip()}
 \"\"\"
-
+{evidence_block(evidence)}
 Write the email in my voice. Rules, and they are not negotiable:
 - First line exactly "Subject: <subject>". Then a blank line, then the body.
 - Body under 120 words. Plain text. No markdown, no bullets, no emoji, no signature block.
@@ -304,8 +535,14 @@ Write the email in my voice. Rules, and they are not negotiable:
 """
 
 
-def render(entry: dict, subject: str, body: str, now: str) -> str:
+def render(entry: dict, subject: str, body: str, now: str, *, evidence=()) -> str:
     """One draft block. Records the send route, and says plainly if there is none.
+
+    `evidence` is keyword-only and optional, so every existing call site keeps
+    working unchanged, and a draft with no evidence renders exactly as it did
+    before. When evidence is present it is written onto the draft, because the one
+    thing a reader of OUTREACH_DRAFTS.md needs before pressing send is what the
+    pitch is resting on -- and whether its license permits saying so.
 
     `Contact:` carries only the routes that reach a person. Places -- a homepage, a
     job document, an application form -- go on their own `Published:` line, because
@@ -325,6 +562,12 @@ def render(entry: dict, subject: str, body: str, now: str) -> str:
              # visible as such without herald deciding what to do about it.
              f"- Employment as stated in the post: {employment_type(entry['title'])}",
              f"- Status: **draft only — nothing sent** ({now})"]
+    rows = list(evidence or ())
+    if rows:
+        lines.append("- Evidence: " + "; ".join(
+            f"[{row['source_id']}] {row['title'][:60]} "
+            f"(sha256 {row['content_hash'][:12]}; {row['license_note']})"
+            for row in rows))
     if places:
         lines.append(f"- Published (places, not routes): {', '.join(places)}")
     if addresses:
@@ -527,6 +770,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--about-file", default=None, help="read that paragraph from a file")
     parser.add_argument("--model", "-m", default=None, help="preset name or provider::model")
     parser.add_argument("--limit", type=int, default=10, help="max drafts this run (default 10)")
+    parser.add_argument("--match", action="append", default=[], metavar="TEXT",
+                        help="only consider titles containing TEXT (repeatable)")
+    parser.add_argument("--evidence-ledger", default=None, metavar="DIR",
+                        help="read bounded, registry-admitted evidence from a Foxwood "
+                             "ledger directory and give it to the model as citations "
+                             "for the offer; omitted means no change to the prompt")
+    parser.add_argument("--evidence-claim", action="append", dest="evidence_claims",
+                        default=[], metavar="CLAIM_ID",
+                        help="claim IDs to use from that ledger (repeatable; omitted means "
+                             f"the most recent {EVIDENCE_LIMIT_DEFAULT})")
+    parser.add_argument("--evidence-limit", type=int, default=EVIDENCE_LIMIT_DEFAULT,
+                        help=f"how many of the most recent claims to use when no "
+                             f"--evidence-claim is given (default {EVIDENCE_LIMIT_DEFAULT})")
+    parser.add_argument("--seed-ledger", default=None, metavar="DIR",
+                        help="write each lead this run will draft into a Foxwood ledger "
+                             "as a citable source, and hand that draft its own post; "
+                             "does nothing for leads already drafted or refused")
     parser.add_argument("--list", action="store_true",
                         help="report who qualifies and who does not, then stop")
     parser.add_argument("--dry-run", action="store_true",
@@ -550,6 +810,12 @@ def main(argv: list[str] | None = None) -> int:
         ok, reason = qualify(entry)
         (qualified if ok else rejected).append((entry, reason))
 
+    if args.match:
+        needles = [needle.lower() for needle in args.match if needle.strip()]
+        qualified = [(entry, reason) for entry, reason in qualified
+                     if any(needle in entry["title"].lower() for needle in needles)]
+        print(f"  title filter: {', '.join(args.match)}")
+
     print(f"  {len(entries)} entries in LEADS.md, {len(qualified)} qualified to contact")
     for entry, reason in rejected:
         print(f"    skip  {entry['title'][:58]:<58} — {reason}")
@@ -561,6 +827,25 @@ def main(argv: list[str] | None = None) -> int:
         # filter here.
         print(f"    lead  [{employment_type(entry['title'])}] "
               f"{entry['title'][:52]:<52} — {', '.join(reachable_of(entry))}")
+
+    # A ledger that was asked for and cannot be read is a broken pipe, and it must
+    # not present itself as "no evidence available, carrying on".
+    evidence: list[dict] = []
+    if args.evidence_ledger:
+        if not args.evidence_ledger.strip():
+            print("  --evidence-ledger was empty; give a ledger directory or omit it",
+                  file=sys.stderr)
+            return 2
+        try:
+            evidence = load_evidence(args.evidence_ledger, args.evidence_claims,
+                                     args.evidence_limit)
+            print(f"  evidence: {len(evidence)} source line(s) from {len({row['claim_id'] for row in evidence})} claim(s) "
+                  f"in {Path(args.evidence_ledger).expanduser()} "
+                  f"({' '.join(sorted({row['source_id'] for row in evidence}))})",
+                  file=sys.stderr)
+        except Exception as exc:
+            print(f"  evidence cannot be loaded: {exc}", file=sys.stderr)
+            return 2
 
     if args.list:
         return 0
@@ -603,10 +888,71 @@ def main(argv: list[str] | None = None) -> int:
               f"(--redo to redo)")
     todo = todo[: max(0, args.limit)]
 
+    # Seeded evidence is per lead, not per run. The post being answered differs for
+    # every draft, so it is kept keyed by source URL and attached per entry below --
+    # handing every draft the same list of posts would have each pitch mention three
+    # strangers' threads, which is worse than citing nothing.
+    seeded: dict[str, str] = {}
+    thread_rows: dict[str, dict] = {}
+    if args.seed_ledger:
+        if not args.seed_ledger.strip():
+            print("  --seed-ledger was empty; give a ledger directory or omit it",
+                  file=sys.stderr)
+            return 2
+        try:
+            import lead_evidence
+        except Exception as exc:
+            print(f"  lead_evidence is not importable: {exc}", file=sys.stderr)
+            return 2
+
+        # --dry-run writes nothing, and that includes the ledger. Seeding into the
+        # operator's directory during a dry run would make the one command whose
+        # whole contract is "nothing is written" the command that writes the most.
+        # A scratch directory still answers the question the dry run is asking --
+        # what the prompt will actually say -- and the rows are read into memory
+        # before it goes away.
+        scratch = tempfile.TemporaryDirectory() if args.dry_run else None
+        target = Path(scratch.name) if scratch is not None else args.seed_ledger
+        try:
+            seeded, skipped = lead_evidence.seed_ledger(todo, target)
+            # Only read back when something was written. Calling load_evidence with an
+            # empty source_ids falls through to the claims path and asks a question
+            # about a ledger of leads -- which has no claims by construction -- and it
+            # refuses, correctly. An unseeded run is not a broken pipe, so it must not
+            # be made to look like one.
+            if seeded:
+                thread_rows = {row["source_id"]: row for row in load_evidence(
+                    target, source_ids=list(seeded.values()))}
+        except Exception as exc:
+            print(f"  leads cannot be seeded into the ledger: {exc}", file=sys.stderr)
+            return 2
+        finally:
+            if scratch is not None:
+                scratch.cleanup()
+
+        where = ("a scratch directory (dry run writes nothing)" if scratch is not None
+                 else str(Path(args.seed_ledger).expanduser()))
+        print(f"  seeded {len(seeded)} of {len(todo)} lead(s) into {where} "
+              f"as citable evidence"
+              + (f"; {skipped} skipped (no citable text or no link)" if skipped else ""),
+              file=sys.stderr)
+
+    def evidence_for(entry: dict) -> list[dict]:
+        """Run-wide artifacts, plus this lead's own post when it was seeded.
+
+        A lead that was skipped by the seeder gets no thread row and is not a
+        failure: it falls back to exactly the prompt it would have had without
+        --seed-ledger. The alternative -- a draft that cites a post it was not
+        answering -- is the one outcome this must not produce.
+        """
+        rows = list(evidence)
+        row = thread_rows.get(seeded.get(source_of(entry), ""))
+        return rows + [row] if row else rows
+
     if args.dry_run:
         for entry in todo:
             print(f"\n--- prompt for {entry['title'][:60]} ---")
-            print(build_prompt(entry, about))
+            print(build_prompt(entry, about, evidence_for(entry)))
         print(f"\ndry run: {len(todo)} prompt(s); nothing called, nothing written")
         return 0
 
@@ -616,8 +962,8 @@ def main(argv: list[str] | None = None) -> int:
     for entry in todo:
         source = source_of(entry)
         try:
-            reply = complete_with_retries(build_prompt(entry, about), args.model,
-                                          args.retries)
+            reply = complete_with_retries(build_prompt(entry, about, evidence_for(entry)),
+                                          args.model, args.retries)
         except RuntimeError as exc:
             failures += 1
             # Recorded for the report, and deliberately *not* treated as resolved: a
@@ -644,8 +990,21 @@ def main(argv: list[str] | None = None) -> int:
             verdicts_now[source] = {"verdict": "malformed", "at": now, "why": why}
             print(f"    bad     {entry['title'][:52]} — {why}")
             continue
-        blocks.append(render(entry, subject, body, now))
-        verdicts_now[source] = {"verdict": "drafted", "at": now, "why": subject}
+        blocks.append(render(entry, subject, body, now, evidence=evidence_for(entry)))
+        # What the pitch rested on is recoverable from OUTREACH_DRAFTS.md and is not
+        # an opinion about the lead, so it is kept in the memory that makes this
+        # batched tool resumable: changing the evidence needs --redo, same as changing
+        # the offer, or the new question would be answered with the old evidence.
+        #
+        # Read from `evidence_for`, not from the run-wide list: with --seed-ledger each
+        # draft carries its own post, so recording the run-wide list would say a draft
+        # rested on evidence this one was never shown. The blank claim on a thread row
+        # is filtered rather than recorded as "".
+        rows_used = evidence_for(entry)
+        evidence_ids = sorted({row["source_id"] for row in rows_used})
+        evidence_claims = sorted({row["claim_id"] for row in rows_used if row["claim_id"]})
+        verdicts_now[source] = {"verdict": "drafted", "at": now, "why": subject,
+                                "evidence": evidence_ids, "claims": evidence_claims}
         print(f"    drafted {entry['title'][:52]}")
 
     # Saved before the drafts are written, so that a batch stopping at its limit -- or

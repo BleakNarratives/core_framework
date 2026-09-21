@@ -69,6 +69,10 @@ screenshots_scan/
 tools/guard/snapshots/
 tools/guard/guard.jsonl
 
+# foxwood research: default ledger directory is foxwood_data/ledger (local evidence state)
+foxwood_data/
+verdicts.jsonl
+
 # — additional large/temporary artifacts to keep the indexer fast —
 .cache/
 *.tar

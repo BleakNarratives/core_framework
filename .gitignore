@@ -40,6 +40,7 @@
 !/cascade-arbitration/**
 !/BUNNYSPACE.md
 !/.gitignore
+!/publish.sh
 !/package.json
 !/package-lock.json
 !/README.md

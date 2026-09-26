@@ -24,6 +24,21 @@
 !/rag_storage/**
 !/scripts
 !/scripts/**
+!/Bufftag
+!/Bufftag/**
+!/.bufftag
+!/.bufftag/**
+
+# — standalone shippable package (self-contained, no deps on the rest) —
+# cascade-arbitration is a deliberately independent artifact: it imports
+# nothing from this repo and nothing from it imports this repo, so it can be
+# released on its own without dragging the 188-project home tree along.
+# Negation only -- adding an explicit ignore line here would be self-defeating,
+# since git never descends into an ignored directory and so never evaluates
+# the `/**` below.
+!/cascade-arbitration
+!/cascade-arbitration/**
+!/BUNNYSPACE.md
 !/.gitignore
 !/package.json
 !/package-lock.json

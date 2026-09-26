@@ -60,17 +60,33 @@ this, the same fact is discovered by watching the box page out ~109GB, hit load 
 13 on 4 cores, and wedge a process in uninterruptible `D` state. That is not a
 hypothetical; that is the measurement that produced this package.
 
+## Install
+
+```bash
+pip install .            # or: pip install ".[probe]" to include requests
+```
+
+That gives you the library plus two commands:
+
+```bash
+cascade-bench            # measure this host, emit a profile as JSON
+cascade-demo             # show the decisions that profile implies
+```
+
+Both also run straight from a checkout with no install at all.
+
 ## Try it
 
 ```bash
 python3 bench.py                  # measure THIS host, emit a profile
 python3 demo.py                   # see the decisions it implies
 python3 demo.py --host-gpu        # the same workload on a big GPU box
-python3 -m unittest test_cascade -v   # 21 tests, all offline
+python3 -m unittest test_cascade  # 21 tests, all offline
 ```
 
-No dependencies beyond the standard library. `bench.py` optionally probes a local
-Ollama over loopback and degrades silently if it isn't running.
+Zero runtime dependencies. `requests` is used only for the optional local Ollama
+probe, which is loopback-only and degrades to a skip without it — so the arbiter
+itself has no way to reach the network even if you wanted it to.
 
 ## The decisions
 
@@ -105,6 +121,27 @@ not one to act on.
 
 You have a box that's good enough for a small model and you keep re-discovering that it
 isn't good enough for *some* things. This tells you which, in one run.
+
+## Using it
+
+```python
+from cascade import CascadeRequest, HostProfile, TaskShape, arbitrate
+
+host = HostProfile(
+    name="edge-1", total_ram_mb=8192, available_ram_mb=3000, cpu_cores=4,
+    has_gpu=False, local_tok_per_s=4.12, local_load_s=20.6,
+    local_model_installed=True, local_model_mb=505,
+)
+d = arbitrate(CascadeRequest(TaskShape.CLASSIFY, input_tokens=800), host)
+
+if d.eligible:
+    run_locally(...)          # d.estimated_local_s tells you the cost
+else:
+    escalate(...)             # d.reasons says why, in order
+```
+
+`HostProfile` is data, not a probe. Build one with `cascade-bench` if you want
+measurements, or by hand if you already know them.
 
 ## Honest limits
 

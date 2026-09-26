@@ -1,6 +1,6 @@
 """
-whorl.core.cascade
-──────────────────
+cascade
+───────
 Cascade arbitration: decide *per request* whether local inference is eligible,
 or the request must escalate to a cloud lane.
 

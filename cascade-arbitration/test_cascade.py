@@ -1,5 +1,5 @@
 """
-Tests for whorl.core.cascade.
+Tests for cascade.
 
 Fully offline and deterministic: arbitration is a pure function of
 CascadeRequest + HostProfile, so no network, clock or probe is involved

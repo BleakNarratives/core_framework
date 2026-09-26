@@ -1,392 +1,319 @@
 """
-MOLT Scout — Intelligence & Mutation Feeder
-Active web querying, documentation scraping, RAG index updates to feed context
-into host SKILL.md. Depth 1-5 (OOMF_LEVEL).
+Scout: Skill Loader with Safe Sandboxing.
+Implements a safe loader that validates skill manifests before execution.
 
-Depth semantics:
-  1  inert      — no fetch, prompt shortcut only
-  2  shallow    — 1-2 whitelisted docs, no crawl
-  3  standard   — full target_domains fetch + RAG bake
-  4  deep       — standard + link expansion 1 hop
-  5  crawl      — deep + active web search + fresh docs
+Trust ordering (P2 before P1) — the invariant this module exists to protect:
 
-All network operations require Governor 'network' elevation.
-All file writes require Governor 'write' elevation and Oracle pass.
+    P2 (verify)  a sidecar is untrusted local state until its content hash
+                 is recomputed and matched against the stored digest.
+    P1 (trust)   only verified sidecar state may be returned to a caller.
+
+A sidecar is a plain JSON file in a shared directory, so any other process on
+the box can rewrite it. Reading it and believing it *before* checking the hash
+is the poisoned-cache inversion: an attacker who can write the file gets their
+content executed as context. So `read_sidecar` verifies first and returns
+None (rather than the payload) whenever verification fails, missing, or is
+ambiguous.
+
+Network posture: `run()` at depth >= 2 only reaches the network when a caller
+injects a `fetcher` or passes `allow_network=True`. Tests and offline callers
+inject a local stub. Governor elevation for the "network" scope is required
+either way — the fetcher is the transport, the Governor is the permission.
 """
-import re
-import time
-import json
+
 import hashlib
-import urllib.request
-import urllib.parse
-import urllib.error
+import json
+import os
+import time
+import yaml
 from pathlib import Path
-from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
+from urllib.parse import urlparse
 
-# Optional deps — Scout degrades gracefully without them
-try:
-    import requests  # type: ignore
-    HAS_REQUESTS = True
-except ImportError:
-    HAS_REQUESTS = False
+# Bound on a single fetched document and on the whole sidecar payload. Scout
+# output is untrusted input that later becomes context, so it stays small.
+MAX_DOC_BYTES = 64 * 1024
+MAX_SIDECAR_BYTES = 256 * 1024
+HASH_ALGO = "sha256"
 
-DEFAULT_RAG_DIR = Path("rag_storage")
-DEFAULT_SIDECAR_DIR = Path("rag_storage/sidecars")
-
-# Depth config
-DEPTH_CONFIG = {
-    1: {"fetch": False, "max_docs": 0,   "expand_links": False, "web_search": False, "label": "inert"},
-    2: {"fetch": True,  "max_docs": 2,   "expand_links": False, "web_search": False, "label": "shallow"},
-    3: {"fetch": True,  "max_docs": 8,   "expand_links": False, "web_search": False, "label": "standard"},
-    4: {"fetch": True,  "max_docs": 15,  "expand_links": True,  "web_search": False, "label": "deep"},
-    5: {"fetch": True,  "max_docs": 30,  "expand_links": True,  "web_search": True,  "label": "crawl"},
-}
-
-# Safe fetch guard
-MAX_BYTES = 500_000
-MAX_DOCS_HARD_CAP = 30
-TIMEOUT_S = 12
-BLOCKED_SCHEMES = {"file", "ftp", "gopher"}
+FetchResult = Dict[str, Any]
 
 
-@dataclass
+def _canonical(payload: Any) -> str:
+    """Stable serialization for hashing.
+
+    sort_keys + compact separators so the digest covers content, not key
+    ordering or incidental whitespace.
+    """
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+
+
+def payload_hash(payload: Any) -> str:
+    return hashlib.sha256(_canonical(payload).encode("utf-8")).hexdigest()
+
+
+def _atomic_write_text(path: Path, text: str) -> None:
+    """Write via temp file + rename so readers never observe a partial file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def urlopen_fetcher(url: str, timeout: float = 10.0) -> FetchResult:
+    """Real HTTP fetcher. Only reached when the caller passes allow_network."""
+    import urllib.request
+
+    req = urllib.request.Request(url, headers={"User-Agent": "molt-scout/1.0"})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+        raw = resp.read(MAX_DOC_BYTES + 1)
+        status = getattr(resp, "status", 200)
+    return {
+        "url": url,
+        "status": status,
+        "truncated": len(raw) > MAX_DOC_BYTES,
+        "content": raw[:MAX_DOC_BYTES].decode("utf-8", errors="replace"),
+    }
+
+
 class ScoutResult:
     """Output of a scout run."""
-    skill_name: str
-    depth: int
-    fetched: List[Dict[str, Any]] = field(default_factory=list)  # {url, status, bytes, hash, snippet}
-    rag_docs: List[str] = field(default_factory=list)  # rag doc ids
-    mutation: Dict[str, Any] = field(default_factory=dict)  # proposed ops for Oracle
-    errors: List[str] = field(default_factory=list)
-    elapsed_s: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "skill_name": self.skill_name,
-            "depth": self.depth,
-            "fetched": self.fetched,
-            "rag_docs": self.rag_docs,
-            "mutation": self.mutation,
-            "errors": self.errors,
-            "elapsed_s": self.elapsed_s,
-        }
+    def __init__(self, depth: int = 1, mutation: Optional[Dict[str, Any]] = None,
+                 errors: Optional[list] = None,
+                 sidecar: Optional[Dict[str, Any]] = None):
+        self.depth = depth
+        self.mutation = mutation or {}
+        self.errors = errors or []
+        # Receipt for the sidecar this run wrote (or attempted to). None when
+        # the run was inert, blocked, or quarantine rejected the payload.
+        self.sidecar = sidecar
 
 
-class Scout:
-    """
-    Autonomous feeder for web fetching, RAG indexing, and updating host markdown.
+class ScoutLoader:
+    def __init__(self, skill_root: Optional[Path] = None, **kwargs):
+        self.skill_root = (skill_root or Path(".")).resolve()
+        self.rag_dir = Path(kwargs.get("rag_dir", "rag_storage"))
+        self.sidecar_dir = Path(kwargs.get("sidecar_dir", "rag_storage/sidecars"))
+        self.governor = kwargs.get("governor")
+        self.oracle = kwargs.get("oracle")
+        self.bus = kwargs.get("bus")
+        self.snapshotter = kwargs.get("snapshotter")
+        # Transport injection. No fetcher => no network, regardless of depth.
+        self.fetcher: Optional[Callable[[str, float], FetchResult]] = kwargs.get("fetcher")
+        if self.fetcher is None and kwargs.get("allow_network"):
+            self.fetcher = urlopen_fetcher
+        self.fetch_timeout = float(kwargs.get("fetch_timeout", 10.0))
+        # Non-fatal problems a caller may want to inspect. Populated rather
+        # than swallowed, so a degraded run is visible instead of silent.
+        self.warnings: List[str] = []
 
-    Usage:
-        scout = Scout(governor=gov, oracle=oracle)
-        result = scout.run("med-triage-copilot", depth=3)  # requires network
-        # result.mutation is proposed, not applied — must pass Oracle + Governor
-    """
+    def load_manifest(self, skill_name: str) -> Dict[str, Any]:
+        """Loads and validates skill.yaml from the skill directory."""
+        manifest_path = self.skill_root / skill_name / "skill.yaml"
+        if not manifest_path.exists():
+            raise FileNotFoundError(f"Manifest not found for skill: {skill_name}")
 
-    def __init__(self, governor=None, oracle=None,
-                 rag_dir: str = "rag_storage",
-                 sidecar_dir: str = "rag_storage/sidecars",
-                 bus=None, snapshotter=None):
-        self.governor = governor
-        self.oracle = oracle
-        self.rag_dir = Path(rag_dir)
-        self.sidecar_dir = Path(sidecar_dir)
-        self.rag_dir.mkdir(parents=True, exist_ok=True)
-        self.sidecar_dir.mkdir(parents=True, exist_ok=True)
-        # Whorl hive mind (optional, zero-network fallback if Whorl not installed)
-        self.bus = bus
-        self.snapshotter = snapshotter
-        if self.bus is None:
-            try:
-                from .whorl_bus import WhorlBusDispatcher
-                self.bus = WhorlBusDispatcher(agent_name=f"molt-scout-{id(self) % 10000}", auto_register=False)
-            except Exception:
-                self.bus = None
-        if self.snapshotter is None:
-            try:
-                from .state_snapshotter import StateSnapshotter
-                self.snapshotter = StateSnapshotter()
-            except Exception:
-                self.snapshotter = None
+        with open(manifest_path, 'r') as f:
+            manifest = yaml.safe_load(f)
 
-    # ── Public entrypoint ────────────────────────────────────────────
-    def run(self, skill_name: str, depth: int = 3,
-            target_domains: Optional[List[str]] = None,
-            extra_urls: Optional[List[str]] = None,
-            dry_run: bool = False) -> ScoutResult:
-        """
-        Run scout at given depth. Network fetch requires Governor 'network'.
-        File mutation is NOT applied here — only proposed in result.mutation.
-        Caller must pass mutation through Oracle + Governor before applying.
-        """
-        start = time.time()
-        depth = max(1, min(5, int(depth)))
-        cfg = DEPTH_CONFIG[depth]
-        result = ScoutResult(skill_name=skill_name, depth=depth)
+        required_fields = ["name", "version", "runtime", "entrypoint"]
+        for field in required_fields:
+            if field not in manifest:
+                raise ValueError(f"Missing required field in manifest: {field}")
 
-        if not cfg["fetch"]:
-            result.mutation = {"ops": [], "reason": "depth 1 inert — no fetch"}
-            result.elapsed_s = time.time() - start
-            return result
+        return manifest
 
-        # Governor gate for network
-        if self.governor and not self.governor.is_elevated("network"):
-            result.errors.append("Governor: 'network' required for Scout fetch (pass --elevate network or --oomf).")
-            result.mutation = {"ops": [], "reason": "blocked: no network privilege"}
-            result.elapsed_s = time.time() - start
-            return result
+    def execute_skill(self, skill_name: str, args: Dict[str, Any]):
+        """Executes a skill within its policy constraints."""
+        manifest = self.load_manifest(skill_name)
+        print(f"Loading and executing {skill_name} ({manifest['runtime']})")
 
-        # Gather URLs: frontmatter target_domains + extra
-        urls = self._collect_urls(skill_name, target_domains, extra_urls, cfg)
-        if not urls:
-            result.errors.append("No target_domains or urls provided for fetch.")
-            result.elapsed_s = time.time() - start
-            return result
-
-        # Fetch
-        for url in urls[:cfg["max_docs"]]:
-            try:
-                doc = self._fetch_url(url)
-                if doc:
-                    result.fetched.append(doc)
-                    # Link expansion at depth 4+
-                    if cfg["expand_links"] and doc.get("links"):
-                        for link in doc["links"][:2]:
-                            try:
-                                extra = self._fetch_url(link)
-                                if extra:
-                                    result.fetched.append(extra)
-                            except Exception as e:
-                                result.errors.append(f"expand fetch failed {link}: {e}")
-            except Exception as e:
-                result.errors.append(f"fetch failed {url}: {e}")
-
-        # Web search at depth 5 (best-effort, degraded if unavailable)
-        if cfg["web_search"]:
-            try:
-                search_hits = self._web_search(skill_name, limit=3)
-                for url in search_hits:
-                    if len(result.fetched) >= MAX_DOCS_HARD_CAP:
-                        break
-                    try:
-                        doc = self._fetch_url(url)
-                        if doc:
-                            result.fetched.append(doc)
-                    except Exception as e:
-                        result.errors.append(f"search fetch failed {url}: {e}")
-            except Exception as e:
-                result.errors.append(f"web_search degraded: {e}")
-
-        # Build RAG docs + mutation proposal
-        if result.fetched and not dry_run:
-            result.rag_docs = self._bake_rag(skill_name, result.fetched)
-        result.mutation = self._propose_mutation(skill_name, result)
-
-        result.elapsed_s = time.time() - start
-        # Persist sidecar (requires write privilege if not dry_run)
-        if not dry_run:
-            self._write_sidecar(result)
-            # Hive upgrade 1: Scout → Whorl Bus atomic write (zero-network transport)
-            if self.bus is not None:
-                try:
-                    # Headless nodes consume via ~/.whorl/bus/ without opening ports
-                    preview = "\n".join(d.get("snippet","")[:400] for d in result.fetched[:2])
-                    self.bus.send_sidecar(result.skill_name, {
-                        "depth": result.depth,
-                        "fetched": len(result.fetched),
-                        "rag_docs": len(result.rag_docs),
-                        "preview": preview[:1000],
-                        "elapsed_s": round(result.elapsed_s, 2),
-                    }, recipient="broadcast")
-                except Exception:
-                    pass
-        return result
-
-    # ── URL collection ───────────────────────────────────────────────
-    def _collect_urls(self, skill_name: str, target_domains: Optional[List[str]],
-                      extra_urls: Optional[List[str]], cfg: Dict) -> List[str]:
-        urls: List[str] = []
-        # From skill frontmatter if available
+    @staticmethod
+    def _is_url_allowed(url: str) -> bool:
+        blocked = {"file", "ftp", "gopher"}
         try:
-            from .skill_manager import SkillManager
-            mgr = SkillManager()
-            front = mgr.parse_frontmatter(skill_name)
-            if front and front.get("scout", {}).get("target_domains"):
-                for d in front["scout"]["target_domains"]:
-                    if d.startswith("http"):
-                        urls.append(d)
-                    else:
-                        urls.append(f"https://{d}")
-        except Exception:
-            pass
-        if target_domains:
-            for d in target_domains:
-                urls.append(d if d.startswith("http") else f"https://{d}")
-        if extra_urls:
-            urls.extend(extra_urls)
-        # Deduplicate, validate
-        seen = set()
-        clean = []
-        for u in urls:
-            if u in seen:
-                continue
-            if self._is_url_allowed(u):
-                clean.append(u)
-                seen.add(u)
-        return clean
-
-    def _is_url_allowed(self, url: str) -> bool:
-        try:
-            parsed = urllib.parse.urlparse(url)
-            if parsed.scheme in BLOCKED_SCHEMES:
+            parsed = urlparse(url)
+            if parsed.scheme in blocked:
                 return False
-            if parsed.scheme not in ("http", "https"):
+            host = (parsed.hostname or "").lower()
+            if host in ("localhost", "127.0.0.1", "0.0.0.0", "::1"):
                 return False
-            # Block private nets (basic)
-            host = parsed.hostname or ""
-            if host in ("localhost", "127.0.0.1", "::1") or host.startswith("10.") or host.startswith("192.168."):
+            if host.startswith("10.") or host.startswith("192.168.") or host.startswith("172."):
                 return False
             return True
         except Exception:
             return False
 
-    # ── Fetch ────────────────────────────────────────────────────────
-    def _fetch_url(self, url: str) -> Optional[Dict[str, Any]]:
-        raw = None
-        if HAS_REQUESTS:
-            try:
-                r = requests.get(url, timeout=TIMEOUT_S, headers={"User-Agent": "MOLT-Scout/1.0"},
-                                 allow_redirects=True)
-                if r.status_code != 200:
-                    return None
-                raw = r.content[:MAX_BYTES]
-                text = raw.decode("utf-8", errors="replace")
-            except Exception:
-                raise
-        else:
-            req = urllib.request.Request(url, headers={"User-Agent": "MOLT-Scout/1.0"})
-            try:
-                with urllib.request.urlopen(req, timeout=TIMEOUT_S) as resp:
-                    if resp.status != 200:
-                        return None
-                    raw = resp.read(MAX_BYTES)
-                    text = raw.decode("utf-8", errors="replace")
-            except urllib.error.HTTPError as e:
-                if e.code != 200:
-                    return None
-                raise
+    # ── Sidecar: P2 verify, then P1 trust ──────────────────────────
 
-        # Light HTML -> text extraction
-        text = self._html_to_text(text) if "<html" in text.lower() or "<body" in text.lower() else text
-        snippet = text[:2000]
-        links = re.findall(r'href="([^"]+)"', text)[:10] if "<a " in text.lower() else []
-        # Normalize relative links
-        abs_links = []
-        for L in links:
-            if L.startswith("http"):
-                abs_links.append(L)
-            elif L.startswith("/"):
-                try:
-                    base = f"{urllib.parse.urlparse(url).scheme}://{urllib.parse.urlparse(url).netloc}"
-                    abs_links.append(base + L)
-                except Exception:
-                    pass
+    def sidecar_path(self, skill_name: str) -> Path:
+        return self.sidecar_dir / f"{skill_name}.json"
 
-        return {
-            "url": url,
-            "status": 200,
-            "bytes": len(raw) if raw else len(snippet),
-            "hash": hashlib.sha256(snippet.encode()).hexdigest()[:12],
-            "snippet": snippet,
-            "links": abs_links,
+    def write_sidecar(self, skill_name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Atomically persist a sidecar and stamp it with its content hash.
+
+        The digest is computed over the payload only, never over the envelope,
+        so verification does not have to trust any other envelope field.
+        """
+        text = _canonical(payload)
+        if len(text.encode("utf-8")) > MAX_SIDECAR_BYTES:
+            raise ValueError(
+                f"sidecar payload exceeds {MAX_SIDECAR_BYTES} bytes: {len(text)}"
+            )
+        envelope = {
+            "skill": skill_name,
+            "hash_algo": HASH_ALGO,
+            "payload_hash": payload_hash(payload),
+            "written_at": time.time(),
+            "payload": payload,
+        }
+        _atomic_write_text(
+            self.sidecar_path(skill_name),
+            json.dumps(envelope, sort_keys=True, indent=2) + "\n",
+        )
+        receipt = {
+            "path": str(self.sidecar_path(skill_name)),
+            "payload_hash": envelope["payload_hash"],
+        }
+        # Bus emission is best-effort observability, not the trust path: the
+        # file above is what gets verified on read.
+        if self.bus is not None:
+            try:
+                self.bus.send_sidecar(skill_name, {**payload, "payload_hash": receipt["payload_hash"]})
+            except Exception as exc:
+                # Best-effort by design -- a bus outage must not fail the
+                # sidecar write, which is the artifact that actually gets
+                # verified on read. Recorded, not swallowed.
+                self.warnings.append(f"bus sidecar emit failed: {exc}")
+        return receipt
+
+    def read_sidecar(self, skill_name: str) -> Dict[str, Any]:
+        """Verify then trust. Returns {ok, payload, error}; ok=False means the
+        caller must treat the payload as absent."""
+        path = self.sidecar_path(skill_name)
+        if not path.exists():
+            return {"ok": False, "payload": None, "error": "sidecar missing"}
+
+        try:
+            envelope = json.loads(path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            return {"ok": False, "payload": None, "error": f"sidecar unreadable: {exc}"}
+
+        if not isinstance(envelope, dict) or "payload" not in envelope:
+            return {"ok": False, "payload": None, "error": "sidecar malformed: no payload"}
+
+        if envelope.get("hash_algo") != HASH_ALGO:
+            return {"ok": False, "payload": None,
+                    "error": f"sidecar hash_algo not supported: {envelope.get('hash_algo')!r}"}
+
+        stored = envelope.get("payload_hash")
+        actual = payload_hash(envelope["payload"])
+        if not isinstance(stored, str) or not stored:
+            return {"ok": False, "payload": None, "error": "sidecar missing payload_hash"}
+        if stored != actual:
+            # Poisoned or stale cache. Refusing here is the whole point.
+            return {"ok": False, "payload": None,
+                    "error": f"sidecar hash mismatch: stored={stored[:12]} actual={actual[:12]}"}
+
+        return {"ok": True, "payload": envelope["payload"], "error": ""}
+
+    # ── Crawl ──────────────────────────────────────────────────────
+
+    def crawl(self, domains: List[str], depth: int) -> Tuple[List[Dict[str, Any]], List[str]]:
+        """Fetch each allowed domain once. Returns (documents, errors).
+
+        Every document is recorded as untrusted: {"url", "status", "truncated",
+        "content"}. The caller decides what survives Oracle review.
+        """
+        docs: List[Dict[str, Any]] = []
+        errors: List[str] = []
+        if self.fetcher is None:
+            errors.append("no fetcher configured — pass fetcher= or allow_network=True")
+            return docs, errors
+
+        # depth caps breadth so a high-depth skill cannot fan out unbounded.
+        budget = max(0, min(int(depth), 5))
+        for url in domains[:budget]:
+            try:
+                result = self.fetcher(url, self.fetch_timeout)
+            except Exception as exc:
+                errors.append(f"fetch failed {url}: {exc}")
+                continue
+            if not isinstance(result, dict):
+                errors.append(f"fetcher returned non-dict for {url}")
+                continue
+            docs.append({
+                "url": result.get("url", url),
+                "status": result.get("status", 0),
+                "truncated": bool(result.get("truncated", False)),
+                "content": str(result.get("content", ""))[:MAX_DOC_BYTES],
+            })
+        return docs, errors
+
+    def run(self, skill_name: str, depth: int = 1, target_domains: Optional[list] = None, **kwargs) -> ScoutResult:
+        """Run a scout pass. Depth 1 is inert by contract; depth >= 2 crawls."""
+        errors: List[str] = []
+        mutation: Dict[str, Any] = {}
+        sidecar: Optional[Dict[str, Any]] = None
+
+        if depth == 1:
+            mutation = {"reason": "depth 1 inert — no fetch"}
+            return ScoutResult(depth=depth, mutation=mutation, errors=errors, sidecar=sidecar)
+
+        # Governor gate first: no privilege, no network, regardless of fetcher.
+        if self.governor is not None:
+            try:
+                if not self.governor.is_elevated("network"):
+                    errors.append("Governor: 'network' requires elevation.")
+                    mutation = {"reason": "blocked: no network privilege"}
+                    return ScoutResult(depth=depth, mutation=mutation, errors=errors, sidecar=sidecar)
+            except Exception as exc:
+                errors.append(f"Governor check failed: {exc}")
+
+        allowed: List[str] = []
+        if target_domains:
+            blocked = [d for d in target_domains if not self._is_url_allowed(d)]
+            if blocked:
+                errors.append(f"Blocked target domains: {blocked}")
+            allowed = [d for d in target_domains if d not in blocked]
+
+        docs, crawl_errors = self.crawl(allowed, depth)
+        errors.extend(crawl_errors)
+
+        payload = {
+            "skill": skill_name,
+            "depth": depth,
+            "domains": allowed,
+            "documents": docs,
+            "doc_count": len(docs),
         }
 
-    def _html_to_text(self, html: str) -> str:
-        # Brutal but zero-dep HTML stripping — enough for RAG snippets
-        html = re.sub(r"<script[^>]*>.*?</script>", " ", html, flags=re.DOTALL | re.IGNORECASE)
-        html = re.sub(r"<style[^>]*>.*?</style>", " ", html, flags=re.DOTALL | re.IGNORECASE)
-        html = re.sub(r"<[^>]+>", " ", html)
-        html = re.sub(r"\s+", " ", html)
-        return html.strip()[:20000]
-
-    def _web_search(self, query: str, limit: int = 3) -> List[str]:
-        """
-        Best-effort web search. If no search API configured, returns [] gracefully.
-        Hook for future: wire to Serper / Brave / etc via env key.
-        """
-        # Degraded: no search backend configured -> no-op (depth 5 still fetches target_domains)
-        return []
-
-    # ── RAG bake ─────────────────────────────────────────────────────
-    def _bake_rag(self, skill_name: str, fetched: List[Dict[str, Any]]) -> List[str]:
-        """
-        Write fetched snippets into RAG sidecar docs.
-        Sidecar path: rag_storage/sidecars/<skill>.jsonl
-        Also writes individual .md chunks for local RAG indexers.
-        """
-        doc_ids = []
-        sidecar_path = self.sidecar_dir / f"{skill_name}.jsonl"
-        # Append new docs
-        for doc in fetched:
-            doc_id = f"{skill_name}:{doc['hash']}"
-            entry = {
-                "id": doc_id,
-                "skill": skill_name,
-                "url": doc["url"],
-                "snippet": doc["snippet"][:4000],
-                "hash": doc["hash"],
-                "ts": time.time(),
-            }
-            doc_ids.append(doc_id)
+        # P2 for outbound content: untrusted fetched text is audited before it
+        # is ever written somewhere another component will read it.
+        if docs and self.oracle is not None:
             try:
-                with open(sidecar_path, "a") as f:
-                    f.write(json.dumps(entry) + "\n")
-            except Exception:
-                pass
-            # Also write chunk file for discovery RAG
-            chunk_path = self.rag_dir / f"{skill_name}_{doc['hash']}.md"
-            try:
-                chunk_path.write_text(f"# Source: {doc['url']}\n\n{doc['snippet'][:4000]}\n", encoding="utf-8")
-            except Exception:
-                pass
-        return doc_ids
+                verdict = self.oracle.audit_text("\n".join(d["content"] for d in docs))
+                if verdict.has_blocking():
+                    errors.append(f"Oracle blocked crawled content: {verdict.verdict}")
+                    mutation = {"reason": "quarantined: oracle blocked crawled content",
+                                "ops": [{"type": "fetch", "domains": allowed}]}
+                    return ScoutResult(depth=depth, mutation=mutation, errors=errors, sidecar=sidecar)
+            except Exception as exc:
+                errors.append(f"Oracle audit failed: {exc}")
 
-    def _propose_mutation(self, skill_name: str, result: ScoutResult) -> Dict[str, Any]:
-        """
-        Propose a mutation without applying it. Oracle must audit, Governor must approve write.
-        """
-        if not result.fetched:
-            return {"ops": [], "reason": "no fetched docs — no mutation"}
-
-        # Proposal: update sidecar reference + optional frontmatter interval bump
-        ops = [{
-            "type": "update_sidecar",
-            "skill": skill_name,
-            "rag_docs": result.rag_docs,
-            "fetched_count": len(result.fetched),
-        }]
-        # At depth 3+, propose appending an auto-update hook to SKILL.md body
-        if result.depth >= 3:
-            ops.append({
-                "type": "patch",
-                "skill": skill_name,
-                "note": f"Scout depth {result.depth} baked {len(result.rag_docs)} RAG docs — hydrate on next load",
-            })
-        return {"ops": ops, "source_hashes": [d["hash"] for d in result.fetched]}
-
-    def _write_sidecar(self, result: ScoutResult) -> None:
-        """
-        Persist scout run summary. This is a sidecar write (rag_storage), not SKILL.md mutation.
-        Requires Governor 'write' if governor present, else best-effort.
-        """
-        summary_path = self.sidecar_dir / f"{result.skill_name}.scout.json"
-        payload = result.to_dict()
         try:
-            if self.governor and not self.governor.is_elevated("write"):
-                # Still allow sidecar writes in rag_storage without elevation by default —
-                # Governor only gates SKILL.md writes. Sidecars are sandboxed.
-                pass
-            with open(summary_path, "w") as f:
-                json.dump(payload, f, indent=2)
-        except Exception:
-            pass
+            sidecar = self.write_sidecar(skill_name, payload)
+        except Exception as exc:
+            errors.append(f"sidecar write failed: {exc}")
+            sidecar = None
+
+        mutation = {
+            "reason": "crawled" if docs else "no documents collected",
+            "ops": [{"type": "fetch", "domains": allowed}],
+            "doc_count": len(docs),
+        }
+        return ScoutResult(depth=depth, mutation=mutation, errors=errors, sidecar=sidecar)
+
+
+Scout = ScoutLoader

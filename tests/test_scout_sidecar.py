@@ -60,14 +60,14 @@ class TestSidecarVerifyThenTrust(unittest.TestCase):
         got = s.read_sidecar("skill-a")
         self.assertFalse(got["ok"])
         self.assertIsNone(got["payload"])
-        self.assertIn("hash mismatch", got["error"])
+        self.assertIn("digest_mismatch", got["error"])
 
     def test_missing_hash_is_refused(self):
         s = self._scout()
         s.write_sidecar("skill-a", {"a": 1})
         path = s.sidecar_path("skill-a")
         env = json.loads(path.read_text(encoding="utf-8"))
-        del env["payload_hash"]
+        del env["digest"]
         path.write_text(json.dumps(env), encoding="utf-8")
         self.assertFalse(s.read_sidecar("skill-a")["ok"])
 
@@ -76,11 +76,29 @@ class TestSidecarVerifyThenTrust(unittest.TestCase):
         s.write_sidecar("skill-a", {"a": 1})
         path = s.sidecar_path("skill-a")
         env = json.loads(path.read_text(encoding="utf-8"))
-        env["hash_algo"] = "md5"
+        env["algo"] = "md5"
         path.write_text(json.dumps(env), encoding="utf-8")
         got = s.read_sidecar("skill-a")
         self.assertFalse(got["ok"])
-        self.assertIn("hash_algo", got["error"])
+        self.assertIn("unsupported_algo", got["error"])
+
+    def test_legacy_envelope_fails_closed(self):
+        """A sidecar from before the move to verified_cache must not be trusted.
+
+        The old envelope used {hash_algo, payload_hash}. It carries no digest
+        this build recognises, so it is refused rather than re-trusted --
+        an unverifiable cache is exactly the case the pattern exists for.
+        """
+        s = self._scout()
+        path = s.sidecar_path("legacy")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({
+            "skill": "legacy", "hash_algo": "sha256",
+            "payload_hash": "deadbeef", "payload": {"instruction": "old"},
+        }), encoding="utf-8")
+        got = s.read_sidecar("legacy")
+        self.assertFalse(got["ok"])
+        self.assertIsNone(got["payload"], "legacy payload must be withheld")
 
     def test_malformed_and_missing_are_refused(self):
         s = self._scout()

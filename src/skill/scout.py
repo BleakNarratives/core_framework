@@ -21,14 +21,13 @@ inject a local stub. Governor elevation for the "network" scope is required
 either way — the fetcher is the transport, the Governor is the permission.
 """
 
-import hashlib
-import json
-import os
 import time
 import yaml
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
+
+from src.skill._vendor.verified_cache import SidecarStore, digest_of
 
 # Bound on a single fetched document and on the whole sidecar payload. Scout
 # output is untrusted input that later becomes context, so it stays small.
@@ -39,25 +38,14 @@ HASH_ALGO = "sha256"
 FetchResult = Dict[str, Any]
 
 
-def _canonical(payload: Any) -> str:
-    """Stable serialization for hashing.
-
-    sort_keys + compact separators so the digest covers content, not key
-    ordering or incidental whitespace.
-    """
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
-
-
 def payload_hash(payload: Any) -> str:
-    return hashlib.sha256(_canonical(payload).encode("utf-8")).hexdigest()
+    """Content digest of a sidecar payload.
 
-
-def _atomic_write_text(path: Path, text: str) -> None:
-    """Write via temp file + rename so readers never observe a partial file."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    tmp.write_text(text, encoding="utf-8")
-    os.replace(tmp, path)
+    Delegates to verified_cache so there is exactly one hashing
+    implementation in the process. Retained as a module-level name because
+    callers used it before the envelope moved.
+    """
+    return digest_of(payload, HASH_ALGO).value
 
 
 def urlopen_fetcher(url: str, timeout: float = 10.0) -> FetchResult:
@@ -107,6 +95,7 @@ class ScoutLoader:
         # Non-fatal problems a caller may want to inspect. Populated rather
         # than swallowed, so a degraded run is visible instead of silent.
         self.warnings: List[str] = []
+        self._sidecar_store: Optional[SidecarStore] = None
 
     def load_manifest(self, skill_name: str) -> Dict[str, Any]:
         """Loads and validates skill.yaml from the skill directory."""
@@ -147,40 +136,37 @@ class ScoutLoader:
 
     # ── Sidecar: P2 verify, then P1 trust ──────────────────────────
 
+    def _store(self) -> SidecarStore:
+        """Lazily build the store. Kept lazy so constructing a Scout with an
+        unreadable sidecar_dir does not raise before anyone has written."""
+        if self._sidecar_store is None:
+            self._sidecar_store = SidecarStore(
+                self.sidecar_dir, algo=HASH_ALGO, max_bytes=MAX_SIDECAR_BYTES
+            )
+        return self._sidecar_store
+
     def sidecar_path(self, skill_name: str) -> Path:
-        return self.sidecar_dir / f"{skill_name}.json"
+        return self._store().path_for(skill_name)
 
     def write_sidecar(self, skill_name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-        """Atomically persist a sidecar and stamp it with its content hash.
+        """Atomically persist a sidecar, stamped with its content digest.
 
-        The digest is computed over the payload only, never over the envelope,
-        so verification does not have to trust any other envelope field.
+        Delegates to the vendored verified_cache, which owns the trust logic.
+        Scout keeps this method as the public surface so existing callers and
+        the bus receipt format are unchanged.
+
+        NOTE: the on-disk envelope moved from {hash_algo, payload_hash} to
+        {algo, digest}. Sidecars written by the previous format fail closed as
+        `unsupported_algo` rather than being silently re-trusted, which is the
+        correct outcome -- an old file has no digest this build would trust.
         """
-        text = _canonical(payload)
-        if len(text.encode("utf-8")) > MAX_SIDECAR_BYTES:
-            raise ValueError(
-                f"sidecar payload exceeds {MAX_SIDECAR_BYTES} bytes: {len(text)}"
-            )
-        envelope = {
-            "skill": skill_name,
-            "hash_algo": HASH_ALGO,
-            "payload_hash": payload_hash(payload),
-            "written_at": time.time(),
-            "payload": payload,
-        }
-        _atomic_write_text(
-            self.sidecar_path(skill_name),
-            json.dumps(envelope, sort_keys=True, indent=2) + "\n",
-        )
-        receipt = {
-            "path": str(self.sidecar_path(skill_name)),
-            "payload_hash": envelope["payload_hash"],
-        }
+        digest = self._store().write(skill_name, payload, extra={"skill": skill_name})
+        receipt = {"path": str(self.sidecar_path(skill_name)), "payload_hash": digest.value}
         # Bus emission is best-effort observability, not the trust path: the
         # file above is what gets verified on read.
         if self.bus is not None:
             try:
-                self.bus.send_sidecar(skill_name, {**payload, "payload_hash": receipt["payload_hash"]})
+                self.bus.send_sidecar(skill_name, {**payload, "payload_hash": digest.value})
             except Exception as exc:
                 # Best-effort by design -- a bus outage must not fail the
                 # sidecar write, which is the artifact that actually gets
@@ -190,33 +176,17 @@ class ScoutLoader:
 
     def read_sidecar(self, skill_name: str) -> Dict[str, Any]:
         """Verify then trust. Returns {ok, payload, error}; ok=False means the
-        caller must treat the payload as absent."""
-        path = self.sidecar_path(skill_name)
-        if not path.exists():
-            return {"ok": False, "payload": None, "error": "sidecar missing"}
+        caller must treat the payload as absent.
 
-        try:
-            envelope = json.loads(path.read_text(encoding="utf-8"))
-        except Exception as exc:
-            return {"ok": False, "payload": None, "error": f"sidecar unreadable: {exc}"}
-
-        if not isinstance(envelope, dict) or "payload" not in envelope:
-            return {"ok": False, "payload": None, "error": "sidecar malformed: no payload"}
-
-        if envelope.get("hash_algo") != HASH_ALGO:
-            return {"ok": False, "payload": None,
-                    "error": f"sidecar hash_algo not supported: {envelope.get('hash_algo')!r}"}
-
-        stored = envelope.get("payload_hash")
-        actual = payload_hash(envelope["payload"])
-        if not isinstance(stored, str) or not stored:
-            return {"ok": False, "payload": None, "error": "sidecar missing payload_hash"}
-        if stored != actual:
-            # Poisoned or stale cache. Refusing here is the whole point.
-            return {"ok": False, "payload": None,
-                    "error": f"sidecar hash mismatch: stored={stored[:12]} actual={actual[:12]}"}
-
-        return {"ok": True, "payload": envelope["payload"], "error": ""}
+        The payload is withheld on every failure path -- there is no way to get
+        unverified bytes out of this method.
+        """
+        v = self._store().read(skill_name)
+        return {
+            "ok": v.ok,
+            "payload": v.payload,
+            "error": "" if v.ok else v.reason,
+        }
 
     # ── Crawl ──────────────────────────────────────────────────────
 

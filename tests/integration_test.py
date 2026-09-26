@@ -35,9 +35,16 @@ class TestFullEnginePipeline(unittest.TestCase):
         self.manager.add_insight("problems_frustrations", "No clear content plan")
         
         # 2. Discovery
+        # discover_topics() has two channels: insight-derived topics, and a MOLT
+        # channel that surfaces living SKILL.md trees from the working
+        # directory. The second depends on what happens to be checked out, so
+        # asserting a total here made the test fail whenever a skill with
+        # scout.depth >= 3 existed. Assert on the insight-derived channel --
+        # that is the guarantee this pipeline is actually about.
         topics = self.discovery.discover_topics()
-        self.assertEqual(len(topics), 1)
-        topic = topics[0]['topic']
+        solution_topics = [t for t in topics if t["type"] == "Solution"]
+        self.assertEqual(len(solution_topics), 1)
+        topic = solution_topics[0]['topic']
         
         # 3. Creation
         plan = self.creation.generate_content_plan(topic, "blog_post")

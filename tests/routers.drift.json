@@ -1,0 +1,17 @@
+{
+  "files": [
+    "The-Werkz/Official-Vertical-AI-Boardroom/router.py",
+    "SyntaxIntelligence/boardroom/router.py",
+    "buffface-saga-partition/Official-Vertical-AI-Boardroom/router.py"
+  ],
+  "missing": "skip",
+  "invariants": [
+    {"name": "vault capture keeps *_POOL vars", "contains": "\"_KEY_POOL\""},
+    {"name": "vault allowlist has GROQ_API_KEY_POOL", "contains": "\"GROQ_API_KEY_POOL\","},
+    {"name": "placeholder keys rejected", "contains": "startswith(\"your_\")"},
+    {"name": "no dead co_varnames branch", "not_contains": "co_varnames", "ignore_comments": true},
+    {"name": "no leftover demo hacks", "not_contains": "# demo:"},
+    {"name": "ollama pins thread count", "regex": "\"num_thread\""},
+    {"name": "ollama pins context", "contains": "\"num_ctx\""}
+  ]
+}

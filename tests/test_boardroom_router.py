@@ -27,6 +27,15 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
+from src.skill._vendor.driftguard import (  # noqa: E402
+    build_invariants,
+    load_config,
+    run,
+)
+
+# Config paths are relative to the repo root, which is what drift-guard resolves
+# them against; the config itself lives beside this test.
+
 ROUTER_PATHS = {
     "werkz": REPO_ROOT / "The-Werkz" / "Official-Vertical-AI-Boardroom" / "router.py",
     "syntax": REPO_ROOT / "SyntaxIntelligence" / "boardroom" / "router.py",
@@ -277,37 +286,40 @@ class TestCopyDrift(unittest.TestCase):
     not the others. The features may differ; the invariants may not.
     """
 
-    SECURITY_CRITICAL = [
-        # (human label, predicate over source text)
-        ("vault capture keeps *_POOL",
-         lambda s: '"_KEY_POOL"' in s),
-        ("vault allowlist has GROQ_API_KEY_POOL",
-         lambda s: '"GROQ_API_KEY_POOL",' in s),
-        ("placeholder keys rejected",
-         lambda s: 'startswith("your_")' in s),
-        ("no dead co_varnames branch",
-         # Comments are stripped first: the comment explaining this fix
-         # necessarily names the mistake, and a naive substring check would
-         # flag its own documentation (this exact bug bit twice already).
-         lambda s: "co_varnames" not in _code_only(s)),
-        ("no leftover demo hacks",
-         lambda s: "# demo:" not in s),
-        ("ollama pins thread count",
-         lambda s: '"num_thread"' in s),
-        ("ollama pins context",
-         lambda s: '"num_ctx"' in s),
-    ]
+    # The invariants live in the standalone drift-guard package, vendored under
+    # src/skill/_vendor/. They used to be hardcoded lambdas in this file, which
+    # meant the package shipped unused while a duplicate of its logic sat right
+    # next to it. Config as data, one implementation, nothing to keep in sync.
+    #
+    # Two different roots, easy to conflate: the CONFIG lives beside this test,
+    # while the paths INSIDE it resolve against the repo root.
+    DRIFT_CONFIG = Path(__file__).resolve().parent / "routers.drift.json"
+
+    def _invariants(self):
+        return build_invariants(load_config(self.DRIFT_CONFIG)["invariants"])
 
     def test_security_critical_fixes_present_in_all_copies(self):
-        for label, predicate in self.SECURITY_CRITICAL:
-            for name, path in ROUTER_PATHS.items():
-                with self.subTest(fix=label, router=name):
-                    src = path.read_text(encoding="utf-8")
-                    self.assertTrue(
-                        predicate(src),
-                        f"{name} is missing: {label}. A fix was applied to some "
-                        f"copies and not this one -- see TestCopyDrift docstring.",
-                    )
+        rep = run(
+            [str(p.relative_to(REPO_ROOT)) for p in ROUTER_PATHS.values()],
+            self._invariants(),
+            missing="skip",
+            root=REPO_ROOT,
+        )
+        offenders = [f"{v['file']}: {v['invariant']} -- {v['reason']}" for v in rep.violations]
+        self.assertEqual(
+            offenders, [],
+            "invariant drift across the router copies (a fix reached some, not all):\n  "
+            + "\n  ".join(offenders),
+        )
+
+    def test_drift_config_covers_every_router_copy(self):
+        """A copy added later must be added to the config, or it is unguarded."""
+        configured = set(load_config(self.DRIFT_CONFIG)["files"])
+        self.assertEqual(
+            configured,
+            {str(p.relative_to(REPO_ROOT)) for p in ROUTER_PATHS.values()},
+            "routers.drift.json does not cover exactly the copies this test knows about",
+        )
 
     def test_every_declared_provider_has_a_call_path(self):
         """A provider in the cascade order with no _call_* is a dead lane."""

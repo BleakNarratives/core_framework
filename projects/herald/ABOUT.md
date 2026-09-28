@@ -1,18 +1,4 @@
-<!-- The `--about` paragraph, and nothing else. This file is fed verbatim to
-     `outreach_agent --about-file ABOUT.md`, so every word in it is prompt tokens
-     and every sentence in it is a claim the model may repeat. Evidence for each
-     claim, the narrow variants, and the list of things the model may NOT claim
-     live in ABOUT_EVIDENCE.md. Do not grow this file: see the note at the bottom
-     of that one. -->
+<!-- One paragraph only: this file is fed verbatim to outreach_agent. Claims and
+     boundaries live in ABOUT_EVIDENCE.md. -->
 
-I make LLM coding agents cheap enough and contained enough to run on hardware you
-already own. I run a self-hosted, OpenAI-compatible gateway fronting twelve provider
-pools that rotates keys per provider, so a 429 cools one key instead of ending the
-run and a revoked key gets quarantined instead of retried forever. The client on top
-of it is stdlib-only Python: ~25 MB resident against 436–566 MB measured for the
-commercial client on the same machine, 79 tests, no animation loop. I also wrote the
-containment that makes an agent safe to leave running — file edits and shell commands
-approved as separate tiers, and every path-taking tool confined to the working
-directory by resolving the path, not by asking the model nicely. It is all code you
-can read and run. I take small fixed-price jobs with a defined end; no retainers.
-Based in [TIMEZONE]. [YOUR RATES OR "rate on request"].
+I help small teams make Python backends and AI automations safer to change. I take one bounded problem — a failing endpoint, tangled module, unreliable model workflow, or risky agent tool — and return a short diagnosis, prioritized fixes, and tests or a small patch where appropriate. My own work uses path-confined tools, separate approvals for file edits and shell commands, and append-only change records; I will not claim those controls already exist in your system. I work remotely on small fixed-scope jobs with no retainer, including a project-based bridge while a team hires for a larger role. If the work in your post has a focused cleanup or backlog item that can be separated from the full-time role, send me the repo shape and the failure you want removed; I will tell you whether it is a fit before proposing work.

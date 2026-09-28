@@ -1,0 +1,12 @@
+{
+  "source_diff": "+ sample addition\n- sample deletion\n",
+  "task_id": "sample-task",
+  "agent_id": "offline-demo",
+  "payload": {
+    "line_changes": {"added": 12, "deleted": 4, "modified": 2},
+    "risk_level": "medium",
+    "dependency_order": ["source", "compiler", "preview"],
+    "affected_files": [{"file_path": "src/demo.py", "importance": 0.8}],
+    "agent_narration": {"confidence": 0.75}
+  }
+}

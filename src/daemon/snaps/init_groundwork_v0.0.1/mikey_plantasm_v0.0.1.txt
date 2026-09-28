@@ -1,0 +1,29 @@
+# ScoutDaemon: Socratic-Fallibilistic Runtime Specification
+## Version: v0.1.0-alpha
+## Purpose: Autonomous, Hydrated, Zero-Bloat Runtime Scouting
+
+### 1. Architectural Model (The "ScoutDaemon" Convention)
+This skill replaces reactive tool-calling with a pro-active "Scout daemon" runtime.
+- **Hydration**: Pro-active pre-fetching on schedule.
+- **Zero-Bloat**: Prompt already hydrated at IDE/Session open.
+- **Interface**: Consumes `sidecar.json` for immediate state awareness.
+
+### 2. Priority Hierarchy (Execution Logic)
+1.  **Caching (P1 - Immediate)**: Trust local state. `sidecar.json` is the ground truth.
+2.  **Verification (P2 - RAG)**: Syphoning/Disprove projection. If projected state $\neq$ current state, re-index.
+3.  **Simulations (P3/P4 - ML/Native)**: Invoke native engines (`iWarship`, `Poncho`) to populate `prediction_stream`.
+4.  **Fallback (P5 - Final)**: Scraping/Agg/Lurking (Only triggered if sidecar is stale).
+
+### 3. Distributed Model Input Interface (Multi-Model Feedback)
+To mature this agent, the following endpoints are defined for continuous cross-model audit/verification:
+- **`audit_log`**: Structured feedback from `Gemma`, `DeepSeek-V4-Flash`, `GPT-6-Luna`.
+- **`reasoning_stream`**: Contradictory policy analysis from `StepFun`, `Solar-4`, `MiMo-2.6`, `GLM-5.3`.
+- **`native_consensus`**: Synthesis layer from `Ox/SageOx`, `Puter-AI`, `Qwen`.
+- **`adversarial_veto`**: Direct injection path for `Meta` models to force re-evaluation of high-risk decisions.
+
+### 4. Maturity Milestones
+- [ ] **Test**: Mock `daemon/scout.py` to generate `sidecar.json`.
+- [ ] **Mold**: Integrate feed consumption in `inference_bridge`.
+- [ ] **Grow**: Hook `iWarship`/`Poncho` into native simulation stream.
+- [ ] **Mature**: Automated verification of multi-model feedback weights.
+- [ ] **Complete**: Zero-tool-call hydration on initialization.

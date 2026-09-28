@@ -7,6 +7,7 @@ name = "cascade-arbitration"
 version = "0.1.0"
 description = "Decide per request whether local LLM inference is eligible, instead of discovering it with a thrash."
 readme = "README.md"
+authors = [{ name = "BleakNarratives" }]
 license = { file = "LICENSE" }
 requires-python = ">=3.9"
 keywords = ["llm", "routing", "cascade", "ollama", "edge", "inference"]
@@ -31,7 +32,7 @@ cascade-bench = "bench:main"
 cascade-demo = "demo:main"
 
 [project.urls]
-Issues = "https://github.com/OWNER/cascade-arbitration/issues"
+Issues = "https://github.com/BleakNarratives/cascade-arbitration/issues"
 
 [tool.setuptools]
 py-modules = ["cascade", "bench", "demo"]

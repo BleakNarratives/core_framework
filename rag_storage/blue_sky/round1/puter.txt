@@ -1,0 +1,94 @@
+[2mInitializing Puter...[0m
+
+[2mputer>[0m **VERDICT**: **SHIP_WITH_CHANGES** – the vision is promising but the spec is mis‑aligned with the actual codebase and security constraints. Substantial rewrites are required before it can be shipped.
+
+---
+
+### THE 3 BEST IDEAS
+1. **Message‑bus (`whorl_bus.py`) already exists** – a solid, atomic, audit‑ready transport that can be reused for side‑car updates and cross‑model feedback.  
+2. **`arena_gladiator` provides a proven voting primitive** – the ELO‑style scoring can be leveraged for model‑weight aggregation instead of inventing a new consensus layer.  
+3. **`inference_bridge` enforces a JSON contract** – the “Bitchwork” output format gives a safe, schema‑validated hand‑off point for any downstream daemon.
+
+---
+
+### THE 3 BIGGEST PROBLEMS
+| # | Problem | Why it matters |
+|---|---------|----------------|
+| 1 | **No side‑car producer** – `src/skill/scout.py` never writes `sidecar.json`; P1 therefore has nothing to trust. | All downstream priority logic collapses; the “ground truth” is undefined. |
+| 2 | **Fictional model roster & missing engines** – the spec references Gemma, iWarship, Poncho, etc., none of which exist on the box. | The cross‑model audit pipeline cannot be instantiated; any code that tries to import these will crash. |
+| 3 | **Security mismatch** – the proposal would let raw model output become executable without mandatory Oracle gating, violating the AGENTS.md policy. | This is a hard constraint; shipping as‑is would open an unchecked code‑execution vector. |
+
+---
+
+### ANSWERS
+
+1. **Sidecar ownership** – The only component capable of writing `sidecar.json` today is a *future* Scout daemon. In the current repo, no writer exists; the bus (`whorl_bus`) could be used to serialize side‑car updates from any privileged skill (e.g., `governor` after an Oracle approval). If multiple writers race, the bus’s logical clock and `acknowledge()` can serialize writes, but the spec must declare a *single* authority (e.g., `governor → sidecar`) and treat the side‑car as *tentative* until the Oracle signs off. “Ground truth” is therefore a *derived* state, not absolute, especially when P5 may replace it.
+
+2. **Priority hierarchy correctness** – A cache‑first order (P1 → P2) is unsafe when the cache can be poisoned. The safer ordering is **P2 (verification) before P1**, i.e., *validate* the side‑car against the current environment (via `oracle.audit_text` or a cheap RAG check) and only fall back to the cached copy if verification succeeds. This prevents blind trust in stale or malicious data.
+
+3. **Vote weighting** – The four channels (`audit_log`, `reasoning_stream`, `native_consensus`, `adversarial_veto`) should be mapped onto the existing `arena_gladiator` scoring system rather than kept as independent opaque streams. Each channel becomes a “player” with an assigned weight (e.g., Oracle = 2, native = 1, reasoning = 1, veto = 3). `arena_gladiator` can then compute a weighted ELO outcome. If `adversarial_veto` (high weight) disagrees with a unanimous native consensus, the veto wins because its weight overrides the others; the system should still log the conflict for audit.
+
+4. **What replaces the fictional roster** – Redefine §3 by **capability class**, not model name:  
+   * **Audit** – any model that can call `oracle.audit_text` (e.g., `ox` with a “skeptic” persona).  
+   * **Contradiction** – models that produce counter‑arguments (e.g., `aider` in dry‑run mode).  
+   * **Synthesis** – the “native consensus” engine, which could be `ox`‑adapter or `puter` running a merge script.  
+   * **Veto** – a privileged “Meta” channel that is simply the `governor` with a `--force‑veto` flag.  
+   This removes the nonexistent names and ties the pipeline to the actual binaries present.
+
+5. **Sequencing** – The logical first step is **“Test: mock daemon/scout.py”** *and* implement a side‑car writer (e.g., `scout/write_sidecar()`). Only after a concrete side‑car exists can you “Mold: integrate feed consumption in `inference_bridge`”. The “Zero‑tool‑call hydration” milestone should be moved **ahead of** “Mold” because hydration is the source of the side‑car data that `inference_bridge` will consume. A corrected order:  
+   1. Mock/implement side‑car production.  
+   2. Zero‑tool‑call hydration (populate side‑car on session start).  
+   3. Wire `inference_bridge` to consume the bus.  
+   4. Hook native simulation engines.  
+   5. Automate multi‑model feedback weighting.
+
+---
+
+### CUTTING ROOM FLOOR
+- The entire **model‑by‑name roster** (Gemma, DeepSeek‑V4‑Flash, etc.) – it never resolves on this box.  
+- References to **`iWarship` and `Poncho`** as native engines – they are not Python modules.  
+- The **“adversarial_veto” direct injection path** that bypasses the Oracle – violates security policy.  
+- The claim that “Zero‑tool‑call hydration on initialization” can happen without any code – currently false.
+
+---
+
+### THE PATCH
+1. **Create a real Scout daemon**  
+   *File*: `src/skill/scout_daemon.py`  
+   *Class*: `ScoutDaemon` with methods:  
+   - `collect_state()` – gathers filesystem, env, and `governor`‑exposed metadata.  
+   - `write_sidecar()` – serializes to `sidecar.json` **via** `whorl_bus.send_sidecar()`, attaching a logical‑clock timestamp.  
+   - `run()` – scheduled via `cron`‑like async loop (e.g., `asyncio.sleep(300)`).  
+
+2. **Update priority logic** in `src/skill/inference_bridge.py` (or a new module `priority.py`):  
+   ```python
+   def resolve_state():
+       sidecar = bus.read_sidecar()
+       if not oracle.verify(sidecar):
+           sidecar = rag_fetch()   # P2
+       return sidecar
+   ```  
+   This swaps P2 before P1.
+
+3. **Map channels to arena_gladiator**  
+   *File*: `src/skill/arena_gladiator.py` – add a `weight` attribute to each participant and a helper `register_channel(name, weight)`.  
+   At startup (e.g., in `governor.__init__`), register:  
+   ```python
+   arena.register_channel('audit_log', 2)
+   arena.register_channel('reasoning_stream', 1)
+   arena.register_channel('native_consensus', 1)
+   arena.register_channel('adversarial_veto', 3)  # only governor can emit
+   ```
+
+4. **Enforce Oracle gating** – modify `inference_bridge.molt_one_shot` to call `oracle.audit_text` on any generated `code` before writing to `.boardroom_history.jsonl`. If the verdict is not “approved”, abort the write.
+
+5. **Re‑order milestones** in `PROJECT.md` (or equivalent):  
+   1. Mock/implement side‑car writer (`scout_daemon`).  
+   2. Hydration on init (populate side‑car).  
+   3. Bus‑to‑bridge integration.  
+   4. Native simulation hooks.  
+   5. Automated multi‑model weighting.
+
+Implementing the above brings the spec into alignment with the actual repository, respects the security model, and gives the proposal a concrete, testable path forward.
+[2m  [groq/openai/gpt-oss-120b] 2218→1812 tokens, 4.34s[0m
+

@@ -1,0 +1,14 @@
+Skill conflict detected: "snark-reader" from "/home/bleaknarratives/.agents/skills/snark-reader/SKILL.md" is overriding the same skill from "/home/bleaknarratives/.gemini/skills/snark-reader/SKILL.md".
+[ContextManager] Hot start calibration failed _ApiError: {"error":{"code":404,"message":"models/context-calibrator is not found for API version v1beta, or is not supported for countTokens. Call ModelService.ListModels to see the list of available models and their supported methods.","status":"NOT_FOUND"}}
+    at throwErrorIfNotOK (file:///home/bleaknarratives/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-MFLFXOVQ.js:267315:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async file:///home/bleaknarratives/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-MFLFXOVQ.js:267066:7
+    at async BaseLlmClient.countTokens (file:///home/bleaknarratives/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-MFLFXOVQ.js:307621:21)
+    at async ContextManager.performHotStartCalibration (file:///home/bleaknarratives/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-MFLFXOVQ.js:344526:31)
+    at async file:///home/bleaknarratives/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-MFLFXOVQ.js:344326:11
+    at async Promise.all (index 1)
+    at async ContextManager.renderHistory (file:///home/bleaknarratives/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-MFLFXOVQ.js:344330:5)
+    at async GeminiClient.processTurn (file:///home/bleaknarratives/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-MFLFXOVQ.js:345359:83)
+    at async GeminiClient.sendMessageStream (file:///home/bleaknarratives/.npm-global/lib/node_modules/@google/gemini-cli/bundle/chunk-MFLFXOVQ.js:345547:14) {
+  status: 404
+}

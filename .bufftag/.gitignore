@@ -1,0 +1,4 @@
+# Runtime coordination state and external rollback heads are operator-local.
+*.lock
+review-leases/
+*.head.json

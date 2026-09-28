@@ -20,7 +20,7 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-VIEWER = REPO_ROOT / "Code-City-Apocalypse" / "Code_City" / "viewer.html"
+VIEWER = REPO_ROOT / "tools" / "city.html"
 SCANNER = REPO_ROOT / "Code-City-Apocalypse" / "Code_City" / "repo_scanner.py"
 
 requires_assets = unittest.skipIf(

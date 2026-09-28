@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bleaknarratives.invalid/schemas/diff-theater.animation.v1.json",
+  "title": "Diff Theater Animation Proposal v1",
+  "description": "A declarative, proposal-only animation document derived from an untrusted diff event.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "schema_hash",
+    "compiler_version",
+    "source_diff",
+    "source_event",
+    "intent",
+    "timeline",
+    "reduced_motion",
+    "render_targets",
+    "proposal_only"
+  ],
+  "properties": {
+    "schema": {"const": "diff-theater.animation/v1"},
+    "schema_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "compiler_version": {"type": "string", "minLength": 1, "maxLength": 100},
+    "source_diff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "bytes", "text_storage"],
+      "properties": {
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "bytes": {"type": "integer", "minimum": 0, "maximum": 1048576},
+        "text_storage": {"const": "proposal_payload_only"}
+      }
+    },
+    "source_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "agent_id", "risk_level", "confidence", "line_changes", "affected_files", "dependency_order"],
+      "properties": {
+        "event_id": {"type": "string", "minLength": 1, "maxLength": 200},
+        "agent_id": {"type": "string", "minLength": 1, "maxLength": 200},
+        "risk_level": {"enum": ["low", "medium", "high", "critical"]},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "line_changes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["added", "deleted", "modified"],
+          "properties": {
+            "added": {"type": "integer", "minimum": 0, "maximum": 1000000},
+            "deleted": {"type": "integer", "minimum": 0, "maximum": 1000000},
+            "modified": {"type": "integer", "minimum": 0, "maximum": 1000000}
+          }
+        },
+        "affected_files": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "importance"],
+            "properties": {
+              "path": {"type": "string", "minLength": 1, "maxLength": 500},
+              "importance": {"type": "number", "minimum": 0, "maximum": 1}
+            }
+          }
+        },
+        "dependency_order": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {"type": "string", "minLength": 1, "maxLength": 200}
+        }
+      }
+    },
+    "intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "summary", "trust"],
+      "properties": {
+        "name": {"enum": ["calm-ribbon", "dependency-pulse", "risk-weather", "quiet-settle"]},
+        "summary": {"type": "string", "maxLength": 500},
+        "trust": {"const": "derived_from_untrusted_diff"}
+      }
+    },
+    "timeline_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "timeline": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "at_ms", "duration_ms", "kind", "lane", "intensity", "easing"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"},
+          "at_ms": {"type": "integer", "minimum": 0, "maximum": 120000},
+          "duration_ms": {"type": "integer", "minimum": 0, "maximum": 120000},
+          "kind": {"enum": ["ribbon-rise", "ribbon-fall", "nexus-pulse", "dependency-pulse", "risk-shift"]},
+          "lane": {"type": "string", "maxLength": 120},
+          "intensity": {"type": "number", "minimum": 0, "maximum": 1},
+          "easing": {"enum": ["linear", "ease-in-out", "ease-out", "ease-in", "spring"]},
+          "source_label": {"type": "string", "maxLength": 500}
+        }
+      }
+    },
+    "reduced_motion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "animation", "show_static_state", "description"],
+      "properties": {
+        "mode": {"const": "static"},
+        "animation": {"const": "none"},
+        "show_static_state": {"const": true},
+        "description": {"type": "string", "maxLength": 300}
+      }
+    },
+    "render_targets": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {"enum": ["native", "css", "tailwind"]}
+    },
+    "proposal_only": {"const": true}
+  }
+}

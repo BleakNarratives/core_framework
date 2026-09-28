@@ -1,0 +1,44 @@
+**VERDICT: DO_NOT_SHIP**
+
+---
+
+**THE 3 BEST IDEAS**
+
+1. **Proactive hydration over reactive tool-calling** — The architectural shift from "agent asks for tool" to "daemon pre-fetches state" is the right direction for latency and autonomy. The spec correctly identifies that `sidecar.json` at session open eliminates the cold-start penalty.
+
+2. **`whorl_bus` already implements the transport layer** — Filesystem-backed bus with `send_sidecar()`, atomic writes, logical clock, and dead-letter handling exists *today* (536 lines, tested). The spec’s "Interface: consumes sidecar.json" is not vaporware; the pipe is real.
+
+3. **`arena_gladiator` gives you a voting primitive with teeth** — Round-robin + ELO + Oracle-disqualification is a stronger foundation than §3’s undefined channels. The spec should build *on* this, not beside it.
+
+---
+
+**THE 3 BIGGEST PROBLEMS** (ranked)
+
+1. **`scout.py` is a 95-line stub that writes nothing** — P1 "trust local state" has *no state*. `run(depth>=2)` returns immediately; `self.sidecar_dir` is ignored. No cron, no inotify, no schedule. The entire priority hierarchy collapses because the cache is never populated.
+
+2. **§3’s model roster is fictional** — Zero of the nine named models (`Gemma`, `DeepSeek-V4-Flash`, `GPT-6-Luna`, `StepFun`, `Solar-4`, `MiMo-2.6`, `GLM-5.3`, `Ox/SageOx`, `Meta`) are reachable. `qwen` is a stub. `iWarship`/`Poncho` don’t exist as callable engines. The spec designs endpoints for infrastructure that does not exist on this box.
+
+3. **P1-before-P2 creates a poisoned-cache vulnerability** — Trusting `sidecar.json` *before* verification means a stale or malicious sidecar is acted on until something else catches it. With no TTL, no hash verification, and no mandatory re-read on mutation, the "ground truth" can be wrong indefinitely. The security posture (AGENTS.md) treats Scout docs as untrusted — this ordering violates that.
+
+---
+
+**ANSWERS**
+
+1. **Sidecar ownership** — No one writes it today. `scout.py` must become the *sole* writer on a fixed schedule (cron or inotify on watched roots) with file-locking (`fcntl`/`portalocker`) to prevent races. "Ground truth" is the wrong framing: the sidecar is a *projection* with a TTL. P5 fallback should *invalidate* the sidecar, not coexist with it — write a new sidecar with a newer logical clock, don’t leave two truths.
+
+2. **Priority hierarchy correctness** — **Wrong ordering.** P2 (verify) must gate P1 (trust). On read: verify hash/clock → if fresh, trust; if stale, re-index → then serve. Cache-first is only safe with *immutable* projections (content-addressed), which this isn’t. Flip P1/P2 or make P1 conditional on P2 passing.
+
+3. **Vote weighting** — Fold the four channels into `arena_gladiator`. Each channel = a variant; Oracle verdict = disqualifier; ELO weights emerge from win/loss history. `adversarial_veto` maps to an Oracle veto — it doesn’t "disagree," it *disqualifies*. A 4-0 `native_consensus` with a veto = 0-1 loss. No separate quorum math needed.
+
+4. **Fictional roster → capability roster** — **Redefine around capability.** The real surfaces map cleanly: `oracle.py`/`gemini -p` → *audit*; `aider --dry-run`/`opencode` → *contradict* (adversarial patch); `ox`/`codex`/`puter` → *synthesize*; `vibe`/`kilo` → *veto* (human-in-loop). Spec §3 should declare *slots* (audit/contradict/synthesize/veto) and bind installed CLIs to slots at startup. Model names are configuration, not architecture.
+
+5. **Sequencing** — The milestone order is backwards. Genuine first: **Test** (make `scout.py` write a valid `sidecar.json` on a timer). Second: **Mold** (wire `whorl_bus` → `inference_bridge` so the bridge *reads* the sidecar). Third: **Grow** (hook real simulators — `ox --persona architect` etc. — into the prediction stream). "Complete" (zero-tool-call hydration) is the *result* of the first three, not a separate step.
+
+---
+
+**CUTTING ROOM FLOOR**
+
+- **Delete §3’s named-model endpoints entirely** — They specify contracts for models that don’t exist. Replace with capability slots + CLI binding config.
+- **Delete `iWarship`/`Poncho` references in §2 P3/P4** — No such modules. If simulation engines are needed, spec them as *interfaces* (`SimulationEngine.run(scenario) → PredictionStream`) and stub them; don’t name imaginary binaries.
+- **Delete "Zero-Bloat: Prompt already hydrated at IDE/Session open" as a guarantee** — It’s an outcome, not a mechanism. The mechanism is `scout.py` + `whorl_bus` + TTL. Say that.
+- **Delete P5 "Scraping/Agg/Lur

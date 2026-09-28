@@ -21,6 +21,13 @@ default_model = "auto"
 #   "auto"            -> walk the live provider chain
 #   "provider::model" -> pin one provider (path-routed by the gateway)
 [models]
+# >>> loadout presets (bin/loadout) — do not hand-edit >>>
+# Regenerate: bin/loadout emit
+operator = "groq::openai/gpt-oss-120b"
+operator_secondary = "auto"
+recruiter = "groq::openai/gpt-oss-120b"
+recruiter_secondary = "auto"
+# <<< loadout presets <<<
 default = "auto"
 auto = "auto"
 fast = "mistral::mistral-small-latest"

@@ -1,0 +1,69 @@
+**VERDICT**: **SHIP_WITH_CHANGES**  
+
+The core idea of a proactive “Scout Daemon” is valuable, but the current specification is built on non‑existent components, vague ownership semantics, and a risky priority ordering. It can ship once the missing adapters and governance constraints are concretized.
+
+---
+
+**THE 3 BEST IDEAS**
+
+1. **Proactive hydration** – Prefetching state at session start avoids latency spikes and keeps downstream agents responsive.  
+2. **Side‑car JSON as a shared cache** – A lightweight, structured file (`sidecar.json`) is a sensible single source of truth for quick look‑ups.  
+3. **Explicit multi‑model feedback channels** – Distinguishing audit, reasoning, synthesis, and veto streams mirrors real‑world ensemble reasoning and gives a clear extension point for future models.
+
+---
+
+**THE 3 BIGGEST PROBLEMS** (most severe first)
+
+1. **Missing implementation of the Scout daemon** – `src/skill/scout.py` never writes `sidecar.json`, never schedules fetches, and its constructor discards `sidecar_dir`. All downstream stages (P1‑P5) therefore operate on a phantom cache.  
+2. **Cache‑first priority (P1 before P2) is insecure** – Trusting a potentially stale or poisoned side‑car before verification enables an attacker to inject malicious state that will be accepted until a later, unrelated trigger rewrites it.  
+3. **Fictional model roster and undefined adapters** – §§3‑4 reference models (`Gemma`, `iWarship`, `Poncho`, etc.) and APIs that are not present in the repository. This makes the spec unusable and masks the real, limited set of agents (`ox`, `aider`, `kilo`, `vibe`, etc.) that can be invoked.
+
+---
+
+**ANSWERS**
+
+1. **Sidecar ownership** – The only component that could write `sidecar.json` is the Scout daemon itself. Since `scout.py` lacks any write logic, no writer exists today. A correct design would have the daemon open the file on start, acquire an exclusive file lock, and overwrite it atomically on each scheduled fetch (e.g., every N minutes). If two daemon instances race, the lock plus a version counter in the JSON would guarantee that the later write wins, and any stale copy is discarded. “Ground truth” is only valid while the side‑car is fresh; the fallback (P5) must be treated as a recovery path, not a competing source of truth.
+
+2. **Priority hierarchy correctness** – Placing P1 (cache trust) before P2 (verification) is unsafe. A poisoned cache would be propagated to all downstream agents until a verification run happens, which may be delayed or never triggered if the side‑car never changes. A safer order is **P2 → P1**: verify the cached state against an external source on every access, only falling back to the cache if verification succeeds. This prevents silent acceptance of corrupted data.
+
+3. **Vote weighting** – `arena_gladiator` already provides a round‑robin ELO system for pairwise model comparison. The four channels in §3 should not be treated as independent votes; instead, each channel should emit a **score** (e.g., confidence, utility) that is fed into the gladiator’s ELO update. `adversarial_veto` must be a hard veto: if any veto is issued, the current decision is discarded regardless of a 4‑0 `native_consensus`. This prevents a single compromised model from overruling the collective.
+
+4. **What replaces the fictional roster** – Redefine §3 around **capabilities**, not model names:  
+   - **Audit** – any model that can run `oracle.audit_text` (`ox`, `aider`, `kilo`).  
+   - **Contradiction** – models capable of generating counter‑arguments (`gemini -p`, `puter`).  
+   - **Synthesis** – models that can aggregate inputs (`vibe`, `ox` with `--free-models`).  
+   - **Veto** – privileged models with higher trust level (`meta`‑like guard, can be a “super‑oracle” wrapper).  
+   This aligns the spec with the actual binary shims and avoids dead references.
+
+5. **Sequencing** – The true first milestone is **building the Scout daemon**: implement periodic side‑car writes and atomic update logic. Only after a reliable side‑car exists can the “Mold: integrate feed consumption in `inference_bridge`” proceed. Consequently the order should be:  
+   1. Implement Scout daemon (write side‑car).  
+   2. Wire `inference_bridge` to consume the side‑car via `whorl_bus`.  
+   3. Hook native simulation stubs (`poncho_lineup.sh` → Python wrapper) into the prediction stream.  
+   4. Add multi‑model feedback weighting.  
+   5. Achieve zero‑tool‑call hydration once all prior plumbing is verified.
+
+---
+
+**CUTTING ROOM FLOOR**
+
+- The entire **model‑name list** in §3 (Gemma, DeepSeek‑V4‑Flash, GPT‑6‑Luna, etc.) – these are never installed and only clutter the spec.  
+- The **“iWarship / Poncho”** references – no Python module exists; keep only the shell script placeholder until a proper wrapper is written.  
+- The **“Zero‑tool‑call hydration on initialization”** as a final milestone – it should be the *first* milestone, not the last.
+
+---
+
+**THE PATCH**
+
+1. **`src/skill/scout.py`** – Add a `run_loop` method that:
+   - Acquires an exclusive lock on `self.sidecar_dir/sidecar.json`.
+   - Calls a new helper `self.fetch_state()` (to be implemented) that gathers current context (e.g., list of available agents, latest `whorl_bus` messages).
+   - Writes the JSON atomically (write to temp file then rename).
+   - Sleeps for a configurable interval (`self.interval`, default 300 s) and repeats until `depth` limit is reached.
+
+2. **`src/skill/inference_bridge.py`** – Modify `molt_one_shot` to first read `sidecar.json` via `whorl_bus.read(sidecar_path)`; if the file is missing or its `version` is older than the last verification timestamp, invoke `scout.run()` to refresh it before proceeding.
+
+3. **`src/skill/arena_gladiator.py`** – Extend `combat` to accept a *score payload* from each channel (audit, reasoning, synthesis, veto). If `veto` is true, short‑circuit to a loss for the current proposal regardless of other scores. Update ELO calculations to incorporate these weighted scores.
+
+4. **Documentation** – Update `AGENTS.md` §1 “Source of truth” to reflect that `sidecar.json` is only authoritative *after* a successful verification step, and that any write must pass through the Oracle gate (`governor.raise` + `oracle.audit_text`) before being persisted.
+
+Implementing these three code changes will close the functional gap, enforce a safe priority order, and make the multi‑model feedback loop concrete. After the patches, add unit tests for side‑car locking, verification fallback, and veto handling, then the specification can be shipped.

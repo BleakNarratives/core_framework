@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Bufftag // Live Provenance Terminal</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to terminal</a>
+    <header class="topbar">
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true">B</span>
+        <div>
+          <p class="eyebrow">LOCAL PROVENANCE CONTROL</p>
+          <h1>BUFFTAG <span>// LIVE</span></h1>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <span id="connection-pill" class="status-pill pending">CONNECTING</span>
+        <button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle color theme">
+          <span aria-hidden="true">◐</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main" class="terminal-shell">
+      <section class="hero-panel" aria-labelledby="mission-title">
+        <div>
+          <p class="eyebrow">ASSERTION ≠ AUTHENTICITY</p>
+          <h2 id="mission-title">Prove the bytes. Keep the claims honest.</h2>
+          <p class="hero-copy">
+            Live filesystem checks, strict headers, and content-bound receipts.
+            Nothing on this screen is a canned success state.
+          </p>
+        </div>
+        <div class="hero-status" aria-live="polite">
+          <span class="pulse" aria-hidden="true"></span>
+          <div>
+            <strong id="operation-label">BOOTING LOCAL API</strong>
+            <small id="operation-detail">Waiting for server capability handshake.</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="control-strip" aria-label="Verification controls">
+        <label class="field compact">
+          <span>Workspace scope</span>
+          <input id="scope" value="." autocomplete="off" spellcheck="false" />
+          <small>Relative to the server workspace; escape paths are denied.</small>
+        </label>
+        <label class="toggle compact">
+          <input id="require-complete" type="checkbox" />
+          <span>Require complete coverage</span>
+        </label>
+        <label class="toggle compact">
+          <input id="auto-monitor" type="checkbox" checked />
+          <span>Live monitor</span>
+        </label>
+        <label class="field compact interval-field">
+          <span>Poll interval</span>
+          <select id="poll-interval">
+            <option value="5">5 seconds</option>
+            <option value="15" selected>15 seconds</option>
+            <option value="60">60 seconds</option>
+          </select>
+        </label>
+        <button id="verify-button" class="button primary" type="button">RUN LIVE VERIFY</button>
+      </section>
+
+      <section class="metrics" aria-label="Verification summary">
+        <article class="metric-card">
+          <span>FILES SCANNED</span>
+          <strong id="metric-files">—</strong>
+          <small>Awaiting live scan</small>
+        </article>
+        <article class="metric-card">
+          <span>RECEIPTS</span>
+          <strong id="metric-receipts">—</strong>
+          <small>Hash-chain records</small>
+        </article>
+        <article class="metric-card danger">
+          <span>ERRORS</span>
+          <strong id="metric-errors">—</strong>
+          <small>Fail closed</small>
+        </article>
+        <article class="metric-card warning">
+          <span>WARNINGS</span>
+          <strong id="metric-warnings">—</strong>
+          <small>Visible, never rounded up</small>
+        </article>
+      </section>
+
+      <div class="workspace-grid">
+        <section class="panel findings-panel" aria-labelledby="findings-title">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">LIVE AUDIT SURFACE</p>
+              <h2 id="findings-title">Verification findings</h2>
+            </div>
+            <span id="verdict-badge" class="verdict neutral">NO REPORT</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Severity</th>
+                  <th scope="col">Code</th>
+                  <th scope="col">Path</th>
+                  <th scope="col">Evidence</th>
+                </tr>
+              </thead>
+              <tbody id="findings-body">
+                <tr class="empty-row">
+                  <td colspan="4">Run a verification pass to populate this table.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <aside class="side-stack">
+          <section class="panel" aria-labelledby="capability-title">
+            <div class="panel-heading compact-heading">
+              <div>
+                <p class="eyebrow">SERVER CAPABILITIES</p>
+                <h2 id="capability-title">Trust boundary</h2>
+              </div>
+            </div>
+            <dl class="capability-list">
+              <div><dt>Workspace</dt><dd id="capability-workspace">—</dd></div>
+              <div><dt>Write policy</dt><dd id="capability-write">—</dd></div>
+              <div><dt>Receipt signing</dt><dd id="capability-signing">—</dd></div>
+              <div><dt>Transport</dt><dd>127.0.0.1 / same-origin token</dd></div>
+            </dl>
+          </section>
+
+          <section class="panel event-panel" aria-labelledby="events-title">
+            <div class="panel-heading compact-heading">
+              <div>
+                <p class="eyebrow">SESSION RECEIPT</p>
+                <h2 id="events-title">Operation stream</h2>
+              </div>
+              <button id="clear-events" class="text-button" type="button">CLEAR</button>
+            </div>
+            <ol id="event-stream" class="event-stream" aria-live="polite"></ol>
+          </section>
+        </aside>
+      </div>
+
+      <section class="panel deploy-panel" aria-labelledby="deploy-title">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">CONTROLLED MUTATION</p>
+            <h2 id="deploy-title">Propose → review → one-shot stamp</h2>
+          </div>
+          <span id="write-lock" class="write-lock">WRITE GATE</span>
+        </div>
+
+        <div class="deploy-grid">
+          <form id="proposal-form" class="proposal-form">
+            <label class="field">
+              <span>Relative file path</span>
+              <input name="file" required autocomplete="off" spellcheck="false" placeholder="path/to/file.py" />
+            </label>
+            <label class="field">
+              <span>Origin</span>
+              <input name="origin" required autocomplete="off" placeholder="workstation-01" />
+            </label>
+            <label class="field">
+              <span>Pillar</span>
+              <input name="pillar" required autocomplete="off" placeholder="project-name" />
+            </label>
+            <label class="field wide">
+              <span>Declared role</span>
+              <input name="role" required maxlength="500" placeholder="One-line factual role" />
+            </label>
+            <label class="field">
+              <span>Declared author</span>
+              <input name="author" required autocomplete="off" placeholder="human or agent identifier" />
+            </label>
+            <label class="field">
+              <span>Dependencies</span>
+              <input name="deps" value="none" autocomplete="off" />
+            </label>
+            <label class="toggle signed-toggle">
+              <input id="require-signed" name="require_signed" type="checkbox" />
+              <span>Require server-side HMAC receipt</span>
+            </label>
+            <div class="form-actions">
+              <button id="preview-button" class="button secondary" type="submit">GENERATE PROPOSAL</button>
+              <button id="stamp-button" class="button danger-button" type="button" disabled>STAMP FILE</button>
+            </div>
+          </form>
+
+          <div class="review-column">
+            <div class="proposal-output">
+              <div class="output-heading">
+                <span>UNTRUSTED PROPOSAL</span>
+                <span id="proposal-path">NO FILE SELECTED</span>
+              </div>
+              <pre id="proposal-json">Preview writes nothing. Origin and author remain unverified until you declare them.</pre>
+            </div>
+            <label class="field confirmation-field">
+              <span>Exact mutation confirmation</span>
+              <input id="confirmation" autocomplete="off" spellcheck="false" placeholder="STAMP path/to/file.py" />
+              <small id="confirmation-help">Generate a proposal before the write gate opens.</small>
+            </label>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Bufftag local terminal · no model calls · no shell execution</span>
+      <span>Headers are assertions. Receipts bind content. HMAC authenticates records.</span>
+    </footer>
+  </body>
+</html>

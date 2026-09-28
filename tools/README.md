@@ -135,6 +135,13 @@ systemctl --user disable --now airlock-scan.timer
 
 ---
 
+## Code City visualizer
+
+Open `tools/city.html` in a browser, generate data with
+`python Code-City-Apocalypse/Code_City/repo_scanner.py . -o city.json`, then
+select or drag `city.json` into the page. It is standalone (no dependencies or
+server required); when hosted beside `city.json`, it loads that file directly.
+
 ## Adding capabilities
 
 Do **not** create a sibling tool. Add a subcommand, reuse the index, and
@@ -164,4 +171,15 @@ See `tools/rescue/README.md`, `tools/rescue/drift_reconcile.py`, `~/MRD_A9_RESCU
 CSS draw-in (`@keyframes ribbon-draw`) works with no JS; `ribbon.js` measures `getTotalLength()` and sets `--len/--dur/--easing` so loops stay exact. `validate.py` is the recompilation gate — zero deps, checks the v1 contract.
 
 See `src/ui/ribbon/demo.html` (file:// works).
+
+---
+
+## 2026-09-22 session — new tools
+
+### `tools/taps/` — the burial detail for a broken streak
+A streak of 3 in `src/skill/gambit.py` buys 48h instead of 24h and nothing else, and when the count resets the record shows a bare `streak: 0` with no note about what stood there. `taps.py` writes the missing note: an append-only obituary, a gambit-shaped tombstone, and a 21-ribbon salute page.
+
+It reads the instar file itself instead of loading `InstarEngine`, because `_load` persists a fresh state file when it finds none — inspecting a grave with the engine would plant a fake one. `--gambit-store` is a read; taps never writes there, and the suite asserts the file hash is unchanged.
+
+See `tools/taps/README.md` · tests: `tests/test_taps_offline.py`
 

@@ -25,7 +25,7 @@ import time
 from collections import defaultdict
 from pathlib import Path
 
-from pheromone_store import PheromoneStore
+from tools.provenance.pheromone_store import PheromoneStore
 
 TODO_PATTERN = re.compile(r"#\s*(TODO|FIXME|XXX)[:\s](.*)", re.IGNORECASE)
 STALE_DAYS = 180

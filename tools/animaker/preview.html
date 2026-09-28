@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Animaker · Diff Theater Preview</title>
+<style>
+  :root { color-scheme: dark; --bg:#080b16; --panel:#11182a; --line:#2b3c60; --text:#edf3ff; --muted:#9aa9c7; --add:#ffd36a; --del:#65d9ff; --nexus:#c79bff; --warn:#ff9d73; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:radial-gradient(circle at 70% 10%,#18264a 0,#080b16 48%); color:var(--text); font:15px/1.5 system-ui,sans-serif; }
+  header, main { width:min(1100px,calc(100% - 2rem)); margin:auto; }
+  header { padding:2rem 0 1rem; display:flex; justify-content:space-between; gap:1rem; align-items:end; }
+  h1 { margin:0; font-size:clamp(1.5rem,4vw,2.6rem); }
+  p { color:var(--muted); }
+  .panel { background:color-mix(in srgb,var(--panel) 92%,transparent); border:1px solid var(--line); border-radius:16px; padding:1rem; margin:1rem 0; }
+  .controls { display:flex; flex-wrap:wrap; gap:.7rem; align-items:center; }
+  button, input { font:inherit; }
+  button { cursor:pointer; color:var(--text); background:#1b2b4d; border:1px solid #486391; border-radius:9px; padding:.55rem .8rem; }
+  button[aria-pressed="true"] { background:#31558d; border-color:#9cc4ff; }
+  input[type=file] { max-width:100%; }
+  #stage { min-height:330px; position:relative; overflow:hidden; border:1px solid #24385d; border-radius:12px; background:linear-gradient(180deg,#0b1225,#0a0e1c); }
+  .lane { position:absolute; left:8%; right:8%; height:3px; transform-origin:left; border-radius:9px; opacity:.8; }
+  .lane.add { top:38%; background:linear-gradient(90deg,var(--add),#fff1b8); animation:rise 1.2s ease-out both; }
+  .lane.del { top:62%; background:linear-gradient(90deg,var(--del),#bdefff); animation:fall 1.2s ease-in-out both; }
+  .lane.dep { top:50%; background:linear-gradient(90deg,var(--nexus),#f0dcff); animation:pulse 1.4s ease-in-out infinite alternate; }
+  .lane.risk { top:50%; background:linear-gradient(90deg,var(--warn),#ffd1bd); animation:risk 1.1s ease-out both; }
+  @keyframes rise { from { transform:translateY(24px) scaleX(.2); opacity:0; } to { transform:none; opacity:.8; } }
+  @keyframes fall { from { transform:translateY(-24px) scaleX(.2); opacity:0; } to { transform:none; opacity:.8; } }
+  @keyframes pulse { from { transform:scaleX(.35); opacity:.35; } to { transform:scaleX(.95); opacity:.9; } }
+  @keyframes risk { from { transform:translateX(-18px); filter:blur(5px); } to { transform:none; filter:none; } }
+  .summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:.7rem; }
+  .metric { border:1px solid var(--line); border-radius:10px; padding:.7rem; background:#0c1426; }
+  .metric b { display:block; font-size:1.35rem; }
+  .timeline { width:100%; border-collapse:collapse; }
+  .timeline td,.timeline th { border-bottom:1px solid #203250; padding:.45rem; text-align:left; }
+  .hash { overflow-wrap:anywhere; color:var(--muted); font:12px ui-monospace,monospace; }
+  .notice { color:#ffd8a8; }
+  @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; } }
+</style>
+</head>
+<body>
+<header><div><p class="eyebrow">DIFF THEATER / ANIMAKER</p><h1>Animation proposal preview</h1><p>Declarative, offline, and proposal-only. The file is a visual sketch, not an applied patch.</p></div><strong id="verdict">WAITING</strong></header>
+<main>
+  <section class="panel controls">
+    <label>Load <code>diff-theater.animation/v1</code> JSON <input id="file" type="file" accept="application/json"></label>
+    <button id="sample" type="button">Load sample</button>
+    <button data-target="native" aria-pressed="true" type="button">Native</button>
+    <button data-target="css" aria-pressed="false" type="button">CSS</button>
+    <button data-target="tailwind" aria-pressed="false" type="button">Tailwind</button>
+    <button id="replay" type="button">Replay</button>
+  </section>
+  <section id="stage" class="panel" aria-label="Animation preview"><p id="empty">Load a proposal or choose the sample.</p></section>
+  <section class="panel summary" aria-label="Proposal summary">
+    <div class="metric"><span>Schema hash</span><b id="schema-hash">—</b></div>
+    <div class="metric"><span>Timeline hash</span><b id="timeline-hash">—</b></div>
+    <div class="metric"><span>Compiler</span><b id="compiler">—</b></div>
+    <div class="metric"><span>Reduced motion</span><b id="reduced">—</b></div>
+  </section>
+  <section class="panel"><h2>Timeline AST</h2><table class="timeline"><thead><tr><th>At</th><th>Kind</th><th>Lane</th><th>Intensity</th></tr></thead><tbody id="rows"></tbody></table><p id="proposal-note" class="notice"></p></section>
+</main>
+<script>
+(() => {
+  const state = { proposal:null, target:'native' };
+  const $ = id => document.getElementById(id);
+  const sample = {
+    schema:'diff-theater.animation/v1', schema_hash:'0'.repeat(64), compiler_version:'diff-theater.compiler/1.0.0',
+    source_diff:{sha256:'1'.repeat(64),bytes:42,text_storage:'proposal_payload_only'},
+    source_event:{event_id:'sample',agent_id:'offline-demo',risk_level:'medium',confidence:.72,line_changes:{added:18,deleted:7,modified:3},affected_files:[{path:'src/demo.ts',importance:.8}],dependency_order:['source','compiler','preview']},
+    intent:{name:'dependency-pulse',summary:'A sample dependency pulse.',trust:'derived_from_untrusted_diff'},
+    timeline:[{id:'additions',at_ms:0,duration_ms:800,kind:'ribbon-rise',lane:'additions',intensity:.7,easing:'ease-out'},{id:'deletions',at_ms:120,duration_ms:800,kind:'ribbon-fall',lane:'deletions',intensity:.5,easing:'ease-in-out'},{id:'dependency-1',at_ms:400,duration_ms:600,kind:'dependency-pulse',lane:'source',intensity:.6,easing:'spring'},{id:'dependency-2',at_ms:580,duration_ms:600,kind:'dependency-pulse',lane:'compiler',intensity:.6,easing:'spring'}],
+    timeline_sha256:'2'.repeat(64),reduced_motion:{mode:'static',animation:'none',show_static_state:true,description:'Static summary.'},render_targets:['native','css','tailwind'],proposal_only:true
+  };
+  function valid(value) {
+    const hex = /^[0-9a-f]{64}$/;
+    const entryOk = e => e && typeof e.id === 'string' && /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(e.id) && Number.isFinite(e.at_ms) && e.at_ms >= 0 && Number.isFinite(e.duration_ms) && e.duration_ms > 0 && Number.isFinite(e.intensity) && e.intensity >= 0 && e.intensity <= 1 && typeof e.kind === 'string' && ['ribbon-rise','ribbon-fall','nexus-pulse','dependency-pulse','risk-shift'].includes(e.kind) && typeof e.lane === 'string' && e.lane.length <= 200;
+    return value && value.schema === 'diff-theater.animation/v1' && value.proposal_only === true && hex.test(value.schema_hash || '') && hex.test(value.timeline_sha256 || '') && Array.isArray(value.timeline) && value.timeline.length > 0 && value.timeline.length <= 64 && value.timeline.every(entryOk) && value.reduced_motion?.mode === 'static';
+  }
+  function render() {
+    const p = state.proposal; if (!p) return;
+    $('verdict').textContent = p.proposal_only ? 'PROPOSAL ONLY' : 'INVALID';
+    $('schema-hash').textContent = (p.schema_hash || '—').slice(0,12) + '…';
+    $('timeline-hash').textContent = (p.timeline_sha256 || '—').slice(0,12) + '…';
+    $('compiler').textContent = p.compiler_version || '—';
+    $('reduced').textContent = p.reduced_motion?.show_static_state ? 'STATIC' : 'MISSING';
+    $('rows').replaceChildren(...p.timeline.map(e => { const tr=document.createElement('tr'); for (const v of [`${e.at_ms}ms`,e.kind,e.lane,String(e.intensity)]) { const td=document.createElement('td'); td.textContent=v; tr.append(td); } return tr; }));
+    $('proposal-note').textContent = `Source diff: ${p.source_diff?.sha256 || 'unknown'} · target: ${state.target}`;
+    draw();
+  }
+  function draw() { const stage=$('stage'); stage.replaceChildren(); if (!state.proposal) return; const empty=$('empty'); if (empty) empty.remove(); for (const e of state.proposal.timeline) { const lane=document.createElement('i'); lane.className='lane '+(e.kind.includes('rise')?'add':e.kind.includes('fall')?'del':e.kind==='risk-shift'?'risk':'dep'); lane.style.top=(28+(state.proposal.timeline.indexOf(e)%4)*14)+'%'; lane.style.animationDelay=e.at_ms+'ms'; lane.title=`${e.kind}: ${e.lane}`; stage.append(lane); } }
+  function load(value) { if (!valid(value)) { $('verdict').textContent='INVALID'; return; } state.proposal=value; render(); }
+  $('file').addEventListener('change', async e => { const f=e.target.files[0]; if (!f) return; try { load(JSON.parse(await f.text())); } catch { $('verdict').textContent='INVALID JSON'; } });
+  $('sample').addEventListener('click',()=>load(sample));
+  $('replay').addEventListener('click',draw);
+  document.querySelectorAll('[data-target]').forEach(b=>b.addEventListener('click',()=>{ state.target=b.dataset.target; document.querySelectorAll('[data-target]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); draw(); }));
+})();
+</script>
+</body>
+</html>

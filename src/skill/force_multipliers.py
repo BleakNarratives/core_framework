@@ -178,6 +178,10 @@ def fm_preflight_gate(ctx: Dict[str, Any]):
         # audit the hydrated text (RAG portion is inside)
         verdict = oracle.audit_text(hydrated)
         ctx["_preflight_verdict"] = verdict.to_dict()
+        
+        # BUS EMIT
+        bus.emit_sync("preflight_gate", "pre_inject", "audit_complete", {"verdict": verdict.verdict, "skill": skill})
+
         if verdict.verdict == "block":
             # redact injection indicators, do not pass hydrated to model
             ctx["_preflight_blocked"] = True
@@ -187,6 +191,7 @@ def fm_preflight_gate(ctx: Dict[str, Any]):
             ctx["_hydrate_chunk_out"] = ctx["hydrated"]
     except Exception as e:
         ctx.setdefault("_fm_errors", []).append(f"preflight_gate: {e}")
+        bus.emit_sync("preflight_gate", "pre_inject", "error", {"error": str(e)})
     return None
 
 

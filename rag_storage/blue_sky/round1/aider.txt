@@ -1,0 +1,35 @@
+────────────────────────────────────────────────────────────────────────────────
+Warning for openai/default: Unknown context window size and costs, using sane 
+defaults.
+You can skip this check with --no-show-model-warnings
+
+https://aider.chat/docs/llms/warnings.html
+
+Error: Read-only file 
+/home/bleaknarratives/rag_storage/blue_sky/round1/projects/ScoutEmpire/cli/SKILL
+_HINT.md does not exist. Skipping.
+Aider v0.86.2
+Model: openai/default with whole edit format
+Git repo: none
+Repo-map: disabled
+Note: in-chat filenames are always relative to the git working dir, not the 
+current working dir.
+Cur working dir: /home/bleaknarratives/rag_storage/blue_sky/round1
+Git working dir: /home/bleaknarratives
+
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 0.2 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 0.5 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 1.0 seconds...
+litellm.InternalServerError: InternalServerError: OpenAIException - Connection 
+error.
+The API provider's servers are down or overloaded.
+Retrying in 2.0 seconds...

@@ -324,3 +324,140 @@ class Governor:
     # For tests: inject fixed time
     def _set_active_for_test(self, sid: str) -> None:
         self._active_session = sid
+
+
+# ── Dispatch guards ────────────────────────────────────────────────────
+# Salvaged from an external "Cub-Apex" proposal and rebuilt to repo
+# invariants: bounded memory, every verdict audited, nothing suppressed
+# silently. See docs/DISPATCH_GUARDS_SPEC.md.
+
+
+def _audit_event(audit_path: Path, event: str, data: Dict[str, Any]) -> None:
+    entry = {"ts": time.time(), "event": event, **data}
+    try:
+        audit_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(audit_path, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception:
+        pass  # audit is best-effort, matching Governor._audit
+
+
+class DuplicateCallGuard:
+    """Bounded duplicate-call detector for tool/dispatch loops.
+
+    Trust boundary: this is a signal gate, not a silent filter. Every flagged or
+    blocked verdict is written to the audit log. The default action_on_loop is
+    "flag" (pass the call through, record the verdict); "block" is opt-in for
+    callers that own their retry semantics, and a blocked attempt is still
+    audited. Memory is bounded twice: per-signature events expire after
+    window_s, and the number of tracked signatures is capped.
+
+    Callers whose repeats are legitimate (polling, retry after a state change)
+    must vary the signature — include the attempt or state in it — so the guard
+    sees distinct work rather than a loop.
+    """
+
+    MAX_SIGNATURES = 256
+
+    def __init__(self, window_s: float = 60.0, max_duplicates: int = 1,
+                 action_on_loop: str = "flag",
+                 audit_path: str = "rag_storage/governor_audit.jsonl",
+                 clock=None):
+        if action_on_loop not in ("flag", "block"):
+            raise ValueError("action_on_loop must be 'flag' or 'block'")
+        if window_s <= 0 or max_duplicates < 0:
+            raise ValueError("window_s must be > 0 and max_duplicates >= 0")
+        self.window_s = float(window_s)
+        self.max_duplicates = int(max_duplicates)
+        self.action_on_loop = action_on_loop
+        self.audit_path = Path(audit_path)
+        self._clock = clock or time.time
+        self._events: Dict[str, List[float]] = {}
+
+    def check(self, signature: str) -> Dict[str, Any]:
+        """Record one call attempt and return a verdict.
+
+        Verdict: {signature, count, duplicate, exceeded, action, window_s}.
+        action: "allow" (first sight) | "flag" (duplicate seen) | "block"
+        (loop beyond tolerance, only when action_on_loop="block").
+        """
+        now = float(self._clock())
+        window = [t for t in self._events.get(signature, []) if now - t <= self.window_s]
+        window.append(now)
+        # Refresh insertion order so hot signatures are evicted last.
+        self._events.pop(signature, None)
+        self._events[signature] = window
+        while len(self._events) > self.MAX_SIGNATURES:
+            self._events.pop(next(iter(self._events)))
+        count = len(window)
+        if count == 1:
+            return {"signature": signature[:16], "count": 1, "duplicate": False,
+                    "exceeded": False, "action": "allow"}
+        exceeded = count > 1 + self.max_duplicates
+        action = "block" if (exceeded and self.action_on_loop == "block") else "flag"
+        verdict = {"signature": signature[:16], "count": count, "duplicate": True,
+                   "exceeded": exceeded, "action": action, "window_s": self.window_s}
+        _audit_event(self.audit_path,
+                     "duplicate_call_blocked" if action == "block" else "duplicate_call_flagged",
+                     verdict)
+        return verdict
+
+    def tracked_signatures(self) -> int:
+        return len(self._events)
+
+
+class SingleCheckRule:
+    """"Rule of Single Check" — one meaningful verification per subject state.
+
+    Re-running the identical check against an identical subject cannot change
+    the answer; that is loop waste, not verification. The subject_digest scopes
+    the check to the state being verified: a changed digest (code modified)
+    legitimately re-opens it. Flagged rechecks are audited and reported — the
+    rule never pretends a skipped check ran, and never refuses a human asking
+    for a re-run (AGENTS.md §3: the user is the authority); it makes the
+    repetition visible in the audit trail instead.
+    """
+
+    MAX_TRACKED = 256
+
+    def __init__(self, ttl_s: float = 86400.0,
+                 audit_path: str = "rag_storage/governor_audit.jsonl",
+                 clock=None):
+        if ttl_s <= 0:
+            raise ValueError("ttl_s must be > 0")
+        self.ttl_s = float(ttl_s)
+        self.audit_path = Path(audit_path)
+        self._clock = clock or time.time
+        # check_id -> (subject state, last run ts); bounded below.
+        self._seen: Dict[str, Any] = {}
+
+    def should_run(self, check_id: str, subject_digest: str = "") -> Dict[str, Any]:
+        """Return {run, reason} and record the attempt.
+
+        reason: "first_check" | "subject_changed" | "ttl_elapsed" (run: true)
+        or "identical_check_on_identical_state" (run: false, audited).
+        """
+        state = subject_digest or "unscoped"
+        now = float(self._clock())
+        entry = self._seen.get(check_id)
+        if entry is not None:
+            last_state, last_ts = entry
+            if last_state == state and now - last_ts <= self.ttl_s:
+                verdict = {"check_id": check_id, "subject_digest": state[:16],
+                           "run": False, "reason": "identical_check_on_identical_state"}
+                _audit_event(self.audit_path, "recheck_flagged", verdict)
+                return verdict
+            reason = "subject_changed" if last_state != state else "ttl_elapsed"
+        else:
+            reason = "first_check"
+        self._seen.pop(check_id, None)
+        self._seen[check_id] = (state, now)
+        while len(self._seen) > self.MAX_TRACKED:
+            self._seen.pop(next(iter(self._seen)))
+        return {"check_id": check_id, "subject_digest": state[:16],
+                "run": True, "reason": reason}
+
+    def record_result(self, check_id: str, subject_digest: str = "", result: str = "") -> None:
+        _audit_event(self.audit_path, "verification_check",
+                     {"check_id": check_id, "subject_digest": (subject_digest or "unscoped")[:16],
+                      "result": str(result)[:200]})

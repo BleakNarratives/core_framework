@@ -20,3 +20,12 @@
 - Meboard wholly retained: Cumb.Pivot + SCRYING + TILT + Ring (glass/forge/air), REVEAL/NORMAL + stenohump mineUPINthemiddle + Visor GHOST wholly.
 - Prove: `py_compile: PASS`, `meboard_ps.py touch 82 70 --context tell`→s S0.79 C0.50, `space m --dt_ms 300` rewarded +1.0 conf0.56, `backspace m 92 72 --dt_ms 250` punished hard -1.5 μ→252,107 drift12 cov learn, `targeted , m 92 72` targeted_corrected (wrong 291/133 conf0.40, correct heavy boost, α 0.45), RL log 5 rows healthy, `tsc --noEmit PASS`, `vite build 45 modules 193KB (62KB gzip) ✓ in 20s`. No overwrites; stenohump + PS wholly.
 - Motivation: Paper pasted twice by you (v2r hate noted — Beaver verbose lol). One step ahead of you (pre-warp velocity+scry) + ahead of model (learnable α watches own bias). Private perfect, public poison — cloak stays ghost, never ships as template.
+
+
+## 2026-09-23 — Amend (Buffy) — tools/ + tools/provenance + docs [APPEND-ONLY]
+
+- New (docs only, no code): `tools/AMEND_NESTING_DUPES_ROADMAP.md` (the ordering rule — `humane_cannibal.py:170-172` counts a DNA_TAG as a *winner* reason, so tag before merge; prior plan `.archive_cannibal_dryrun_20260911_0037.json` already picked `provenance/dna_tag.py` over `legacy/dna_tag_v0.py` and stopped at dry run; `--out` keeps the manifest off the tree), `tools/provenance/AMEND_DNA_TAG_WIRING.md` (what it actually takes to run the tagger unattended), `docs/AMEND_SUBMISSION_TOYS_TOOLS_GATES.md` (white-paper submission).
+- Corrected: an edit adding `--origin` to `dna_tag.py` was written, then judged unnecessary (batch `--author` binds on `--file` only; `~/.dna_tag_origin` already reads `Crostini-Chromebook`, so nothing needed changing on this box) and reverted with `git checkout --`. **Tree unmodified.**
+- Found: canon file count disagrees between `tools/README.md` (65,019) and `tools/ROADMAP.md` (30,357). One is stale — do not plan nesting work off either until regenerated (`AGENTS.md` §1).
+- Prove: `git diff -- tools/provenance/dna_tag.py` empty; `git status --short` shows only the three new docs plus pre-existing edits; `git check-ignore -v` proved a root-level doc is ignored by `.gitignore:7` (`/*` + allowlist), which is why the submission landed in `docs/`.
+- Not done: `ariadne index --deep` / `dupes` and the cannibal dry run — the index writes `~/.local/share/ariadne/index.db`, outside this repo, so it was queued in the roadmap rather than run unattended.

@@ -1,3 +1,38 @@
+# model / weak-model/openai-api-base are MANAGED by bin/loadout (loadout 'recruiter'). Do not hand-edit; `bin/loadout emit` rewrites them.
+#
+# The class pins 'groq::openai/gpt-oss-120b', but that pin CANNOT be expressed
+# here: litellm parses and strips the vendor prefix before the request
+# is built, so no spelling of the model id survives the trip to the
+# gateway. `openai/default` hands model choice back to the gateway,
+# which resolves it per pool with rotation and fallthrough. See
+# bin/loadout aider_target() for the three spellings that all 404.
+
+model: openai/default
+weak-model: openai/default
+openai-api-base: http://127.0.0.1:7071/v1/auto
+openai-api-key: local-gateway
+
+#
+# These are litellm model strings, not gateway strings. The class pins
+# 'groq::openai/gpt-oss-120b' in the registry, but `provider::` is the gateway's own
+# syntax and litellm rejects it — so the pool is pinned in the base
+# URL path and the model id keeps the provider's spelling.
+
+
+#
+# These are litellm model strings, not gateway strings. The class pins
+# 'groq::openai/gpt-oss-120b' in the registry, but `provider::` is the gateway's own
+# syntax and litellm rejects it — so the pool is pinned in the base
+# URL path and the model id keeps the provider's spelling.
+
+
+#
+# These are litellm model strings, not gateway strings. The class
+#recruiter pins 'groq::openai/gpt-oss-120b' in the registry, but `provider::` is
+# the gateway's own syntax and litellm rejects it, so the pin is
+# resolved here and the gateway receives a plain model id.
+
+
 # Aider config — routed through the local rotating gateway, not a single key.
 #
 # WHY: this used to pin `groq/openai/gpt-oss-120b` against one unrotated key, so
@@ -6,21 +41,28 @@
 # way whether that key is rate-limited or revoked.
 #
 # bin/ai_gateway.py is an OpenAI-compatible endpoint that walks the vault pools
-# in AUTO_CHAIN order (groq, swarms, then the paid and flaky free tiers) and
-# rotates on rate limits. bin/gateway-ensure and bin/vault-launch start it on
-# demand, so `aider` alone is enough; it does not need to be started by hand.
+# in AUTO_CHAIN order and rotates on rate limits. bin/gateway-ensure and
+# bin/vault-launch start it on demand, so `aider` alone is enough; it does not
+# need to be started by hand.
 #
-# Re-probed 2026-09-16 with one real chat call per pool: groq, swarms and
-# openrouter answer; mistral, orcarouter, cerebras, bazaar, puter, openai,
-# zenmux, gemini and sageox do not — for account or upstream reasons, not
-# because the keys are wrong. Per-pool detail: docs/PROVIDER_ENDPOINTS.md.
+# FREE ONLY, as of 2026-09-25. This used to say the chain walked "the paid and
+# flaky free tiers" last, which was true and is no longer the intent: the chain
+# now refuses any pool not declared free in ~/.config/ai/policy.toml, so no
+# aider run can bill you. That file is the answer to "which providers can this
+# reach and why not the others" — query it live at http://127.0.0.1:7071/policy.
+#
+# Re-probed 2026-09-25 with one real chat call per pool: groq 11/11 keys live;
+# openrouter and mistral are free but rate-limited; puter, cerebras, bazaar,
+# swarms and orcarouter all answer 402 and are excluded; zenmux 403; sageox 502.
+# Per-pool detail: docs/PROVIDER_ENDPOINTS.md.
+#
+# Dead keys are reaped out from under this config, not just cooled down:
+# `python3 bin/ai_gateway_reap.py` probes every FREE pool key-by-key and writes
+# verdicts the gateway honours. `python3 bin/ai_trace.py rotation` shows which
+# key actually served each call.
 #
 # Keys are never hardcoded here; they are read from ~/.concierge/vault.json by
 # the gateway process.
-model: openai/default
-weak-model: openai/default
-openai-api-base: http://127.0.0.1:7071/v1/auto
-openai-api-key: local-gateway
 auto-commits: false
 gitignore: false
 dark-mode: true

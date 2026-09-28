@@ -43,6 +43,7 @@ See: Whorl/docs/AGENT_BUS_SPEC.md
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import time
@@ -179,7 +180,8 @@ class WhorlBusDispatcher:
                  whorl_dir: Optional[str] = None,
                  auto_register: bool = True,
                  version: str = "1.0.0",
-                 capabilities: Optional[List[str]] = None):
+                 capabilities: Optional[List[str]] = None,
+                 dedupe_guard: Optional[Any] = None):
         self.agent_name = agent_name
         self.whorl_dir = Path(whorl_dir).expanduser() if whorl_dir else _whorl_dir()
         self.version = version
@@ -187,6 +189,8 @@ class WhorlBusDispatcher:
             "molt.hydrate", "molt.sidecar", "molt.mutation",
             "task.dispatch", "task.result", "score.record",
         ]
+        # Optional loop guard (DuplicateCallGuard); None keeps sends unchanged.
+        self.dedupe_guard = dedupe_guard
         self._available: Optional[bool] = None
         if auto_register:
             try:
@@ -287,6 +291,20 @@ class WhorlBusDispatcher:
             # Allow custom molt.* but warn
             if not message_type.startswith("molt.") and message_type not in ATOMIC_TYPES:
                 raise ValueError(f"Unknown bus type: {message_type}. Must be one of {ALL_TYPES}")
+        if self.dedupe_guard is not None:
+            sig = hashlib.sha256(
+                f"{recipient}|{message_type}|{json.dumps(payload, sort_keys=True, default=str)}".encode()
+            ).hexdigest()[:16]
+            verdict = self.dedupe_guard.check(sig)
+            if verdict.get("action") == "block":
+                # Audited drop, never silent: the guard logged the verdict and
+                # the bus log records the blocked dispatch (AGENTS.md §3/§5).
+                self._deposit_to_bus_log("message_dedup_blocked",
+                                         f"{message_type}->{recipient}", sig, 0)
+                return {"id": message_id or f"msg_dedup_{sig}",
+                        "timestamp": _now(), "from": self.agent_name,
+                        "to": recipient, "type": message_type,
+                        "dedup_blocked": True, "dedup": verdict, "payload": payload}
         if _HAS_WHORL_BUS and _whorl_bus is not None:
             try:
                 # Whorl bus validates recipient — ensure it's registered first

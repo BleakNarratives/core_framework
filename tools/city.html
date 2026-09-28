@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code City</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#0b0e14; color:#c8d0e0;
+         font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; }
+  #hud { display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+         padding:10px 14px; background:#111624; border-bottom:1px solid #1e2740; }
+  #hud b { color:#7fd1ff; font-weight:600; }
+  .stat { color:#8a95ad; }
+  .stat i { color:#e6ecf7; font-style:normal; }
+  #drop { min-height:420px; position:relative; }
+  #drop.over::after { content:"drop city.json"; position:absolute; inset:12px;
+    border:2px dashed #7fd1ff; border-radius:8px; display:grid; place-items:center;
+    color:#7fd1ff; background:rgba(127,209,255,.06); pointer-events:none; }
+  canvas { display:block; width:100%; cursor:grab; }
+  canvas:active { cursor:grabbing; }
+  #tip { position:fixed; pointer-events:none; background:#161d2e; border:1px solid #2a3550;
+         border-radius:6px; padding:7px 9px; font-size:12px; display:none;
+         max-width:320px; box-shadow:0 6px 22px rgba(0,0,0,.55); z-index:9; }
+  #tip h4 { margin:0 0 3px; color:#7fd1ff; font-size:12px; overflow-wrap:anywhere; }
+  #tip .row { color:#8a95ad; }
+  .swatch { display:inline-block; width:9px; height:9px; border-radius:2px;
+            margin-right:5px; vertical-align:-1px; }
+  label { cursor:pointer; color:#7fd1ff; }
+  #err { color:#ff7b72; padding:12px 14px; }
+</style>
+</head>
+<body>
+<div id="hud">
+  <b>CODE CITY</b>
+  <span class="stat">files <i id="s-files">–</i></span>
+  <span class="stat">lines <i id="s-lines">–</i></span>
+  <span class="stat">todos <i id="s-todos">–</i></span>
+  <span class="stat">mean flaw <i id="s-flaw">–</i></span>
+  <span class="stat">root <i id="s-root">–</i></span>
+  <label><input type="file" id="pick" accept=".json,application/json" hidden>open city.json</label>
+  <span class="stat" id="legend"></span>
+  <span class="stat">drag to pan · scroll to zoom</span>
+</div>
+<div id="drop"><canvas id="cv"></canvas></div>
+<div id="tip"></div>
+<script>
+"use strict";
+// Matches repo_scanner.py's measured fields: block height derives from code
+// lines, language sets the building material, and flaw_score colors the roof.
+const LANG = {
+  python:"#3572A5", javascript:"#f1e05a", typescript:"#3178c6", go:"#00ADD8",
+  rust:"#dea584", java:"#b07219", ruby:"#701516", c:"#555555", cpp:"#f34b7d",
+  shell:"#89e051", html:"#e34c26", css:"#563d7c", docs:"#5a6478", config:"#7d8590",
+  other:"#4a5265"
+};
+const WIDTH = 26, GAP = 3, FLOOR_PAD = 40;
+let city = null, geo = [], cityWidth = 1, hover = -1, view = {off:0, z:1, initialized:false};
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const tip = document.getElementById("tip"), drop = document.getElementById("drop");
+
+function fit() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = drop.clientWidth, h = Math.max(420, drop.clientHeight);
+  cv.width = w * dpr; cv.height = h * dpr;
+  cv.style.height = h + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return {w, h};
+}
+
+function layout() {
+  const buildings = city.buildings.slice().sort((a, b) => a.mass - b.mass || a.path.localeCompare(b.path));
+  geo = []; let x = 12;
+  for (const f of buildings) {
+    const h = 8 + Math.log2(1 + f.height) * 13;
+    geo.push({f, x, w:WIDTH, h});
+    x += WIDTH + GAP;
+  }
+  return x;
+}
+
+function flawColor(score) {
+  if (score >= 60) return "#f85149";
+  if (score >= 35) return "#d29922";
+  if (score >= 15) return "#3fb950";
+  return "#2ea043";
+}
+
+function draw() {
+  const {w, h} = fit();
+  ctx.clearRect(0, 0, w, h);
+  const total = cityWidth;
+  if (!view.initialized) {
+    view.z = Math.min(1, Math.max(0.25, (w - 24) / total));
+    view.initialized = true;
+  }
+  const floor = h - FLOOR_PAD;
+  const ground = ctx.createLinearGradient(0, floor, 0, h);
+  ground.addColorStop(0, "#131a2a"); ground.addColorStop(1, "#0b0e14");
+  ctx.fillStyle = ground; ctx.fillRect(0, floor, w, h - floor);
+
+  for (let i = 0; i < geo.length; i++) {
+    const b = geo[i], x = b.x * view.z + view.off, bw = b.w * view.z;
+    const bh = b.h * view.z;
+    if (x + bw < 0 || x > w) continue;
+    const y = floor - bh, on = i === hover, col = LANG[b.f.language] || LANG.other;
+    ctx.fillStyle = on ? col : col + "cc";
+    ctx.fillRect(x, y, bw, bh);
+    ctx.fillStyle = "rgba(0,0,0,.28)";
+    const rows = Math.max(1, Math.floor(bh / Math.max(1, 9 * view.z)));
+    for (let r = 1; r < rows; r++) ctx.fillRect(x, y + r * (bh / rows), bw, 1.5);
+    if (b.f.flaw_score > 0) {
+      ctx.fillStyle = flawColor(b.f.flaw_score);
+      ctx.fillRect(x, y, bw, Math.max(2, Math.min(6, b.f.flaw_score / 12)) * view.z);
+    }
+    if (on) { ctx.strokeStyle = "#7fd1ff"; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, bw, bh); }
+  }
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;"
+  }[c]));
+}
+
+function hud() {
+  const t = city.totals;
+  document.getElementById("s-files").textContent = Number(t.files).toLocaleString();
+  document.getElementById("s-lines").textContent = Number(t.lines).toLocaleString();
+  document.getElementById("s-todos").textContent = Number(t.todos).toLocaleString();
+  document.getElementById("s-flaw").textContent = Number(t.mean_flaw).toFixed(2);
+  document.getElementById("s-root").textContent = city.root || "–";
+  const top = Object.entries(city.by_language || {}).sort((a, b) => b[1].lines - a[1].lines).slice(0, 4)
+    .map(([language, summary]) => `<span class="swatch" style="background:${LANG[language]||LANG.other}"></span>${escapeHtml(language)} ${Number(summary.lines).toLocaleString()}`)
+    .join(" &nbsp; ");
+  document.getElementById("legend").innerHTML = top;
+}
+
+function render(data) {
+  if (!data || !Array.isArray(data.buildings) || !data.totals || typeof data.totals !== "object") {
+    throw new Error("Not a Code City payload: expected buildings[] and totals.");
+  }
+  city = data; cityWidth = layout() || 1;
+  view = {off:0, z:1, initialized:false}; hover = -1;
+  document.getElementById("err")?.remove();
+  hud(); draw();
+}
+
+function pick(px) {
+  return geo.findIndex(b => px >= b.x * view.z + view.off && px <= (b.x + b.w) * view.z + view.off);
+}
+cv.addEventListener("mousemove", e => {
+  const i = pick(e.offsetX);
+  if (i !== hover) { hover = i; draw(); }
+  if (i < 0) { tip.style.display = "none"; return; }
+  const f = geo[i].f;
+  tip.style.display = "block";
+  tip.style.left = Math.min(e.clientX + 14, innerWidth - 330) + "px";
+  tip.style.top = (e.clientY + 14) + "px";
+  tip.innerHTML = `<h4>${escapeHtml(f.path)}</h4>
+    <div class="row"><span class="swatch" style="background:${LANG[f.language]||LANG.other}"></span>${escapeHtml(f.language)}</div>
+    <div class="row">${Number(f.code_lines).toLocaleString()} code lines · ${Number(f.lines).toLocaleString()} total</div>
+    <div class="row" style="color:${flawColor(Number(f.flaw_score))}">flaw ${Number(f.flaw_score)} · ${Number(f.todos)} TODO · max indent ${Number(f.max_indent)}</div>`;
+});
+cv.addEventListener("mouseleave", () => { hover = -1; tip.style.display = "none"; draw(); });
+
+let pan = null;
+cv.addEventListener("mousedown", e => pan = e.clientX);
+addEventListener("mouseup", () => pan = null);
+addEventListener("mousemove", e => {
+  if (pan === null) return;
+  view.off += e.clientX - pan; pan = e.clientX; draw();
+});
+cv.addEventListener("wheel", e => {
+  if (!city) return;
+  e.preventDefault();
+  const old = view.z;
+  view.z = Math.max(0.25, Math.min(5, old * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+  view.off = e.offsetX - (e.offsetX - view.off) * view.z / old;
+  view.initialized = true; draw();
+}, {passive:false});
+
+function loadFile(file) {
+  if (!file) return;
+  file.text().then(text => render(JSON.parse(text))).catch(error => {
+    document.getElementById("err")?.remove();
+    const message = document.createElement("div");
+    message.id = "err"; message.textContent = `Could not load city.json: ${error.message}`;
+    drop.before(message);
+  });
+}
+document.getElementById("pick").addEventListener("change", e => loadFile(e.target.files[0]));
+["dragover","dragenter"].forEach(type => drop.addEventListener(type, e => {
+  e.preventDefault(); drop.classList.add("over");
+}));
+["dragleave","drop"].forEach(type => drop.addEventListener(type, e => {
+  e.preventDefault(); drop.classList.remove("over");
+}));
+drop.addEventListener("drop", e => loadFile(e.dataTransfer.files[0]));
+
+// If hosted next to city.json, load it automatically. file:// users can choose
+// or drag-and-drop the JSON because browsers restrict local fetches.
+fetch("city.json").then(r => r.ok ? r.json() : null).then(data => data && render(data)).catch(() => {});
+</script>
+</body>
+</html>

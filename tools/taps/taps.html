@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taps — 21-ribbon salute</title>
+<!--
+  taps.html — the salute page for tools/taps/taps.py
+
+  Self-contained on purpose: no CDN, no fonts, no fetch. Open the file, or let
+  `taps.py --html` inject the obituary into the slot below. Sound starts only
+  after a click or keypress, because browsers refuse autoplay and ringing a
+  bugle at someone uninvited is not this tool's idea of tender.
+
+  Ethos, from tools/jerry-hearing/docs/ODDS_BRIDGE.md:
+    No streak shaming. Miss = cactus wobble "listen close..." not "you failed."
+-->
+<style>
+  :root {
+    --dusk: #12141c;
+    --dusk2: #2a2438;
+    --brown: #7a543a;
+    --ribbon: #b0423c;
+    --gold: #d9b45b;
+    --paper: #efe6d8;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--dusk); }
+  body {
+    font: 15px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--paper);
+    overflow: hidden;
+  }
+  #stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #hud {
+    position: fixed; left: 16px; bottom: 16px; right: 16px;
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;
+    pointer-events: none;
+  }
+  #hud > * { pointer-events: auto; }
+  #card {
+    max-width: 34rem; padding: 10px 14px;
+    background: rgba(18, 20, 28, 0.72);
+    border: 1px solid rgba(217, 180, 91, 0.35); border-radius: 6px;
+    white-space: pre-wrap;
+  }
+  #card b { color: var(--gold); font-weight: 600; }
+  #eulogy { margin-top: 10px; color: var(--paper); opacity: 0; transition: opacity 1.6s ease; }
+  #eulogy.on { opacity: 1; }
+  button {
+    font: inherit; color: var(--paper); cursor: pointer;
+    background: rgba(122, 84, 58, 0.9); border: 1px solid var(--gold);
+    border-radius: 6px; padding: 10px 16px;
+  }
+  button:hover { background: rgba(150, 104, 70, 0.95); }
+  button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+  #count { color: var(--gold); }
+  /* The one animation a reader asked for is the fade; drop it when they asked for
+     less motion, and keep the ribbons' own steadiness out of the JS loop. */
+  @media (prefers-reduced-motion: reduce) {
+    #eulogy { transition: none; }
+  }
+  .hint { opacity: 0.6; font-size: 12px; }
+</style>
+</head>
+<body>
+<canvas id="stage" aria-label="Twenty-one ribbons raised in salute"></canvas>
+<div id="hud">
+  <div id="card">
+    <b id="title">TAPS</b>
+    <div id="facts"></div>
+    <div id="eulogy"></div>
+    <div id="audiorecord" class="hint"></div>
+  </div>
+  <div>
+    <button id="salute" aria-describedby="help audiohint">
+      SALUTE <span id="count" role="status" aria-live="polite" aria-atomic="true">0 / 21</span>
+    </button>
+    <div class="hint" id="help">space or click the prairie also salutes</div>
+    <!-- Silence should be explained, not mysterious: browsers block audio until a
+         gesture, some contexts wake up suspended, and some machines have no
+         output at all. Say which one happened instead of standing there mute. -->
+    <div class="hint" id="audiohint"></div>
+  </div>
+</div>
+
+<script>
+// Injected by: python tools/taps/taps.py --html rite.html
+// A JSON string literal holding JSON, so this file is valid JS before injection.
+const OBIT_JSON = "TAPS_OBIT_PLACEHOLDER";
+
+// Mirrors SALUTE_COUNT in taps.py; the test asserts the two stay equal.
+const RIBBONS = 21;
+
+const DEMO_OBIT = {
+  user: "you", skill: "something-you-were-good-at",
+  streak: { value: 4, unit: "weeks", days: 28 },
+  grace: { hours: 48, rule: "gambit: streak >= 3 -> 48h, else 24h" },
+  gambit: { found: false, instar: null }
+};
+
+let parsed = null;
+try { parsed = JSON.parse(OBIT_JSON); } catch (err) { parsed = null; }
+const obit = (parsed && typeof parsed === "object") ? parsed : DEMO_OBIT;
+window.TAPS_OBIT = obit;
+
+const canvas = document.getElementById("stage");
+const ctx = canvas.getContext("2d");
+const eulogyEl = document.getElementById("eulogy");
+const countEl = document.getElementById("count");
+
+let W = 0, H = 0;
+let raised = 0;        // ribbons currently up
+let bugleDone = false; // taps has sounded
+let audio = null;
+
+// Honored rather than assumed: a reader who asked for less motion gets a still
+// prairie that redraws when the rite changes, and no fade on the eulogy.
+const motionQuery = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+let reduced = !!(motionQuery && motionQuery.matches);
+
+// ── the record, read out loud ────────────────────────────────────
+(function narrate() {
+  const s = obit.streak || { value: 0, unit: "days", days: 0 };
+  const grace = (obit.grace && obit.grace.hours) || 24;
+  const instar = obit.gambit && obit.gambit.instar;
+  const run = obit.gambit && obit.gambit.run;
+  document.getElementById("title").textContent =
+    `TAPS — for the ${s.value}-${s.unit} streak on ${obit.skill || "a skill"}`;
+  // The run, when gambit had a ledger to read. Absent means nothing was found to
+  // cite, which the line at the bottom says out loud rather than papering over.
+  const runLine = run
+    ? `<br>the run that ended: <b>${run.passes}</b> passes · ` +
+      (run.points ? `<b>${run.points}</b> pts · ` : "") +
+      (run.fastest_ms ? `fastest <b>${(run.fastest_ms / 1000).toFixed(1)}s</b> · ` : "") +
+      (run.started ? `${run.started} → ${run.ended}` : "no dates in the ledger")
+    : "";
+  document.getElementById("facts").innerHTML =
+    `<b>${s.days}</b> days counted · <b>${grace}h</b> grace earned and spent` +
+    (instar ? ` · instar <b>${instar}</b> still standing` : "") +
+    runLine +
+    `<br><span class="hint">${(obit.gambit && obit.gambit.found)
+      ? "read-only from the instar file, append-only record in obituary.jsonl"
+      : "no instar file was found; count is self-reported"}</span>`;
+  eulogyEl.textContent = [
+    `${obit.user || "you"}, the count stopped here — the way every count stops:`,
+    `at the edge of being a person with other work to do.`,
+    ``,
+    `Nothing is owed. When you come back, the doc hydrates at the same`,
+    `instar, and the next challenge is a first challenge, not a debt.`,
+    ``,
+    `When the bugle stops, the prairie keeps humming.`
+  ].join("\n");
+})();
+
+// ── prairie furniture ────────────────────────────────────────────
+// Fixed-seed dots so the sky is the same sky every time this page is opened.
+function sky() {
+  let seed = 20260922;
+  const rnd = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
+  const stars = [];
+  for (let i = 0; i < 110; i++) stars.push([rnd(), rnd() * 0.55, 0.4 + rnd() * 0.9]);
+  return stars;
+}
+const STARS = sky();
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  W = canvas.clientWidth; H = canvas.clientHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener("resize", resize);
+resize();
+
+// Brown work gloves, because this was work.
+function glove(x, y, s, tilt) {
+  ctx.save();
+  ctx.translate(x, y); ctx.rotate(tilt); ctx.scale(s, s);
+  ctx.fillStyle = "#7a543a";
+  ctx.beginPath(); ctx.ellipse(0, 0, 11, 14, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillRect(-10, -22, 20, 14);                 // cuff
+  ctx.fillStyle = "#8d6446";
+  for (let i = 0; i < 4; i++) ctx.fillRect(-9 + i * 5, -34, 4, 16);  // fingers
+  ctx.fillStyle = "#6b4832";
+  ctx.fillRect(-11, -20, 22, 4);                  // seam
+  ctx.restore();
+}
+
+// Tumbleweed: slow-roll, right to left, 34 seconds a pass.
+function tumbleweed(t) {
+  const period = 34000;
+  const p = ((t % period) + period) % period / period;
+  const x = W + 70 - p * (W + 140);
+  const r = 26 + 5 * Math.sin(t / 900);
+  const y = H * 0.72 + 6 * Math.sin(t / 700);
+  ctx.save(); ctx.translate(x, y); ctx.rotate(-t / 420);
+  ctx.strokeStyle = "rgba(150, 118, 74, 0.8)"; ctx.lineWidth = 1.6;
+  for (let i = 0; i < 7; i++) {
+    ctx.beginPath();
+    ctx.ellipse(0, 0, r, r * (0.35 + i * 0.09), i * 0.5 + t / 2600, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Cactus wobbles instead of pointing. Listen close.
+function cactus(x, s, t) {
+  const wob = 3 * s * Math.sin(t / 620 + x);
+  const base = H * 0.74;
+  ctx.fillStyle = "#3a6b3a";
+  ctx.fillRect(x + wob, base - 64 * s, 15 * s, 64 * s);
+  ctx.fillRect(x + wob - 11 * s, base - 38 * s, 12 * s, 20 * s);
+  ctx.fillRect(x + wob + 15 * s, base - 46 * s, 12 * s, 24 * s);
+  ctx.fillStyle = "#2f5a2f";
+  ctx.fillRect(x + wob + 5 * s, base - 60 * s, 2 * s, 56 * s);
+}
+
+// Ribbon i: i = 0 is the first raised, so the rank fills left to right.
+function ribbonProgress(i, t) {
+  const lead = raised - i;                     // how long ago this one was called
+  if (lead <= 0) return 0;
+  const up = Math.min(1, lead * 1.5);          // fast raise, ~0.2s
+  const settle = folded ? Math.max(0, 1 - (t - foldAt) / 1400) : 1;
+  return up * settle;
+}
+
+let foldAt = 0;
+let folded = false;
+
+function drawRibbons(t) {
+  const n = RIBBONS;
+  const topY = H * 0.24, baseY = H * 0.72;
+  const span = Math.min(W * 0.86, 21 * 30);
+  const step = span / (n - 1);
+  const x0 = (W - span) / 2;
+  for (let i = 0; i < n; i++) {
+    const p = ribbonProgress(i, t);
+    const x = x0 + i * step;
+    ctx.strokeStyle = "rgba(217, 180, 91, 0.35)";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, baseY); ctx.lineTo(x, baseY - (baseY - topY) * p); ctx.stroke();
+    if (p <= 0) continue;
+    const y = topY;
+    const wave = 3 * Math.sin(t / 480 + i * 0.7);
+    const h = 34 + 8 * Math.sin(t / 700 + i);
+    ctx.fillStyle = i % 2 ? "#8f3833" : "#b0423c";
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(x + 15 + wave, y + h * 0.4, x + 2 + wave, y + h);
+    ctx.lineTo(x + 26 + wave, y + h * 0.86);
+    ctx.quadraticCurveTo(x + 14 + wave, y + h * 0.4, x + 24, y);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "rgba(239, 230, 216, " + (0.35 + 0.3 * p) + ")";
+    ctx.font = "10px ui-monospace, monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(String(i + 1), x + 12, baseY + 14);
+  }
+  // Honor guard: two gloves, brown, raised to the brim for the whole rite.
+  const saluteLift = raised > 0 ? 1 : 0;
+  const bob = 2 * Math.sin(t / 900);
+  glove(x0 - 34, baseY - 118 * saluteLift + bob, 1.5, -0.35);
+  glove(x0 + span + 34, baseY - 118 * saluteLift - bob, 1.5, 0.35);
+}
+
+function drawSky(t) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, "#0d0f16");
+  g.addColorStop(0.55, "#2a2438");
+  g.addColorStop(1, "#3b2f3a");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "rgba(239, 230, 216, 0.75)";
+  for (const [sx, sy, sr] of STARS) {
+    const tw = 0.55 + 0.45 * Math.sin(t / 1400 + sx * 40);
+    ctx.globalAlpha = tw * 0.7;
+    ctx.fillRect(sx * W, sy * H, sr, sr);
+  }
+  ctx.globalAlpha = 1;
+  // ground
+  ctx.fillStyle = "#241d24"; ctx.fillRect(0, H * 0.72, W, H * 0.28);
+  ctx.fillStyle = "#2d2430";
+  for (let i = 0; i < 60; i++) ctx.fillRect((i * 137) % W, H * 0.72 + (i % 7) * 3, 12, 2);
+}
+
+// One draw, with time frozen when motion is unwelcome: same prairie, same ribbons,
+// none of the drift.
+function drawScene(t) {
+  const at = reduced ? 0 : t;
+  drawSky(at);
+  cactus(W * 0.08, 1.05, at);
+  cactus(W * 0.92, 0.85, at + 400);
+  tumbleweed(at);
+  drawRibbons(at);
+}
+
+let looping = false;
+function frame(now) {
+  drawScene(now);
+  if (!looping) return;
+  requestAnimationFrame(frame);
+}
+
+function startLoop() {
+  if (looping || reduced) return;
+  looping = true;
+  requestAnimationFrame(frame);
+}
+
+function stopLoop() {
+  looping = false;
+  drawScene(0);   // leave a settled frame rather than a half-drawn one
+}
+
+startLoop();
+if (reduced) drawScene(0);
+
+// ── sound: a drum thud per ribbon, taps once at twenty-one ───────
+// A context can be created in the 'suspended' state (and mobile Safari and Chrome
+// both do this), in which case every scheduled note plays into a frozen clock and
+// the rite is silently mute. So resume first, then schedule, and report the silence
+// instead of letting it look like the page is broken.
+let audioFailed = false;
+function noteAudio(message) {
+  if (audioFailed) return;
+  audioFailed = true;
+  const el = document.getElementById("audiohint");
+  if (el) el.textContent = message;
+  recordSilence(message);
+}
+
+// Silence belongs in the record, not only on the screen. The page cannot write the
+// obituary file (a browser has no business writing there), so it marks the copy it
+// is holding, shows the status, and prints the exact command that appends the note
+// to audio_notes.jsonl.
+function recordSilence(reason) {
+  if (obit.audio) { obit.audio.status = "unavailable"; obit.audio.reason = reason; }
+  const el = document.getElementById("audiorecord");
+  if (!el) return;
+  el.textContent =
+    "audio: unavailable (recorded, not hidden) — keep it with: python tools/taps/taps.py " +
+    `--audio-status unavailable --skill ${obit.skill} --user ${obit.user} --root <offline-root>`;
+}
+
+async function ensureAudio() {
+  if (audio) {
+    if (audio.state === "suspended") {
+      try { await audio.resume(); } catch (err) { noteAudio("audio was blocked — the rite is silent; the ribbons still count"); return null; }
+    }
+    return audio.state === "running" ? audio : null;
+  }
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) { noteAudio("this browser has no Web Audio — silent rite; the ribbons still count"); return null; }
+  try { audio = new Ctx(); } catch (err) { noteAudio("audio could not start — silent rite; the ribbons still count"); return null; }
+  if (audio.state === "suspended") {
+    try { await audio.resume(); } catch (err) { noteAudio("audio was blocked — the rite is silent; the ribbons still count"); return null; }
+  }
+  if (audio.state && audio.state !== "running") {
+    noteAudio("no audio output is available — silent rite; the ribbons still count");
+    return null;
+  }
+  return audio;
+}
+
+async function thud() {
+  const ac = await ensureAudio(); if (!ac) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = "sine"; o.frequency.setValueAtTime(96, ac.currentTime);
+  o.frequency.exponentialRampToValueAtTime(48, ac.currentTime + 0.18);
+  g.gain.setValueAtTime(0.35, ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.22);
+  o.connect(g).connect(ac.destination);
+  o.start(); o.stop(ac.currentTime + 0.24);
+}
+
+async function taps() {
+  const ac = await ensureAudio(); if (!ac) return;
+  const notes = [
+    { f: 392.0, at: 0.0, len: 0.9 },   // G4
+    { f: 523.25, at: 0.85, len: 0.9 }, // C5
+    { f: 659.25, at: 1.7, len: 2.6 }   // E5, held
+  ];
+  for (const n of notes) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = "triangle"; o.frequency.value = n.f;
+    const t0 = ac.currentTime + n.at;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.22, t0 + 0.08);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + n.len);
+    o.connect(g).connect(ac.destination);
+    o.start(t0); o.stop(t0 + n.len + 0.05);
+  }
+}
+
+// ── the rite ─────────────────────────────────────────────────────
+async function salute() {
+  if (raised < RIBBONS) {
+    raised += 1;
+    countEl.textContent = `${raised} / ${RIBBONS}`;
+    await thud();
+    if (raised === RIBBONS && !bugleDone) {
+      bugleDone = true;
+      taps();
+      // Reduced motion still gets the whole rite, just without the theatrics: the
+      // ribbons settle at once and the eulogy arrives promptly instead of fading.
+      const foldAfter = reduced ? 0 : 2600;
+      setTimeout(() => {
+        folded = true;
+        foldAt = reduced ? 0 : performance.now();
+        if (reduced) drawScene(0);
+      }, foldAfter);
+      setTimeout(() => eulogyEl.classList.add("on"), reduced ? 400 : 3200);
+    }
+  } else {
+    raised = 0; folded = false; bugleDone = false;
+    countEl.textContent = `0 / ${RIBBONS}`;
+    eulogyEl.classList.remove("on");
+  }
+  if (reduced) drawScene(0);
+  saluteEl.setAttribute("aria-label", raised >= RIBBONS ? "start the rite over" : "salute");
+}
+
+// Breathing room for motion preferences at runtime, not just at load.
+if (motionQuery && motionQuery.addEventListener) {
+  motionQuery.addEventListener("change", (e) => {
+    reduced = e.matches;
+    if (reduced) stopLoop(); else startLoop();
+  });
+}
+
+const saluteEl = document.getElementById("salute");
+saluteEl.addEventListener("click", salute);
+canvas.addEventListener("click", salute);
+window.addEventListener("keydown", (e) => {
+  if (e.code !== "Space" && e.code !== "Enter") return;
+  // Without this, space with the button focused salutes twice: once from the
+  // button's own click and once from here. One press, one ribbon.
+  if (e.target && e.target.closest && e.target.closest("button")) return;
+  if (e.repeat) return;
+  e.preventDefault();
+  salute();
+});
+</script>
+</body>
+</html>

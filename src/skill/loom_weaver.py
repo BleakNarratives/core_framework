@@ -60,9 +60,15 @@ class LoomThreadWeaver:
     async multi-step pipelines with trace persistence.
     """
 
-    def __init__(self, bus: Optional[Any] = None, snapshotter: Optional[Any] = None):
+    # Worker dispatches carry a context slice, never an unbounded prompt
+    # (AGENTS.md §5: bounded payload sizes). See docs/DISPATCH_GUARDS_SPEC.md.
+    CONTEXT_SLICE_LIMIT = 32000
+
+    def __init__(self, bus: Optional[Any] = None, snapshotter: Optional[Any] = None,
+                 context_slice_limit: int = CONTEXT_SLICE_LIMIT):
         self.bus = bus  # WhorlBusDispatcher or None
         self.snapshotter = snapshotter
+        self.context_slice_limit = int(context_slice_limit)
         LOOM_DIR.mkdir(parents=True, exist_ok=True)
         # Lazy import state_snapshotter
         if self.snapshotter is None:
@@ -132,8 +138,14 @@ class LoomThreadWeaver:
             if bus_broadcast and self.bus is not None:
                 try:
                     self.bus.send_molt_hydrate(sk, hydrated, oomf_level=oomf, recipients=["broadcast"])
+                    prompt_slice = prompt[: self.context_slice_limit]
+                    if len(prompt) > self.context_slice_limit:
+                        trace["prompt_truncated"] = {
+                            "original_chars": len(prompt),
+                            "dispatched_chars": len(prompt_slice),
+                        }
                     self.bus.dispatch_task("loom-worker", task_id=f"{workflow_id}:{idx}",
-                                           prompt=prompt, skill=sk, oomf=oomf)
+                                           prompt=prompt_slice, skill=sk, oomf=oomf)
                     trace["bus"] = "dispatched"
                 except Exception as e:
                     trace["bus_error"] = str(e)[:120]

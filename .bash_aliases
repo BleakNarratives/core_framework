@@ -268,3 +268,6 @@ trace() {
   rm -f "$log"
   return $rc
 }
+
+# Launch Gemma model via Ollama
+alias gemma='pgrep ollama > /dev/null || (ollama serve & sleep 5); ollama run hf.co/unsloth/gemma-3-4b-it-unsloth-bnb-4bit:Q4_K_XL'

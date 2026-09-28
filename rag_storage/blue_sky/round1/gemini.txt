@@ -1,0 +1,27 @@
+- **VERDICT**: DO_NOT_SHIP.
+
+- **THE 3 BEST IDEAS**
+    1. **Proactive Hydration**: Moving from reactive tool-calling to pre-fetching state is the correct direction for reducing latency and improving agent responsiveness.
+    2. **Architectural Separation**: The proposal correctly identifies the need for distinct audit, synthesis, and veto layers, which aligns well with established security patterns.
+    3. **Message Bus Utilization**: Implicitly, the need for a shared state interface (`sidecar.json`) is the missing piece for the existing `whorl_bus.py`.
+
+- **THE 3 BIGGEST PROBLEMS**
+    1. **Fictional Infrastructure**: The proposal relies on entirely imaginary models and simulation engines (`iWarship`, `Poncho`, etc.). This is non-functional dead weight.
+    2. **Ignoring Existing Primitives**: It proposes a new "ScoutDaemon" rather than leveraging the already functional `whorl_bus.py`, `arena_gladiator.py`, and `oracle.py` infrastructure.
+    3. **Misplaced Trust (Security Hazard)**: Treating an unverified `sidecar.json` as "ground truth" (P1) before passing it through the mandatory `Oracle` check violates the project's security posture defined in `AGENTS.md`.
+
+- **ANSWERS**
+    1. **Sidecar ownership**: `whorl_bus.py` must manage the sidecar via atomic write locks. "Ground truth" is a misnomer; it is a cached, untrusted projection that must be validated by the `Oracle` before use.
+    2. **Priority hierarchy**: Caching first is correct for *performance*, but it must be framed as a "speculative hint." Any decision impacting the system state must be held pending `P2` verification.
+    3. **Vote weighting**: Do not fold channels into a single ELO pool. Use `arena_gladiator` *within* each channel to select the best adapter/model for that specific capability. Fixed, hard-coded weights should define the interaction: `Adversarial Veto` > `Native Consensus` > `Audit`.
+    4. **Capability-based Roster**: Absolutely reframe around capability. We have working shims; we should define the requirements for an "Auditor" capability and map the available adapters (`ox`, `aider`, etc.) to those roles dynamically based on performance metrics.
+    5. **Sequencing**: The order is inverted. First, the infrastructure (bus integration with existing bridges) must be built. The "Test" milestone is useless until a daemon can actually interact with `whorl_bus.py`.
+
+- **CUTTING ROOM FLOOR**
+    - Delete the entirety of §3’s roster of fictional models.
+    - Delete the references to `iWarship` and `Poncho` in §2.
+
+- **THE PATCH**
+    1. **`src/skill/scout.py`**: Rewrite the stub to act as a client of `src/skill/whorl_bus.py`. It should subscribe to the bus to read/write `sidecar.json` using atomic file operations.
+    2. **`bin/model_router.py`**: Replace the stubbed routing logic with a functional dispatch to available, installed adapters (`ox`, `aider`, `gemini`, `vibe`).
+    3. **`src/skill/inference_bridge.py`**: Update `molt_one_shot()` to route requests through the newly functional `model_router.py` instead of the current `$1` fallback script.

@@ -21,8 +21,6 @@ Zero-bloat: if no skill name is passed, bridge is a plain passthrough.
 import os
 import sys
 import json
-import re
-import subprocess
 import urllib.request
 import urllib.parse
 from pathlib import Path

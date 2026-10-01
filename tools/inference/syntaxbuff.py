@@ -43,6 +43,11 @@ PERSONA_SEED = MIKEY_SWARM / "personas" / "persona_seed.json"
 PUTER_TOKEN = HOME / ".puter_token"
 SESSION_LOG = HOME / ".syntaxbuff_session.jsonl"
 
+# The local AI gateway is the single holder of provider keys (see
+# ~/.config/ai/config.toml). All inference routes through it, so every call
+# inherits the live provider chain and nothing here reads a provider key.
+GATEWAY_BASE = os.environ.get("AI_GATEWAY_URL", "http://127.0.0.1:7071/v1/auto")
+
 # ─────────────────────────────────────────────────────────────────────────────
 # MODEL ROSTER — Puter-powered, zero billing to operator
 # ─────────────────────────────────────────────────────────────────────────────
@@ -292,41 +297,50 @@ def call_openai_compatible(prompt, model_id, base_url, system=None):
         return json.loads(r.read())["choices"][0]["message"]["content"]
 
 # ─────────────────────────────────────────────────────────────────────────────
+# GATEWAY TRANSPORT — the default path
+# ─────────────────────────────────────────────────────────────────────────────
+# Roster providers the gateway can pin explicitly. Anything else is sent as
+# "auto", which walks the live chain (groq -> swarms -> openrouter) instead of
+# pinning a pool that may be inert. See docs/PROVIDER_ENDPOINTS.md.
+GATEWAY_PINNABLE = {"groq", "openrouter", "swarms"}
+
+
+def _gateway_model(model_key):
+    """Map a roster key to a gateway model string, or 'auto'."""
+    entry = MODELS.get(model_key)
+    if entry and entry.get("provider") in GATEWAY_PINNABLE:
+        return f"{entry['provider']}::{entry['id']}"
+    return "auto"
+
+
+def call_gateway(prompt, model="auto", system=None):
+    """One-shot chat call to the local AI gateway. Reads no provider key."""
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
+    data = json.dumps({"model": model, "messages": messages}).encode()
+    req = urllib.request.Request(
+        f"{GATEWAY_BASE.rstrip('/')}/chat/completions",
+        data=data, headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(req, timeout=90) as r:
+        return json.loads(r.read())["choices"][0]["message"]["content"]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # MAIN INFERENCE DISPATCHER (FORCE MULTIPLIER HOOK #5)
-# Add new providers here. Model router above auto-selects.
+# Routes through the gateway. The direct call_* adapters above remain for
+# explicit/offline use, but are no longer the default path.
 # ─────────────────────────────────────────────────────────────────────────────
 def dispatch(prompt, model_key=DEFAULT_MODEL, system=None, inject_persona=False):
-    model = MODELS.get(model_key, MODELS[DEFAULT_MODEL])
-    provider = model["provider"]
-    model_id = model["id"]
-
     if inject_persona:
         persona = load_persona()
         system = f"{persona}\n\n{system}" if system else persona
 
-    print(f"[syntaxbuff] model={model_key} provider={provider}", file=sys.stderr)
-
-    try:
-        if provider == "puter":
-            return call_puter(prompt, model_id, system)
-        elif provider == "media_api":
-            raise NotImplementedError(
-                f"Model '{model_id}' is an audio/image model and is not supported in the chat-focused SyntaxBuff interface."
-            )
-        elif provider == "openai_compatible":
-            base_url = model.get("base_url")
-            return call_openai_compatible(prompt, model_id, base_url, system)
-        elif provider == "openrouter":
-            return call_openrouter(prompt, model_id, system)
-        elif provider == "groq":
-            return call_groq(prompt, model_id, system)
-    except Exception as e:
-        print(f"[syntaxbuff] {provider} failed: {e} — trying groq fallback", file=sys.stderr)
-        try:
-            return call_groq(prompt, MODELS["groq"]["id"], system)
-        except Exception as e2:
-            print(f"[syntaxbuff] groq also failed: {e2} — trying qwen fallback", file=sys.stderr)
-            return call_openrouter(prompt, MODELS["qwen"]["id"], system)
+    model = _gateway_model(model_key)
+    print(f"[syntaxbuff] model={model_key} -> gateway({model})", file=sys.stderr)
+    return call_gateway(prompt, model=model, system=system)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # LOG SESSION OUTPUT

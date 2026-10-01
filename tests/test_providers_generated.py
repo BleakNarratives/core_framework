@@ -82,33 +82,32 @@ class TestSyntaxBuffProviders(unittest.TestCase):
                 syntaxbuff.call_openai_compatible("hello", "cohere-model", "https://api.example.test/v1")
         open_url.assert_not_called()
 
-    def test_dispatch_routes_provider_and_returns_result(self):
-        with patch.object(syntaxbuff, "call_openrouter", return_value="ok") as call:
+    def test_dispatch_routes_through_gateway_with_pinned_provider(self):
+        with patch.object(syntaxbuff, "call_gateway", return_value="ok") as call:
             self.assertEqual(syntaxbuff.dispatch("hello", model_key="qwen"), "ok")
-        call.assert_called_once_with("hello", "qwen/qwen3-235b-a22b:free", None)
+        call.assert_called_once_with(
+            "hello", model="openrouter::qwen/qwen3-235b-a22b:free", system=None)
 
-    def test_dispatch_falls_back_to_groq_then_qwen(self):
-        calls = []
+    def test_dispatch_sends_auto_for_non_pinnable_models(self):
+        with patch.object(syntaxbuff, "call_gateway", return_value="ok") as call:
+            syntaxbuff.dispatch("hello", model_key="cohere")
+        call.assert_called_once_with("hello", model="auto", system=None)
 
-        def fake_primary(prompt, model, base_url, system=None):
-            calls.append(("primary", model))
-            raise RuntimeError("primary")
+    def test_call_gateway_uses_local_endpoint_and_parses_response(self):
+        response = {"choices": [{"message": {"content": "gw reply"}}]}
+        with patch.object(syntaxbuff.urllib.request, "urlopen",
+                          return_value=FakeResponse(json.dumps(response).encode())) as open_url:
+            result = syntaxbuff.call_gateway("hello", model="auto", system="sys")
 
-        def fake_groq(prompt, model, system=None):
-            calls.append(("groq", model))
-            raise RuntimeError("groq")
-
-        def fake_qwen(prompt, model, system=None):
-            calls.append(("qwen", model))
-            return "qwen fallback"
-
-        with patch.object(syntaxbuff, "call_openai_compatible", side_effect=fake_primary), \
-             patch.object(syntaxbuff, "call_groq", side_effect=fake_groq), \
-             patch.object(syntaxbuff, "call_openrouter", side_effect=fake_qwen):
-            result = syntaxbuff.dispatch("hello", model_key="cohere")
-
-        self.assertEqual(result, "qwen fallback")
-        self.assertEqual([name for name, _ in calls], ["primary", "groq", "qwen"])
+        self.assertEqual(result, "gw reply")
+        request = open_url.call_args.args[0]
+        self.assertEqual(request.full_url,
+                         syntaxbuff.GATEWAY_BASE.rstrip("/") + "/chat/completions")
+        body = json.loads(request.data)
+        self.assertEqual(body["model"], "auto")
+        self.assertEqual(body["messages"][0], {"role": "system", "content": "sys"})
+        self.assertEqual(body["messages"][1], {"role": "user", "content": "hello"})
+        self.assertNotIn("Authorization", request.headers)
 
 
 class TestLeadDirectorySchema(unittest.TestCase):
@@ -158,6 +157,18 @@ class TestInferenceBridgeParsing(unittest.TestCase):
         request = open_url.call_args.args[0]
         self.assertEqual(json.loads(request.data)["model"], "test-model")
         self.assertIn("Bearer test-key", request.headers["Authorization"])
+
+    def test_call_gateway_uses_local_endpoint(self):
+        response = {"choices": [{"message": {"content": "gw"}}]}
+        with patch.object(bridge.urllib.request, "urlopen",
+                          return_value=FakeResponse(json.dumps(response).encode())) as open_url:
+            result = bridge._call_gateway([{"role": "user", "content": "hi"}])
+
+        self.assertEqual(result, "gw")
+        request = open_url.call_args.args[0]
+        self.assertEqual(request.full_url,
+                         bridge.GATEWAY_BASE.rstrip("/") + "/chat/completions")
+        self.assertNotIn("Authorization", request.headers)
 
     def test_patch_vibe_argv_removes_molt_flags_but_keeps_prompt(self):
         prompt, oomf, scopes = bridge.patch_vibe_argv(

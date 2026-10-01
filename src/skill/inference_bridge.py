@@ -1,9 +1,11 @@
 """
 MOLT Inference Bridge — one-shot API wrapper that nixes tool-call loops.
 Hydrates Living SKILL.md via SkillManager and tosses the hydrated prompt
-at any inference API in a single call — no MCP, no tool schema, no bloat.
+at the local AI gateway in a single call — no MCP, no tool schema, no bloat.
 
-Supports: Puter bridge, OpenRouter, Groq, Gemini, generic OpenAI-compatible.
+Routes through `http://127.0.0.1:7071/v1/auto`: the gateway is the only
+component that holds provider keys, and it walks the live chain
+(groq -> swarms -> openrouter) so this bridge inherits fallback for free.
 
 Usage (Python):
     from src.skill.inference_bridge import molt_one_shot
@@ -28,12 +30,11 @@ from typing import Optional, List, Dict, Any
 
 from .skill_manager import SkillManager
 
-# Reuse SyntaxBuff model routing if available
-try:
-    from tools.inference.syntaxbuff import dispatch as buff_dispatch  # type: ignore
-    HAS_BUFF = True
-except Exception:
-    HAS_BUFF = False
+# All inference goes through the local gateway, the only component that holds
+# provider keys (see ~/.config/ai/config.toml). This replaces the old SyntaxBuff
+# dispatch + raw OPENROUTER_API_KEY/GROQ_API_KEY fallback, which bypassed the
+# gateway's live provider chain entirely.
+GATEWAY_BASE = os.environ.get("AI_GATEWAY_URL", "http://127.0.0.1:7071/v1/auto")
 
 # ── Bitchwork Guardrail ──────────────────────────────────────────
 SYSTEM_BITCHWORK_SUFFIX = """
@@ -139,29 +140,10 @@ def molt_one_shot(skill_name: str, user_query: str,
         # Return hydrated system + user concat for inspection
         return json.dumps(messages, indent=2, ensure_ascii=False)
 
-    # Extract system + user for legacy dispatchers
-    system = messages[0]["content"] if messages else ""
-    prompt = messages[1]["content"] if len(messages) > 1 else user_query
-
-    # Prefer SyntaxBuff dispatch (Puter/Groq/OpenRouter routing)
-    if HAS_BUFF:
-        try:
-            # buff_dispatch expects (prompt, model_key, system)
-            # model param maps to buff model keys
-            return buff_dispatch(prompt, model_key=model, system=system)
-        except Exception as e:
-            print(f"[molt] buff dispatch failed: {e} — trying generic", file=sys.stderr)
-
-    # Fallback: direct OpenRouter if key present
-    key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("GROQ_API_KEY")
-    if key:
-        return _call_openrouter_generic(messages, key, timeout=timeout)
-
-    # Last resort: return dry_run hint
-    raise RuntimeError(
-        "No inference backend available. Set OPENROUTER_API_KEY/GROQ_API_KEY or ensure "
-        "SyntaxBuff Puter bridge is configured. Use dry_run=True to inspect hydrated prompt."
-    )
+    # Route through the local gateway: it owns the provider keys and walks the
+    # live chain, so this call inherits fallback for free. `model`/`provider` are
+    # retained for signature compatibility but the chain now selects the pool.
+    return _call_gateway(messages, model="auto", timeout=timeout)
 
 def molt_one_shot_sanitized(skill_name: str, user_query: str, **kwargs) -> Dict[str, Any]:
     """Wrapper that enforces Bitchwork Protocol on the output.
@@ -177,6 +159,30 @@ def molt_one_shot_sanitized(skill_name: str, user_query: str, **kwargs) -> Dict[
         # `raw` kept alongside the envelope so earlier readers keep working.
         f.write(json.dumps({"skill": skill_name, "raw": raw_output, **result}) + "\n")
     return result
+
+
+def _call_gateway(messages: List[Dict[str, str]], model: str = "auto",
+                  timeout: int = 90) -> str:
+    """One-shot chat completion via the local AI gateway (/v1/auto).
+
+    No provider key is read here — the gateway owns them and walks its live
+    chain. Raises if the gateway is unreachable so the caller does not silently
+    fall back to a key-holding path.
+    """
+    payload = json.dumps({"model": model, "messages": messages}).encode()
+    req = urllib.request.Request(
+        f"{GATEWAY_BASE.rstrip('/')}/chat/completions",
+        data=payload, headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            data = json.loads(r.read())
+    except Exception as e:
+        raise RuntimeError(
+            f"AI gateway unreachable at {GATEWAY_BASE} ({e}). "
+            "Start it with: systemctl --user start ai-gateway"
+        ) from e
+    return data["choices"][0]["message"]["content"]
 
 
 def _call_openrouter_generic(messages: List[Dict[str, str]], api_key: str,
@@ -275,11 +281,12 @@ def _cli():
         if args.dry_run:
             print(args.prompt)
             return 0
-        if HAS_BUFF:
-            print(buff_dispatch(args.prompt, model_key=args.model, system=args.system))
-            return 0
-        print("Set --skill or OPENROUTER_API_KEY", file=sys.stderr)
-        return 1
+        messages = []
+        if args.system:
+            messages.append({"role": "system", "content": args.system})
+        messages.append({"role": "user", "content": args.prompt})
+        print(_call_gateway(messages, model="auto"))
+        return 0
 
     out = molt_one_shot(skill, args.prompt, oomf_level=args.oomf,
                         model=args.model, system_prefix=args.system,

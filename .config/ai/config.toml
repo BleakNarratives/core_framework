@@ -30,12 +30,17 @@ recruiter_secondary = "auto"
 # <<< loadout presets <<<
 default = "auto"
 auto = "auto"
-fast = "mistral::mistral-small-latest"
+# Live pools only, per docs/PROVIDER_ENDPOINTS.md (re-probed 2026-09-16):
+# groq, swarms and openrouter answer; mistral (429), openai (unpaid),
+# gemini-direct (upstream 503) and cerebras (402) do not, so no preset pins
+# them. Prefer `auto` or a pinned live pool below.
+fast = "groq::openai/gpt-oss-120b"
 code = "openrouter::nvidia/nemotron-3-super-120b-a12b:free"
-big = "openai::gpt-4o-mini"
-# gemini-2.5-* is refused for this key and gemini-3.5-flash hangs; the
-# -latest alias is the one that actually answers (~2.7s, verified live).
-gemini = "gemini::gemini-flash-latest"
+# swarms fronts 1908 model ids, including the Gemini route that answers while
+# the Google key is upstream-503. Used for both heavy reasoning and long/
+# Gemini-shaped context until a direct Gemini key works again.
+big = "swarms::gemini/gemini-3.1-pro-preview"
+gemini = "swarms::gemini/gemini-3.1-pro-preview"
 
 # Answer style for headless callers (bin/ai --headless, errfix, future agents).
 [headless]

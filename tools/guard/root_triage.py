@@ -62,10 +62,12 @@ def looks_secret(name: str) -> bool:
 def classify(name: str, tracked: bool) -> tuple[str, str]:
     if tracked:
         return "SHIP", "tracked by git — leave alone"
-    if name.startswith("."):
-        return "LOCAL-CONFIG", "dotfile: shell/tool config or state"
+    # Secret check runs BEFORE the dotfile rule on purpose: a secret dotfile
+    # (e.g. `.git-credentials`) must be PROTECT, not dismissed as local config.
     if looks_secret(name):
         return "PROTECT", "secret-shaped name — do not move/copy/paste; verify & rotate"
+    if name.startswith("."):
+        return "LOCAL-CONFIG", "dotfile: shell/tool config or state"
     ext = Path(name).suffix.lower()
     low = name.lower()
     if " (1)" in low or ext in ARCHIVE_EXTS:

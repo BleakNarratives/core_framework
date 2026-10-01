@@ -25,9 +25,30 @@ More stubs at bottom — wire whatever scouts you already have.
 import time
 import json
 import hashlib
+import logging
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Callable, Optional, Tuple
+
+log = logging.getLogger(__name__)
+
+
+def _emit(source: str, stage: str, event: str, payload: Dict[str, Any]) -> None:
+    """Best-effort event emit to the central telemetry bus.
+
+    Telemetry is never allowed to break the hydration path: the import is
+    lazy (so importing this module has no side effects) and a missing or
+    broken sink is recorded at debug rather than raised. Previously the
+    preflight gate referenced an undefined ``bus``, so this path raised
+    ``NameError`` on every non-empty hydration and the error handler raised
+    again on its own emit.
+    """
+    try:
+        from ..core.telemetry_bus import bus  # optional: not present in slim checkouts
+        bus.emit_sync(source, stage, event, payload)
+    except Exception as exc:  # telemetry is fire-and-forget by contract
+        log.debug("telemetry emit skipped (%s/%s/%s): %s", source, stage, event, exc)
+
 
 # ── registry ─────────────────────────────────────────────────────
 @dataclass
@@ -180,7 +201,8 @@ def fm_preflight_gate(ctx: Dict[str, Any]):
         ctx["_preflight_verdict"] = verdict.to_dict()
         
         # BUS EMIT
-        bus.emit_sync("preflight_gate", "pre_inject", "audit_complete", {"verdict": verdict.verdict, "skill": skill})
+        _emit("preflight_gate", "pre_inject", "audit_complete",
+              {"verdict": verdict.verdict, "skill": skill})
 
         if verdict.verdict == "block":
             # redact injection indicators, do not pass hydrated to model
@@ -191,7 +213,7 @@ def fm_preflight_gate(ctx: Dict[str, Any]):
             ctx["_hydrate_chunk_out"] = ctx["hydrated"]
     except Exception as e:
         ctx.setdefault("_fm_errors", []).append(f"preflight_gate: {e}")
-        bus.emit_sync("preflight_gate", "pre_inject", "error", {"error": str(e)})
+        _emit("preflight_gate", "pre_inject", "error", {"error": str(e)})
     return None
 
 

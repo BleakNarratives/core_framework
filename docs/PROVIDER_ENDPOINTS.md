@@ -203,11 +203,17 @@ reason that is neither the key nor the URL.
   so the two rows in the table above still show the raw codes they returned
   before the fix. Restart `ai-gateway` for the running process to pick it up.
 
-### Four vault pools still have no route at all
+### Resolved 2026-09-30 — no unexplained pools remain
 
 `concierge.py list` reports 16 pools; the gateway routes 12. `jules` and `vibe`
 are the two the 09-15 section already resolves as duplicates of `gemini` and
-`mistral`. That leaves **`google`** and **`unknown`** arriving with neither a
-route nor an explanation — the same "keys arrived and were never read" pattern
-this file has now recorded three times. Neither was probed, so neither is
-claimed dead here.
+`mistral`. The last two are now closed out, so every pool is routed, a known
+duplicate, or retired — the "keys arrived and were never read" pattern has no
+remaining instances:
+
+- **`google`** — `status: retired` and no key present. Not routable and not
+  expected to be; it is the superseded Google AI Studio key. Nothing to wire.
+- **`unknown`** — a **placeholder value**, not a key. The vault recorded its
+  source as `UNPACKED/equinex-forge-r&d/.env.local:GEMINI_API_KEY` with a stored
+  prefix of `PLACEHOLDER_API_...`. It was retired (`status: retired`) rather than
+  probed, because wiring a placeholder only adds a guaranteed-failing hop.

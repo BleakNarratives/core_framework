@@ -42,17 +42,20 @@ and local runtime state. Do not move or delete an entry based on its name alone.
   `python -m unittest discover -s projects/herald/tests -t projects/herald`
   (130 tests, offline). Its lead data (`LEADS.md`, `OUTREACH_DRAFTS.md`) is
   deliberately ignored by `projects/herald/.gitignore`.
-- `thoth_orchestrator/` is ignored by the root `.gitignore` (`/*`, with no allowlist
-  entry) and yet imported by tracked code: `src/sovereign/recursive_engine.py` and
-  `src/sovereign/bridges.py` reach `thoth_orchestrator.agent_bus` and
-  `thoth_orchestrator.motherbrain`, so `agent_bus` also resolves as a top-level
-  import wherever `sys.path` picks up its directory. Both imports sit behind
-  try/except, so a clone without the directory degrades rather than fails.
-  Its state paths are pinned to one machine in several files. `agent_bus.py` used to
-  default its bus directory to `/home/bleaknarratives/RootBase` regardless of
-  `$HOME`; it now defaults to `$HOME/RootBase`. Because the directory is untracked,
-  that fix cannot travel in a commit — `tests/test_thoth_bus_location.py` records it
-  instead, and skips where `agent_bus` is not importable.
+- `thoth_orchestrator/` is **tracked** despite having no allowlist entry in the
+  root `.gitignore`: 58 source files were added before the `/*` allowlist existed,
+  and ignore rules do not apply to already-tracked files. It is imported by tracked
+  code: `src/sovereign/recursive_engine.py` and `src/sovereign/bridges.py` reach
+  `thoth_orchestrator.agent_bus` and `thoth_orchestrator.motherbrain`, so `agent_bus`
+  also resolves as a top-level import wherever `sys.path` picks up its directory.
+  Both imports sit behind try/except, so a clone without the directory degrades
+  rather than fails. Its state paths are pinned to one machine in several files.
+  `agent_bus.py` used to default its bus directory to `/home/bleaknarratives/RootBase`
+  regardless of `$HOME`; it now defaults to `$HOME/RootBase`, and because the file is
+  tracked, that fix travels in a commit. (Its generated `foxwood_backup/` — 1,036
+  timestamped JSON dumps — was removed from tracking on 2026-09-30 and is now covered
+  by `/*`.) `tests/test_thoth_bus_location.py` still records the fix and skips where
+  `agent_bus` is not importable.
 - The current branch is `feature/ribbon-animation`. As of 2026-09-19 the working
   tree is committed apart from the untracked items catalogued above; this
   document describes the tree and does not imply ownership of anything in it.

@@ -27,6 +27,7 @@ Bypass a single commit:  git commit --no-verify
 """
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -40,6 +41,10 @@ BLOCKED_PREFIXES = ("thoth_orchestrator/foxwood_backup/",)
 # Advisory only. Kept narrow so the gate stays trustworthy: every entry is a
 # finding that is genuinely a bug or dead code, not a style preference.
 RUFF_SELECT = "E9,F63,F7,F82,F821,F401,F841"
+
+# A real finding line is `path:line:col: CODE message`. ruff also prints summary
+# lines ("Found N errors.", "[*] N fixable...") that must not be counted.
+FINDING_RE = re.compile(r"^.+:\d+:\d+: [A-Z]+\d+")
 
 
 def _git(*args: str) -> str:
@@ -98,7 +103,7 @@ def ruff_findings(paths: list[str]) -> tuple[list[str], bool]:
     if proc.returncode == 0:
         # ruff prints "All checks passed!" on success; that is not a finding.
         return [], True
-    lines = [ln for ln in proc.stdout.splitlines() if ln.strip()]
+    lines = [ln for ln in proc.stdout.splitlines() if FINDING_RE.match(ln)]
     return lines, True
 
 

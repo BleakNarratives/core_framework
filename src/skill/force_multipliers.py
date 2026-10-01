@@ -27,7 +27,7 @@ import json
 import hashlib
 import logging
 from pathlib import Path
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, Any, List, Callable, Optional, Tuple
 
 log = logging.getLogger(__name__)

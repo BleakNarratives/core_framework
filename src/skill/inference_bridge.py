@@ -28,6 +28,16 @@ from typing import Optional, List, Dict, Any
 
 from .skill_manager import SkillManager
 
+# Pre-execution regulator ("Cui Bono"): composes the Tribunal preflight guardrails
+# with the local utility/risk gate. Optional on purpose — a missing tools/ tree
+# must degrade to "no regulator", never break inference.
+try:
+    from tools.guard.cui_bono_regulator import evaluate_pre_execution as _cui_bono
+    HAS_REGULATOR = True
+except Exception:
+    _cui_bono = None
+    HAS_REGULATOR = False
+
 # All inference goes through the local gateway, the only component that holds
 # provider keys (see ~/.config/ai/config.toml). This replaces the old SyntaxBuff
 # dispatch + raw OPENROUTER_API_KEY/GROQ_API_KEY fallback, which bypassed the
@@ -137,6 +147,16 @@ def molt_one_shot(skill_name: str, user_query: str,
     if dry_run:
         # Return hydrated system + user concat for inspection
         return json.dumps(messages, indent=2, ensure_ascii=False)
+
+    # Pre-execution regulator: refuse a dangerous operation before it reaches a
+    # provider. Only BLOCK stops the call; REDIRECT is advisory for now.
+    if HAS_REGULATOR:
+        decision = _cui_bono({"command": user_query, "goal": skill_name})
+        if decision.verdict == "BLOCK":
+            raise RuntimeError(
+                "Blocked by the Cui Bono pre-execution regulator: "
+                + "; ".join(decision.reasoning[-3:])
+            )
 
     # Route through the local gateway: it owns the provider keys and walks the
     # live chain, so this call inherits fallback for free. `model`/`provider` are

@@ -21,6 +21,7 @@ import logging
 import sys
 import time
 from pathlib import Path
+from typing import Dict
 
 from core_framework.adapters.district_schema import (
     BuildingSpec,
@@ -94,8 +95,6 @@ class MarketEvent:
 # ---------------------------------------------------------------------------
 # Translator
 # ---------------------------------------------------------------------------
-from core_framework.adapters.axe_scout_spec import format_axe_finding_to_scout_intel
-
 class MarketTwinTranslator:
     """Converts Vertical AI domain objects into Code City city-scene entities."""
 
@@ -110,12 +109,6 @@ class MarketTwinTranslator:
         self.monsters.clear()
         self.disasters.clear()
         self.agents.clear()
-
-    def add_axe_scout_finding(self, raw_axe_finding: dict) -> dict:
-        """Accepts a raw scan output from AxeScout and converts it to a 3D city entity."""
-        intel_dict = format_axe_finding_to_scout_intel(raw_axe_finding)
-        intel = ScoutIntel(**intel_dict)
-        return self.add_scout_intel(intel)
 
     def add_scout_intel(self, intel: ScoutIntel) -> dict:
         building_spec = BuildingSpec(

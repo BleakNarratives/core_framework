@@ -1,0 +1,7 @@
+# Generated at runtime; never part of the pointer layer
+__pycache__/
+*.py[cod]
+output/
+logs/
+scout_leaderboard.json
+.pytest_cache/

@@ -4,14 +4,22 @@
 
 | # | Task | File(s) | Status |
 |---|------|---------|--------|
-| 1 | Daemon / non-blocking launcher hardening | `core_framework/launchers/` | Blocked |
-| 2 | Unified `.venv` site-packages mapping | `core_framework/shared/config.py`, launchers | Blocked |
-| 3 | Dual-stream commercial exporters (3D + CSV/JSON alpha) | `core_framework/bin/scout_vehicle.py` | Blocked |
+| 1 | Daemon / non-blocking launcher hardening | `core_framework/launchers/` | **Resolved 2026-10-02** |
+| 2 | Unified `.venv` site-packages mapping | `core_framework/shared/config.py`, launchers | **Resolved 2026-10-02** |
+| 3 | Dual-stream commercial exporters (3D + CSV/JSON alpha) | `core_framework/bin/scout_vehicle.py` | **Resolved 2026-10-02** |
 
 Notes:
-- Daemon hardening is required before `server.py` can run safely inside subshell CLI sandboxes without fd hangs.
-- Venv unification depends on confirming which interpreter the WebSocket frontend/browser can reach from this Chromebook environment.
-- Commercial exporters are gated on live network access for real scout sources.
+- Daemon hardening: `unified.py --detach` runs children in their own session with
+  stdin closed and logs redirected, so a sandboxed subshell never blocks on a
+  child fd. Verified by `tests/test_launcher.py`.
+- Venv unification: `resolve_venv_site_packages()` / `inject_venv_paths()` pick
+  the first candidate venv that actually contains a module. Confirmed resolving
+  `websockets` from `passive_income_swarm-env` (websockets 17.0.1).
+- Exporters: `export_alpha_streams()` writes both streams and is covered by
+  `tests/test_exporters.py`. They operate purely on locally supplied findings.
+- **Still blocked:** live Gemini/Vibe CLI ingestion (no live sources wired) and
+  the backend `websockets` import order in `server.py`. See `BUFFY_ASSESSMENT.md`
+  for the current, verified blocker list — this QRD's section 1 is historical.
 
 ## 2. CLI Agent Delegation Model
 
@@ -77,3 +85,9 @@ Target buyers:
 ## 6. Session Boundary
 
 This QRD is the canonical record of the session. All other files (`ROADMAP.md`, `README.md`) reference this document.
+
+### Addendum — 2026-10-02 (Buffy)
+Tasks 1–3 above were implemented and verified. Transport corrected from raw TCP
+to WebSocket. Test baseline 11 → 27 passing. For the current source of truth on
+status, read `BUFFY_ASSESSMENT.md`; this QRD describes the session that produced
+the design, not the post-implementation state.

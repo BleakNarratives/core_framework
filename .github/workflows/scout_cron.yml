@@ -1,0 +1,76 @@
+# Adaptive scout loop — GitHub Actions trigger (TEMPLATE)
+#
+# This workflow is DISPATCH-FIRST on purpose: the schedule is commented out so
+# it cannot silently consume runner minutes or act before ingestion is wired.
+#
+# To enable unattended runs, uncomment the `schedule:` block below.
+# Caveats worth knowing before you do (see ../CLOUD_ADAPTIVE_BLUEPRINT.md):
+#   * GitHub disables scheduled workflows after ~60 days of repository
+#     inactivity; they must be re-enabled from the Actions tab.
+#   * Runner storage is ephemeral. `output/` and the JSON memory file do NOT
+#     persist between runs unless uploaded as an artifact or committed back
+#     (or mirrored to a database).
+#   * No live data sources are wired yet, so a run currently scores whatever
+#     findings the caller supplies — there is no network ingestion in this repo.
+
+name: scout-loop
+
+on:
+  workflow_dispatch:
+    inputs:
+      query_pattern:
+        description: "Query pattern to record in adaptive memory"
+        required: false
+        default: "debt covenant default risk"
+      ws_url:
+        description: "Optional Code City WebSocket URL (broadcast is best-effort)"
+        required: false
+        default: ""
+  # schedule:
+  #   - cron: "*/15 * * * *"   # every 15 minutes
+
+permissions:
+  contents: read
+
+jobs:
+  patrol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install runtime dependency
+        run: python -m pip install --upgrade pip websockets
+
+      - name: Run scout vehicle (score + export)
+        env:
+          CODE_CITY_WS_URL: ${{ inputs.ws_url }}
+        run: |
+          python -m pytest core_framework/tests -q
+          python core_framework/bin/scout_vehicle.py
+
+      - name: Upload alpha streams
+        uses: actions/upload-artifact@v4
+        with:
+          name: scout-output
+          path: |
+            core_framework/output/market_twin.json
+            core_framework/output/alpha_stream.csv
+          if-no-files-found: warn
+          retention-days: 7
+
+      # Optional outreach. Guarded so a missing secret is a no-op, never a fail.
+      - name: Notify webhook (optional)
+        if: ${{ secrets.SCOUT_WEBHOOK_URL != '' }}
+        env:
+          SCOUT_WEBHOOK_URL: ${{ secrets.SCOUT_WEBHOOK_URL }}
+        run: |
+          if [ -f core_framework/output/market_twin.json ]; then
+            curl -sS -X POST -H "Content-Type: application/json" \
+              --data @core_framework/output/market_twin.json \
+              "$SCOUT_WEBHOOK_URL" || echo "webhook delivery failed (non-fatal)"
+          fi

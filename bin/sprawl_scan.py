@@ -23,6 +23,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -105,6 +106,7 @@ class DocEntry:
     age_days: int
     words: int
     incomplete_markers: int
+    content_hash: str = ""
     backup: bool = False
     open_tasks: List[str] = field(default_factory=list)
     done_count: int = 0
@@ -182,6 +184,7 @@ def _parse_doc(path: Path, root: Path, now: float) -> DocEntry | None:
         age_days=int(max(0, (now - stat.st_mtime) // 86400)),
         words=len(text.split()),
         incomplete_markers=len(INCOMPLETE_RE.findall(text)),
+        content_hash=hashlib.sha256(raw).hexdigest()[:12],
         backup=_is_backup(rel),
         open_tasks=open_tasks,
         done_count=done,
@@ -384,11 +387,26 @@ def render_triage(entries: List[DocEntry], root: Path, *, stale_days: int = DEFA
         "",
     ]
     if dupe_families:
-        lines += ["| filename | copies | projects |", "|---|---:|---|"]
+        lines += [
+            "**Verdict matters.** `identical` families are pure copy-propagation and can be",
+            "collapsed to one canonical copy plus pointers. `DIVERGENT` families share only",
+            "the filename — they are different documents and must be left alone (or renamed).",
+            "",
+            "| filename | copies | distinct contents | verdict | projects |",
+            "|---|---:|---:|---|---|",
+        ]
         for name, docs in sorted(dupe_families.items(), key=lambda kv: -len(kv[1])):
+            distinct = len({d.content_hash for d in docs})
+            verdict = "identical" if distinct == 1 else "DIVERGENT"
             projects = ", ".join(sorted({d.project for d in docs})[:8])
             more = "" if len({d.project for d in docs}) <= 8 else " …"
-            lines.append(f"| `{name}` | {len(docs)} | {projects}{more} |")
+            lines.append(f"| `{name}` | {len(docs)} | {distinct} | {verdict} | {projects}{more} |")
+        identical = sum(1 for docs in dupe_families.values() if len({d.content_hash for d in docs}) == 1)
+        lines += [
+            "",
+            f"- collapse-safe (`identical`): **{identical}** families",
+            f"- must not be touched (`DIVERGENT`): **{len(dupe_families) - identical}** families",
+        ]
     else:
         lines.append("_No duplicate filename families found._")
     lines.append("")
@@ -470,8 +488,8 @@ def render_triage(entries: List[DocEntry], root: Path, *, stale_days: int = DEFA
         "1. Regenerate weekly (or after any big session):",
         "   `python3 -m core_framework.bin.sprawl_scan`",
         "2. Keep ONE canonical index + triage at the repo root; never fork `SPRAWL_*.md`.",
-        "3. When a duplicate family is resolved, delete the non-canonical copies (or",
-        "   replace them with a one-line pointer to the canonical doc).",
+        "3. Collapse only `identical` duplicate families (one canonical copy + pointers).",
+        "   Leave `DIVERGENT` families alone — same name, different content.",
         "4. Prefer appending to an existing ledger over creating a new `*_HANDOFF.md`.",
         "",
         "> This plan is advisory. Verify each candidate before moving anything — mtime",

@@ -91,11 +91,15 @@ def test_category_classification(tmp_path):
 def test_triage_flags_duplicates_and_incomplete(tmp_path):
     root = tmp_path
     _write(root / "p1" / "ROADMAP.md", "# one\n- [ ] task\n")
-    _write(root / "p2" / "ROADMAP.md", "# two\n- [x] done\n")
+    _write(root / "p2" / "ROADMAP.md", "# two\n- [x] done\n")      # divergent
+    _write(root / "p1" / "QRD.md", "# same\nbody\n")
+    _write(root / "p2" / "QRD.md", "# same\nbody\n")               # identical
     _write(root / "p1" / "WHITE_PAPER.md", "# Draft\nThis is a TODO stub draft.\n")
     entries = scan(root, depth=5)
     md = render_triage(entries, root, stale_days=0, incomplete_words=800)
     assert "SPRAWL_TRIAGE" in md
-    assert "`roadmap.md`" in md          # duplicate family
+    assert "`roadmap.md`" in md            # duplicate family
+    assert "DIVERGENT" in md               # roadmap copies differ
+    assert "identical" in md               # qrd copies match
     assert "p1/WHITE_PAPER.md" in md       # incomplete worklist
     assert "Standing actions" in md

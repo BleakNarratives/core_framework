@@ -9,7 +9,7 @@
 #                                              # + broadcast + status
 #  Stages (modular):    ./domino.sh preflight | serve | stop | restart
 #                       ./domino.sh patrol | broadcast | plan | status
-#                       ./domino.sh sprawl | skill | help
+#                       ./domino.sh leaderboard | sprawl | skill | help
 #
 #  Safe by default: offline fixtures, localhost backend, no secrets, no network
 #  unless you pass DOMINO_LIVE=1 (which needs SEC_USER_AGENT). Nothing here is
@@ -136,6 +136,38 @@ plan() {
       --query "$QUERY" --export "$OUT" --plan )
 }
 
+leaderboard() {
+  preflight
+  say "leaderboard driver (offline fixtures) -> $OUT/leaderboard.json"
+  local lb="$OUT/leaderboard.json"
+  ( cd "$ROOT" && "$PY" -m core_framework.bin.scout_vehicle \
+      --ingest "sec=$SEC_FIXTURE" --ingest "news=$NEWS_FIXTURE" \
+      --query "$QUERY" --export "$OUT" \
+      --leaderboard "$lb" --memory "$OUT/adaptive_memory.json" )
+  "$PY" - "$lb" <<'PY'
+import json, sys
+
+try:
+    data = json.load(open(sys.argv[1]))
+except Exception as exc:  # noqa: BLE001 - report, don't crash the runner
+    print(f"[domino] no leaderboard yet: {exc}")
+    raise SystemExit(0)
+
+agents = data.get("agents", {})
+pending = data.get("pending_signals", {})
+print("[domino] leaderboard queue")
+for name, st in sorted(agents.items(), key=lambda kv: -kv[1].get("total_score", 0)):
+    print(
+        f"  {name}: score={st.get('total_score', 0)} "
+        f"discoveries={st.get('discoveries', 0)} critical={st.get('critical_hits', 0)} "
+        f"bounties={st.get('bounties', 0)} false_positives={st.get('false_positives', 0)}"
+    )
+print(f"  pending fast signals awaiting deep confirmation: {len(pending)}")
+for key in pending:
+    print(f"    - {key}")
+PY
+}
+
 sprawl() {
   say "regenerating the doc-sprawl index + triage plan"
   ( cd "$ROOT" && "$PY" -m core_framework.bin.sprawl_scan )
@@ -194,6 +226,7 @@ Usage: ./domino.sh [command]
   patrol         ingest -> score -> translate -> export (offline fixtures)
   broadcast      patrol + push the market twin to the backend
   plan           show the adaptive query plan learned so far
+  leaderboard    run the driver offline and print the leaderboard queue
   status         show backend + output artifact status
   sprawl         regenerate SPRAWL_INDEX.md + SPRAWL_TRIAGE.md at the repo root
   skill          surface the axescout-market-twin skill and a CLI hint
@@ -217,6 +250,7 @@ case "$cmd" in
   patrol|scout)       patrol ;;
   broadcast|push)     broadcast ;;
   plan|adaptive)      plan ;;
+  leaderboard|board)  leaderboard ;;
   skill)              skill ;;
   help|-h|--help)     usage ;;
   *) die "unknown command: $cmd (try: all serve stop patrol broadcast plan status sprawl skill help)" ;;

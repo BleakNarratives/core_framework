@@ -101,6 +101,15 @@ on free-tier infrastructure without keeping the Chromebook open.
 - `tests/test_ingest_adapter.py` — 6 tests incl. full network-free E2E loop.
 - `.github/workflows/scout_cron.yml` — dispatch-first Actions template; schedule
   commented until ingestion exists.
+- **Leaderboard driver** — `./domino.sh leaderboard` runs the offline fixtures
+  pass and prints the live leaderboard queue. Verified: 5 findings, +414 pts on
+  a first run, 5 buildings / 4 monsters, artifacts in `output/`.
+- **Duplicate consolidation** — `sprawl_scan.py --consolidate [--apply]`
+  classifies identical families (`MIRROR` / `CONFIG` / `SNAPSHOT` / `REVIEW` /
+  `SAFE`) and collapses **only** `SAFE` strays, backing each up to
+  `~/.sprawl_backup/<stamp>/` first. Applied 3 strays; left 40 multi-project
+  mirrors, 1 agent-config family, 3 workspace snapshots, and 2 cross-project
+  families untouched.
 - `DESIGN_INTENT_ASSESSMENT.md` — TempleOS-intent gap analysis + tool inventory.
 
 ### Next (ordered, smallest first)
@@ -165,9 +174,9 @@ Files changed in this later session:
 - `core_framework/tests/test_cli.py` (new)
 - `core_framework/bin/sprawl_scan.py` (new — doc-sprawl map + triage planner)
 - `core_framework/tests/test_sprawl_scan.py` (new)
-- `~/SPRAWL_INDEX.md`, `~/SPRAWL_TRIAGE.md` (generated at the repo root; gitignored, regenerable via `./domino.sh sprawl`)
+- `~/SPRAWL_INDEX.md`, `~/SPRAWL_TRIAGE.md`, `~/SPRAWL_CONSOLIDATE.md` (generated at the repo root; gitignored, regenerable via `./domino.sh sprawl` / `--consolidate`)
 - `tools/ingest/__init__.py` (new — package marker so the offline importer resolves)
 - `~/domino.sh` (new — root wrapper; ignored by the home repo's `/*` rule)
 
-No canonical *source* tree modified. 51/51 tests pass; WebSocket transport
+No canonical *source* tree modified. 64/64 tests pass; WebSocket transport
 verified against the live backend on an isolated localhost port.

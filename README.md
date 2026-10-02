@@ -21,9 +21,10 @@ coach_bleak, boardroom, scouts, genetic arena, and all agent swarms.
 From the repo root, one command fires the whole scout machine offline:
 
 ```bash
-./domino.sh            # preflight -> serve -> patrol -> broadcast -> status
-./domino.sh help       # all stages: serve | stop | patrol | broadcast | plan
-                       #             status | sprawl | skill
+./domino.sh                 # preflight -> serve -> patrol -> broadcast -> status
+./domino.sh leaderboard     # run the driver offline, print the leaderboard queue
+./domino.sh help            # stages: serve | stop | patrol | broadcast | plan
+                            #         leaderboard | status | sprawl | skill
 ```
 
 `~/domino.sh` is a thin root-level wrapper that execs the canonical, modular
@@ -44,6 +45,22 @@ and produces a triage plan:
 and separates **active** projects from **museum/backup/recovery** copies so the
 work surface stays small. Regenerate any time; the two root files are generated,
 not hand-edited.
+
+### Duplicate consolidation (opt-in)
+
+`sprawl_scan.py` also plans safe duplicate collapses. It classifies every
+byte-identical filename family and only ever touches **SAFE** strays — copies
+that sit outside their canonical tree. Deliberate multi-project mirrors,
+agent/tool config copies, and point-in-time workspace snapshots are classified
+and deliberately left alone:
+
+```bash
+python3 -m core_framework.bin.sprawl_scan --consolidate          # write SPRAWL_CONSOLIDATE.md (plan only)
+python3 -m core_framework.bin.sprawl_scan --consolidate --apply  # back up + replace strays with pointer stubs
+```
+
+`--apply` copies each duplicate to `~/.sprawl_backup/<stamp>/` before writing
+the pointer, so every collapse is reversible.
 
 ## Quick start
 

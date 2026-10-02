@@ -27,6 +27,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import sys
 import time
 from collections import Counter, defaultdict
@@ -87,6 +88,10 @@ INCOMPLETE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Pointer stubs written by `apply_consolidation` are markers, not documents:
+# skip them so a resolved duplicate family stops appearing in the index/worklist.
+POINTER_MARKER = "# Consolidated duplicate"
+
 MAX_READ_BYTES = 400_000
 DEFAULT_STALE_DAYS = 30
 DEFAULT_INCOMPLETE_WORDS = 800
@@ -94,6 +99,16 @@ DEFAULT_INCOMPLETE_WORDS = 800
 # Path fragments that mark museum / backup / recovery trees. Most duplicate doc
 # families live here; separating them makes the active work surface realistic.
 BACKUP_MARKERS = ("archive", "graveyard", "unpacked", "recovery", "backup", "dump", "_incoming")
+
+# Consolidation-planner classification. Byte-identical is necessary but not
+# sufficient for a safe collapse: mirrors, agent-tool config, and workspace
+# snapshots are identical on purpose.
+AGENT_CONFIG_DIRS = {
+    ".claude", ".codex", ".gemini", ".hermes", ".junie", ".openhands",
+    ".vscode", ".config", ".codebuddy", ".grok",
+}
+SNAPSHOT_MARKERS = ("dev-cockpit", "workspaces", "snapshot", "backup", "archive")
+SUSPECT_PATH_PARTS = {"~"}
 
 
 @dataclass
@@ -155,6 +170,9 @@ def _parse_doc(path: Path, root: Path, now: float) -> DocEntry | None:
         text = raw.decode("utf-8", errors="replace")
         stat = path.stat()
     except OSError:
+        return None
+
+    if text.lstrip().startswith(POINTER_MARKER):
         return None
 
     title = ""
@@ -498,6 +516,152 @@ def render_triage(entries: List[DocEntry], root: Path, *, stale_days: int = DEFA
     return "\n".join(lines)
 
 
+# ---------------------------------------------------------------------------
+# Consolidation planner
+#
+# "Identical" alone does not make a duplicate family safe to collapse: the
+# copies may be deliberate multi-project mirrors, agent-tool config files, or
+# point-in-time workspace snapshots. This planner classifies each identical
+# family and only proposes a collapse for copies that sit outside the
+# canonical tree (strays). Divergent families are never in scope.
+# ---------------------------------------------------------------------------
+def _is_stray(entry: DocEntry) -> bool:
+    """True when a copy sits outside a meaningful project tree.
+
+    Strays are root-level one-off files and path components that are clearly
+    accidental (a literal ``~`` directory). These are the copies safe to
+    collapse to a pointer because the canonical document lives elsewhere.
+    """
+    parts = Path(entry.path).parts
+    if len(parts) == 1:
+        return True
+    return any(p in SUSPECT_PATH_PARTS for p in parts[:-1])
+
+
+def family_verdict(docs: List[DocEntry]) -> tuple[str, str]:
+    """Classify an identical duplicate family. Returns ``(verdict, reason)``.
+
+    ``SAFE`` is the only verdict the applier acts on; everything else is left
+    for a human because the copies carry different meanings despite equal bytes.
+    """
+    projects = {d.project for d in docs}
+    dirs = [p.lower() for d in docs for p in Path(d.path).parts[:-1]]
+    if any(p in AGENT_CONFIG_DIRS for p in dirs):
+        return "CONFIG", "agent/tool config directory; tooling reads these"
+    if any(marker in p for p in dirs for marker in SNAPSHOT_MARKERS):
+        return "SNAPSHOT", "point-in-time workspace/snapshot; leave intact"
+    if len(projects) >= 3:
+        return "MIRROR", "deliberate multi-project mirror; a sync step re-creates these"
+    strays = [d for d in docs if _is_stray(d)]
+    if strays and len(strays) < len(docs):
+        return "SAFE", "duplicate copy outside the canonical tree"
+    return "REVIEW", "cross-project; confirm the canonical owner first"
+
+
+def _pick_canonical(docs: List[DocEntry]) -> DocEntry:
+    pool = [d for d in docs if not _is_stray(d)] or list(docs)
+    return sorted(pool, key=lambda d: (len(Path(d.path).parts), d.path))[0]
+
+
+def plan_consolidation(entries: List[DocEntry]) -> List[dict]:
+    """One plan row per identical duplicate family (verdict + canonical + copies)."""
+    families: dict[str, list[DocEntry]] = defaultdict(list)
+    for entry in entries:
+        if not entry.backup:
+            families[entry.basename].append(entry)
+    plan: List[dict] = []
+    for name, docs in sorted(families.items(), key=lambda kv: -len(kv[1])):
+        if len(docs) < 2 or len({d.content_hash for d in docs}) != 1:
+            continue  # divergent families are explicitly out of scope
+        verdict, reason = family_verdict(docs)
+        canonical = _pick_canonical(docs)
+        plan.append({
+            "name": name,
+            "verdict": verdict,
+            "reason": reason,
+            "canonical": canonical.path,
+            "copies": sorted(d.path for d in docs),
+        })
+    return plan
+
+
+def _pointer_stub(copy_rel: Path, canonical_rel: Path, backup_rel: str) -> str:
+    link = os.path.relpath(canonical_rel, copy_rel.parent)
+    return (
+        "# Consolidated duplicate\n\n"
+        "This file was a byte-identical duplicate. The canonical document is:\n\n"
+        f"- [`{canonical_rel.as_posix()}`]({link.replace(os.sep, '/')})\n\n"
+        "Do not edit this stub; edit the canonical file. The original content was\n"
+        f"backed up to `{backup_rel}`.\n"
+    )
+
+
+def render_consolidation(plan: List[dict], root: Path, generated: str | None = None) -> str:
+    generated = generated or datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    counts = Counter(row["verdict"] for row in plan)
+    lines = [
+        "# SPRAWL_CONSOLIDATE.md — safe duplicate-collapse plan",
+        "",
+        "> Generated by `core_framework/bin/sprawl_scan.py`; regenerate, don't hand-edit.",
+        f"> Generated: {generated} · root: `{root}`",
+        ">",
+        "> Only `SAFE` families are collapsed by `--apply`; every other verdict is",
+        "> deliberately left for a human. `SAFE` means each extra copy is a stray",
+        "> outside the canonical tree — not a mirror, config, or snapshot.",
+        "",
+        f"- identical families: **{len(plan)}** · "
+        + ", ".join(f"{k}={v}" for k, v in sorted(counts.items())),
+        "",
+        "| family | verdict | canonical | copies | reason |",
+        "|---|---|---|---:|---|",
+    ]
+    for row in sorted(plan, key=lambda r: (r["verdict"] != "SAFE", r["name"])):
+        lines.append(
+            f"| `{row['name']}` | {row['verdict']} | `{row['canonical']}` | "
+            f"{len(row['copies'])} | {row['reason']} |"
+        )
+    lines += ["", "## Actions", ""]
+    safe = [r for r in plan if r["verdict"] == "SAFE"]
+    if not safe:
+        lines.append("_No SAFE families — nothing to collapse automatically._")
+    for row in safe:
+        lines.append(f"### `{row['name']}`")
+        lines.append(f"- keep: `{row['canonical']}`")
+        for copy in row["copies"]:
+            if copy != row["canonical"]:
+                lines.append(f"- collapse → pointer: `{copy}`")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def apply_consolidation(plan: List[dict], root: Path, backup_dir: str | Path | None = None,
+                        stamp: str | None = None) -> tuple[list[str], Path]:
+    """Collapse SAFE families: back up each duplicate, then write a pointer stub.
+
+    Only ``SAFE`` rows are touched. Returns ``(actions, backup_root)``.
+    """
+    root = Path(root).resolve()
+    stamp = stamp or datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    backup_root = Path(backup_dir).resolve() if backup_dir else (Path.home() / ".sprawl_backup" / stamp)
+    actions: list[str] = []
+    for row in plan:
+        if row["verdict"] != "SAFE":
+            continue
+        canonical = Path(row["canonical"])
+        for copy in row["copies"]:
+            if copy == row["canonical"]:
+                continue
+            src = root / copy
+            if not src.exists() or not src.is_file():
+                continue
+            backup_path = backup_root / copy
+            backup_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, backup_path)
+            src.write_text(_pointer_stub(Path(copy), canonical, str(backup_path)), encoding="utf-8")
+            actions.append(f"{copy} -> {row['canonical']}")
+    return actions, backup_root
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="sprawl_scan",
@@ -512,6 +676,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--stale-days", type=int, default=DEFAULT_STALE_DAYS)
     parser.add_argument("--incomplete-words", type=int, default=DEFAULT_INCOMPLETE_WORDS)
     parser.add_argument("--max-per-doc", type=int, default=25, help="open tasks shown per doc")
+    parser.add_argument("--consolidate", action="store_true",
+                        help="write SPRAWL_CONSOLIDATE.md (safe duplicate-collapse plan)")
+    parser.add_argument("--apply", action="store_true",
+                        help="apply SAFE consolidations (backup + pointer stubs; implies --consolidate)")
+    parser.add_argument("--consolidate-out", default=None,
+                        help="plan path (default <root>/SPRAWL_CONSOLIDATE.md)")
+    parser.add_argument("--backup-dir", default=None,
+                        help="backup root for --apply (default ~/.sprawl_backup/<stamp>)")
     return parser
 
 
@@ -539,6 +711,23 @@ def main(argv=None) -> int:
             entries, root, stale_days=args.stale_days, incomplete_words=args.incomplete_words,
         ))
         print(f"[sprawl] triage -> {triage_path}")
+
+    if args.consolidate or args.apply:
+        plan = plan_consolidation(entries)
+        plan_path = Path(args.consolidate_out) if args.consolidate_out else (root / "SPRAWL_CONSOLIDATE.md")
+        plan_path.write_text(render_consolidation(plan, root))
+        safe = [row for row in plan if row["verdict"] == "SAFE"]
+        verdicts = Counter(row["verdict"] for row in plan)
+        print(
+            f"[sprawl] consolidate: {len(plan)} identical families "
+            f"({', '.join(f'{k}={v}' for k, v in sorted(verdicts.items()))}) "
+            f"· SAFE={len(safe)} -> {plan_path}"
+        )
+        if args.apply:
+            actions, backup_root = apply_consolidation(plan, root, args.backup_dir)
+            print(f"[sprawl] applied {len(actions)} collapse(s); backups in {backup_root}")
+            for action in actions:
+                print(f"[sprawl]   {action}")
     return 0
 
 

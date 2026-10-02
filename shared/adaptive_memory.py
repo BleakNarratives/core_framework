@@ -145,10 +145,12 @@ class AdaptiveQueryMemory:
         """Record one run and reward/decay the pattern accordingly.
 
         Reward is proportional to high-alpha yield and confidence; a run that
-        produces nothing adds no pheromone and therefore decays naturally.
+        produces nothing adds no pheromone, and decay is only applied if 
+        new yield is actually evaluated.
         """
         now = self._clock() if now is None else now
-        self._decay_all(now)
+        if high_alpha_count > 0:
+            self._decay_all(now)
 
         key = f"{data_source}::{query_pattern}"
         rec = self.records.get(key)

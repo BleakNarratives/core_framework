@@ -163,6 +163,9 @@ Files changed in this later session:
 - `core_framework/bin/domino.sh` (new — canonical one-shot orchestrator)
 - `core_framework/fixtures/{sec_filings,news_feed}.json` (new — offline demo)
 - `core_framework/tests/test_cli.py` (new)
+- `core_framework/bin/sprawl_scan.py` (new — doc-sprawl map + triage planner)
+- `core_framework/tests/test_sprawl_scan.py` (new)
+- `~/SPRAWL_INDEX.md`, `~/SPRAWL_TRIAGE.md` (generated at the repo root; gitignored, regenerable via `./domino.sh sprawl`)
 - `tools/ingest/__init__.py` (new — package marker so the offline importer resolves)
 - `~/domino.sh` (new — root wrapper; ignored by the home repo's `/*` rule)
 

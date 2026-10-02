@@ -22,13 +22,28 @@ From the repo root, one command fires the whole scout machine offline:
 
 ```bash
 ./domino.sh            # preflight -> serve -> patrol -> broadcast -> status
-./domino.sh help       # all stages: serve | stop | patrol | broadcast | plan | status | skill
+./domino.sh help       # all stages: serve | stop | patrol | broadcast | plan
+                       #             status | sprawl | skill
 ```
 
 `~/domino.sh` is a thin root-level wrapper that execs the canonical, modular
 orchestrator at `core_framework/bin/domino.sh`. It is safe by default: offline
 fixtures, localhost backend, no secrets, no network (pass `--live` / set
 `SEC_USER_AGENT` only when you mean it).
+
+## Doc sprawl
+
+One command maps every roadmap / handoff / QRD / MRD / STANK / white-paper doc
+and produces a triage plan:
+
+```bash
+./domino.sh sprawl          # writes SPRAWL_INDEX.md + SPRAWL_TRIAGE.md at the repo root
+```
+
+`sprawl_scan.py` is read-only: it extracts open checklist items, classifies docs,
+and separates **active** projects from **museum/backup/recovery** copies so the
+work surface stays small. Regenerate any time; the two root files are generated,
+not hand-edited.
 
 ## Quick start
 

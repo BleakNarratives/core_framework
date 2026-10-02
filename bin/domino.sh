@@ -9,7 +9,7 @@
 #                                              # + broadcast + status
 #  Stages (modular):    ./domino.sh preflight | serve | stop | restart
 #                       ./domino.sh patrol | broadcast | plan | status
-#                       ./domino.sh skill | help
+#                       ./domino.sh sprawl | skill | help
 #
 #  Safe by default: offline fixtures, localhost backend, no secrets, no network
 #  unless you pass DOMINO_LIVE=1 (which needs SEC_USER_AGENT). Nothing here is
@@ -136,6 +136,11 @@ plan() {
       --query "$QUERY" --export "$OUT" --plan )
 }
 
+sprawl() {
+  say "regenerating the doc-sprawl index + triage plan"
+  ( cd "$ROOT" && "$PY" -m core_framework.bin.sprawl_scan )
+}
+
 status() {
   say "status"
   if backend_running; then
@@ -190,6 +195,7 @@ Usage: ./domino.sh [command]
   broadcast      patrol + push the market twin to the backend
   plan           show the adaptive query plan learned so far
   status         show backend + output artifact status
+  sprawl         regenerate SPRAWL_INDEX.md + SPRAWL_TRIAGE.md at the repo root
   skill          surface the axescout-market-twin skill and a CLI hint
   help           this text
 
@@ -207,10 +213,11 @@ case "$cmd" in
   stop)               stop ;;
   restart)            stop; preflight; serve ;;
   status)             status ;;
+  sprawl|index)       sprawl ;;
   patrol|scout)       patrol ;;
   broadcast|push)     broadcast ;;
   plan|adaptive)      plan ;;
   skill)              skill ;;
   help|-h|--help)     usage ;;
-  *) die "unknown command: $cmd (try: all serve stop patrol broadcast plan status skill help)" ;;
+  *) die "unknown command: $cmd (try: all serve stop patrol broadcast plan status sprawl skill help)" ;;
 esac

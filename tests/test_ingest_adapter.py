@@ -104,3 +104,56 @@ def test_end_to_end_offline_loop(tmp_path):
     # Adaptive memory learned from the run.
     assert "sec::debt covenant default risk" in mem.records
     assert mem.records["sec::debt covenant default risk"].pheromone > 0
+
+
+# -- market signal adapter (new fixture feed) -------------------------------
+from core_framework.adapters.ingest_adapter import (  # noqa: E402
+    MarketSignal,
+    MarketSignalAdapter,
+    load_market_signals,
+)
+
+FIXTURE_PATH = REPO_ROOT / "core_framework" / "fixtures" / "market_signals.json"
+
+
+def test_load_market_signals_fixture():
+    signals = load_market_signals(FIXTURE_PATH)
+    assert len(signals) == 3
+    assert signals[0].ticker == "TSLA"
+    assert signals[0].scout_type == "distress"
+    assert signals[0].severity == "CRITICAL"
+    assert signals[1].confidence == 0.78
+
+
+def test_market_signal_adapter_coerces_dicts():
+    adapter = MarketSignalAdapter(source_name="market_signals", medium="general")
+    raw = {
+        "ticker": "NVDA",
+        "scout_type": "competitive",
+        "severity": "WARNING",
+        "summary": "ASIC displacement",
+        "signals": ["pricing war"],
+        "confidence": 0.78,
+    }
+    finding = adapter.finding_from_signal(raw)
+    assert finding["ticker"] == "NVDA"
+    assert finding["scout_type"] == "competitive"
+    assert finding["confidence"] == 0.78
+    assert finding["medium"] == "general"
+
+
+def test_market_signal_adapter_collects_from_fixture():
+    adapter = MarketSignalAdapter(source_name="market_signals", medium="general")
+    signals = load_market_signals(FIXTURE_PATH)
+    findings = adapter.collect(signals, limit=10)
+    assert len(findings) == 3
+    tickers = {f["ticker"] for f in findings}
+    assert tickers == {"TSLA", "NVDA", "RBI"}
+    assert all(f["source"] == "market_signals" for f in findings)
+
+
+def test_market_signal_adapter_limits_output():
+    adapter = MarketSignalAdapter()
+    signals = load_market_signals(FIXTURE_PATH)
+    findings = adapter.collect(signals, limit=2)
+    assert len(findings) == 2

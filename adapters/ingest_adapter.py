@@ -16,6 +16,7 @@ can be exercised end-to-end without credentials.
 from __future__ import annotations
 
 import importlib.util
+import json
 import re
 import sys
 from pathlib import Path
@@ -170,3 +171,81 @@ def collect_offline(local_specs: Iterable[str], limit: int = 20) -> List[Dict[st
         source = LocalJsonSource(name=name or "local", path=Path(path))
         findings.extend(IngestAdapter(name or "local").collect(source, limit=limit))
     return findings
+
+
+# ---------------------------------------------------------------------------
+# Market signal adapter (fixture-backed, offline-safe)
+# ---------------------------------------------------------------------------
+class MarketSignal:
+    """Lightweight representation of an incoming market signal."""
+
+    def __init__(self, ticker: str, scout_type: str, severity: str,
+                 summary: str = "", signals: Iterable[str] | None = None,
+                 confidence: float = 0.5, timestamp: str = ""):
+        self.ticker = ticker
+        self.scout_type = scout_type
+        self.severity = severity
+        self.summary = summary
+        self.signals = list(signals or [])
+        self.confidence = max(0.0, min(1.0, float(confidence or 0.5)))
+        self.timestamp = timestamp
+
+
+def _coerce_market_signal(item: Any) -> MarketSignal:
+    if isinstance(item, MarketSignal):
+        return item
+    if not isinstance(item, dict):
+        raise TypeError(f"market signal must be a dict, got {type(item).__name__}")
+    return MarketSignal(
+        ticker=str(item.get("ticker", "UNKNOWN") or "UNKNOWN"),
+        scout_type=str(item.get("scout_type", "general") or "general"),
+        severity=str(item.get("severity", "INFO") or "INFO"),
+        summary=str(item.get("summary", "") or ""),
+        signals=item.get("signals") or [],
+        confidence=float(item.get("confidence", 0.5) or 0.5),
+        timestamp=str(item.get("timestamp", "") or ""),
+    )
+
+
+class MarketSignalAdapter:
+    """Convert raw market signal payloads into AxeScout-shaped findings.
+
+    Network-free. Works with any iterable of ``MarketSignal`` objects or
+    ``dict``s with the same field names.
+    """
+
+    def __init__(self, source_name: str = "market_signals", medium: str = "general"):
+        self.source_name = source_name
+        self.medium = medium
+
+    def finding_from_signal(self, signal: Any) -> Dict[str, Any]:
+        signal = _coerce_market_signal(signal)
+        severity = derive_severity(
+            signal.confidence * 100.0,
+            " ".join([signal.summary, *signal.signals]),
+        )
+        return {
+            "ticker": signal.ticker,
+            "scout_type": signal.scout_type,
+            "severity": severity,
+            "signals": [signal.summary] if signal.summary else signal.signals[:1],
+            "confidence": round(signal.confidence, 4),
+            "medium": self.medium,
+            "source": self.source_name,
+        }
+
+    def findings_from_signals(self, signals: Iterable[Any]) -> List[Dict[str, Any]]:
+        return [self.finding_from_signal(s) for s in signals]
+
+    def collect(self, signals: Iterable[Any], limit: int = 20) -> List[Dict[str, Any]]:
+        findings = self.findings_from_signals(signals)
+        return findings[:limit]
+
+
+def load_market_signals(path: str | Path) -> List[MarketSignal]:
+    """Load ``market_signals.json``-style fixtures from ``path``."""
+    with open(path, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+    if not isinstance(payload, list):
+        raise TypeError("market signal fixture must be a JSON array")
+    return [_coerce_market_signal(item) for item in payload]

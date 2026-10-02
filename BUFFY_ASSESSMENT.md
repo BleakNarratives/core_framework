@@ -196,4 +196,4 @@ export loop with no network. Live sources remain stubbed by design.
 
 `Code-City-Apocalypse/backend/server.py` (canonical) was fixed this session for
 the `websockets` import order, and its duplicate unreachable `await` removed.
-Final test run: `47 passed`.
+Final test run: `51 passed`.

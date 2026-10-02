@@ -1,0 +1,16 @@
+[
+  {
+    "title": "NVDA competitor pricing war intensifies",
+    "url": "https://example.invalid/news/nvda-pricing",
+    "observed": "2026-10-02",
+    "score": 64,
+    "tags": ["NVDA"]
+  },
+  {
+    "title": "Auto sector supply chain sentiment sours",
+    "url": "https://example.invalid/news/auto-supply",
+    "observed": "2026-10-02",
+    "score": 40,
+    "tags": []
+  }
+]

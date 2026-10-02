@@ -1,0 +1,23 @@
+[
+  {
+    "title": "TSLA debt covenant breach disclosed in 8-K",
+    "url": "https://www.sec.gov/Archives/edgar/data/0001318605/000131860526000001/tsla-8k.htm",
+    "observed": "2026-10-01",
+    "score": 92,
+    "tags": ["TSLA"]
+  },
+  {
+    "title": "RBI regional bank liquidity strain flagged in 10-Q",
+    "url": "https://www.sec.gov/Archives/edgar/data/0000000000/000000000026000001/rbi-10q.htm",
+    "observed": "2026-10-01",
+    "score": 78,
+    "tags": ["RBI"]
+  },
+  {
+    "title": "AMZN regulatory compliance probe referenced in 8-K",
+    "url": "https://www.sec.gov/Archives/edgar/data/0001018724/000101872426000001/amzn-8k.htm",
+    "observed": "2026-10-01",
+    "score": 61,
+    "tags": ["AMZN"]
+  }
+]

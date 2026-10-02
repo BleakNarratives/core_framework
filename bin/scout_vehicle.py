@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import csv
 import json
@@ -474,33 +475,116 @@ class ScoutVehicle:
 
 
 # ---------------------------------------------------------------------------
-# Standalone Execution Runner
+# CLI
 # ---------------------------------------------------------------------------
+DEMO_FINDINGS = [
+    {
+        "ticker": "TSLA",
+        "scout_type": "distress",
+        "severity": "CRITICAL",
+        "signals": ["Debt covenants breach"],
+        "confidence": 0.92,
+    },
+    {
+        "ticker": "NVDA",
+        "scout_type": "competitive",
+        "severity": "WARNING",
+        "signals": ["Custom ASIC displacement"],
+        "confidence": 0.78,
+    },
+]
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="scout_vehicle",
+        description="Scout vehicle: ingest -> score -> translate -> export -> broadcast.",
+    )
+    parser.add_argument("ws_url", nargs="?", default=DEFAULT_WS_URL,
+                        help=f"Code City WebSocket URL (default: {DEFAULT_WS_URL})")
+    parser.add_argument("--ingest", action="append", default=[], metavar="NAME=PATH",
+                        help="offline source spec, repeatable (e.g. sec=path.json)")
+    parser.add_argument("--live", action="store_true",
+                        help="use network-gated live sources (SEC EDGAR); set SEC_USER_AGENT")
+    parser.add_argument("--query", default="debt covenant default risk",
+                        help="query pattern for live search / adaptive memory")
+    parser.add_argument("--limit", type=int, default=20)
+    parser.add_argument("--export", metavar="DIR", default=None)
+    parser.add_argument("--memory", metavar="PATH", default=None)
+    parser.add_argument("--leaderboard", metavar="PATH", default=None)
+    parser.add_argument("--broadcast", action="store_true")
+    parser.add_argument("--plan", action="store_true")
+    parser.add_argument("--json", dest="as_json", action="store_true")
+    return parser
+
+
+def cli(argv=None) -> int:
+    """Run one scout cycle. Returns a process exit code (0 ok, 2 live failure)."""
+    args = build_parser().parse_args(argv)
+
+    output_dir = Path(args.export) if args.export else Path(OUTPUT_DIR)
+    memory_path = Path(args.memory) if args.memory else (output_dir / "adaptive_memory.json")
+    ledger = (
+        ScoutLeaderboard(leaderboard_path=args.leaderboard)
+        if args.leaderboard
+        else ScoutLeaderboard()
+    )
+    memory = AdaptiveQueryMemory(path=memory_path)
+    vehicle = ScoutVehicle(agent_id="Gemini-Core-Partner", leaderboard=ledger, adaptive_memory=memory)
+
+    if args.live:
+        from core_framework.adapters.live_sources import SecEdgarFullTextSource
+
+        mode = "live"
+        source = SecEdgarFullTextSource(args.query, allow_network=True)
+        try:
+            payload = vehicle.run_ingested_patrol(source, limit=args.limit, query_pattern=args.query)
+        except Exception as exc:  # network/credential failure is a hard stop
+            print(f"[scout_vehicle] live ingestion failed: {exc}", file=sys.stderr)
+            return 2
+    elif args.ingest:
+        from core_framework.adapters.ingest_adapter import collect_offline
+
+        mode = "offline"
+        findings = collect_offline(args.ingest, limit=args.limit)
+        watchlist = sorted({f["ticker"] for f in findings if f.get("ticker") != "UNKNOWN"})
+        payload = vehicle.run_patrol_pass(watchlist or ["UNKNOWN"], findings)
+        vehicle.record_adaptive_yields(args.query, "offline")
+    else:
+        mode = "demo"
+        payload = vehicle.run_patrol_pass(["TSLA", "NVDA"], DEMO_FINDINGS)
+
+    exported = vehicle.export_alpha_streams(output_dir=output_dir)
+    plan = vehicle.plan_adaptive_watchlist(limit=5) if args.plan else []
+
+    if args.broadcast or mode == "demo":
+        asyncio.run(vehicle.broadcast_payload(args.ws_url))
+
+    summary = {
+        "mode": mode,
+        "findings": len(vehicle.processed_findings),
+        "scored_points": sum(int(f.get("points", 0)) for f in vehicle.processed_findings),
+        "buildings": len(payload["data"]["city"]["buildings"]),
+        "monsters": len(payload["data"]["city"]["monsters"]),
+        "exported": exported,
+        "plan": plan,
+        "ws_url": args.ws_url,
+    }
+    if args.as_json:
+        print(json.dumps(summary, indent=2))
+    else:
+        print(
+            f"[scout_vehicle] mode={mode} findings={summary['findings']} "
+            f"points={summary['scored_points']} buildings={summary['buildings']} "
+            f"monsters={summary['monsters']}"
+        )
+        print(f"[scout_vehicle] exported: {exported}")
+        for item in plan:
+            flag = " (explore)" if item.get("explored") else ""
+            print(f"  plan: {item['query_pattern']} [{item['data_source']}] "
+                  f"pheromone={item['pheromone']}{flag}")
+    return 0
+
+
 if __name__ == "__main__":
-    watchlist = ["TSLA", "AAPL", "NVDA", "AMZN"]
-
-    mock_agent_discoveries = [
-        {
-            "ticker": "TSLA",
-            "scout_type": "distress",
-            "severity": "CRITICAL",
-            "signals": ["Debt covenants breach"],
-            "confidence": 0.92,
-        },
-        {
-            "ticker": "NVDA",
-            "scout_type": "competitive",
-            "severity": "WARNING",
-            "signals": ["Custom ASIC displacement"],
-            "confidence": 0.78,
-        },
-    ]
-
-    vehicle = ScoutVehicle(agent_id="Gemini-Core-Partner")
-    payload = vehicle.run_patrol_pass(watchlist, mock_agent_discoveries)
-
-    exported = vehicle.export_alpha_streams()
-    print(f"Exported alpha streams: {exported}")
-
-    ws_url = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_WS_URL
-    asyncio.run(vehicle.broadcast_payload(ws_url))
+    raise SystemExit(cli())

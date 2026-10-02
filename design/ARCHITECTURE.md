@@ -24,8 +24,10 @@ core_framework/
 │   ├── district_schema.py  # segment → district, deterministic building positions
 │   └── axe_scout_spec.py   # standalone finding → ScoutIntel spec
 ├── bin/
-│   └── scout_vehicle.py # Patrol pass, asymmetric ScoutLeaderboard, exporters,
-│                        # and WebSocket broadcast
+│   ├── scout_vehicle.py # Patrol pass, asymmetric ScoutLeaderboard, exporters,
+│   │                    # WebSocket broadcast, and the scout CLI
+│   └── domino.sh        # Canonical one-shot orchestrator (~/domino.sh wraps it)
+├── fixtures/           # Offline demo findings (no network)
 ├── shared/
 │   └── config.py       # Central path resolution, venv resolution, env defaults
 ├── output/             # Generated: market_twin.json + alpha_stream.csv (gitignored)

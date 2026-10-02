@@ -83,6 +83,13 @@ Buffy assessment). Goal: an event-driven, self-adapting scout loop that can run
 on free-tier infrastructure without keeping the Chromebook open.
 
 ### Done this session
+- **One-shot entrypoint** — `domino.sh` (root wrapper) → `core_framework/bin/domino.sh`
+  (canonical, modular): `all | preflight | serve | stop | patrol | broadcast |
+  plan | status | skill`. Fires preflight → backend → ingest → score → translate
+  → export → WebSocket broadcast → status, offline by default. Verified E2E on an
+  isolated port (5 findings, 5 buildings, broadcast OK, artifacts written).
+- `scout_vehicle` is now a CLI (`--ingest NAME=PATH`, `--live`, `--export`,
+  `--plan`, `--broadcast`); `fixtures/` holds the offline demo findings.
 - `shared/adaptive_memory.py` — pheromone memory (record → reward → exponential
   decay → epsilon-greedy `plan()`); stdlib only, no network.
 - `tests/test_adaptive_memory.py` — 8 deterministic tests.
@@ -153,7 +160,11 @@ Files changed in this later session:
 - `core_framework/BUFFY_ASSESSMENT.md` (new)
 - `core_framework/CLOUD_ADAPTIVE_BLUEPRINT.md` (new)
 - `core_framework/DESIGN_INTENT_ASSESSMENT.md` (new)
+- `core_framework/bin/domino.sh` (new — canonical one-shot orchestrator)
+- `core_framework/fixtures/{sec_filings,news_feed}.json` (new — offline demo)
+- `core_framework/tests/test_cli.py` (new)
 - `tools/ingest/__init__.py` (new — package marker so the offline importer resolves)
+- `~/domino.sh` (new — root wrapper; ignored by the home repo's `/*` rule)
 
-No canonical *source* tree modified. 41/41 tests pass; WebSocket transport
+No canonical *source* tree modified. 51/51 tests pass; WebSocket transport
 verified against the live backend on an isolated localhost port.

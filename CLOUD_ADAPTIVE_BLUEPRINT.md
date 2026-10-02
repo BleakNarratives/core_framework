@@ -122,7 +122,7 @@ implemented today.
 | `.gitignore` | Ignores `output/`, `logs/`, leaderboard, caches |
 
 ### Verified
-- `cd ~/core_framework && python3 -m pytest tests/ -q` → **47 passed**
+- `cd ~/core_framework && python3 -m pytest tests/ -q` → **51 passed**
 - Offline loop verified: local JSON → findings → scoring → `market_twin.json`
   + `alpha_stream.csv`, with adaptive memory learning the query yield.
 - Backend starts under the bare interpreter (port open) after the import-order fix;

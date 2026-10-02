@@ -16,6 +16,20 @@ into the canonical trees already on disk.
 Sidecars preserved in place: crash feeder, red/blue teams, radar, tribunal,
 coach_bleak, boardroom, scouts, genetic arena, and all agent swarms.
 
+## One domino (start here)
+
+From the repo root, one command fires the whole scout machine offline:
+
+```bash
+./domino.sh            # preflight -> serve -> patrol -> broadcast -> status
+./domino.sh help       # all stages: serve | stop | patrol | broadcast | plan | status | skill
+```
+
+`~/domino.sh` is a thin root-level wrapper that execs the canonical, modular
+orchestrator at `core_framework/bin/domino.sh`. It is safe by default: offline
+fixtures, localhost backend, no secrets, no network (pass `--live` / set
+`SEC_USER_AGENT` only when you mean it).
+
 ## Quick start
 
 ```bash
@@ -36,7 +50,8 @@ python core_framework/bin/scout_vehicle.py ws://localhost:8765
 
 ## Asymmetric scoring & exports
 
-`core_framework/bin/scout_vehicle.py` scores findings with
+The `scout_vehicle` module is also a CLI: `python -m core_framework.bin.scout_vehicle --ingest sec=PATH --plan`
+(offline) or `--live` (network-gated). `core_framework/bin/scout_vehicle.py` scores findings with
 `Base Value × Difficulty Multiplier × Confidence × Novelty` (filings 3.5×/50,
 news 1.0×/10), adds cross-medium verification bounties (+100 deep / +25 fast)
 and false-positive penalties (−20), then writes two commercial streams to

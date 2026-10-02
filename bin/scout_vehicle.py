@@ -220,7 +220,7 @@ class ScoutLeaderboard:
         ticker = finding.get("ticker", "UNKNOWN")
         scout_type = finding.get("scout_type", "general")
         severity = finding.get("severity", "INFO")
-        confidence = float(finding.get("confidence", 0.5))
+        confidence = max(0.0, min(1.0, float(finding.get("confidence", 0.5))))
         medium = self.resolve_medium(agent_id, finding)
 
         # False positives are penalised regardless of prior sightings.
@@ -542,6 +542,7 @@ def cli(argv=None) -> int:
         except Exception as exc:  # network/credential failure is a hard stop
             print(f"[scout_vehicle] live ingestion failed: {exc}", file=sys.stderr)
             return 2
+        vehicle.record_adaptive_yields(args.query, getattr(source, "name", "sec"))
     elif args.ingest:
         from core_framework.adapters.ingest_adapter import collect_offline
 

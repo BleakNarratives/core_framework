@@ -224,11 +224,13 @@ class MarketSignalAdapter:
             signal.confidence * 100.0,
             " ".join([signal.summary, *signal.signals]),
         )
+        # Combine summary and all signals to ensure no information loss.
+        all_signals = ([signal.summary] if signal.summary else []) + list(signal.signals)
         return {
             "ticker": signal.ticker,
             "scout_type": signal.scout_type,
             "severity": severity,
-            "signals": [signal.summary] if signal.summary else signal.signals[:1],
+            "signals": all_signals,
             "confidence": round(signal.confidence, 4),
             "medium": self.medium,
             "source": self.source_name,

@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import json
 import os
+import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Any, Callable, Dict, List, Sequence
@@ -32,13 +33,16 @@ from typing import Any, Callable, Dict, List, Sequence
 from core_framework.adapters.ingest_adapter import TrendItem
 
 EDGAR_FTS_URL = "https://efts.sec.gov/LATEST/search-index"
-DEFAULT_USER_AGENT = os.getenv(
-    "SEC_USER_AGENT", "core_framework-scout (contact: set SEC_USER_AGENT)"
-)
+_DEFAULT_SEC_USER_AGENT = "core_framework-scout (contact: set SEC_USER_AGENT)"
+DEFAULT_USER_AGENT = os.getenv("SEC_USER_AGENT", _DEFAULT_SEC_USER_AGENT)
 
 
 class LiveSourceError(RuntimeError):
     """Raised when a live source is used without network authorization."""
+
+
+class LiveSourceNetworkError(LiveSourceError):
+    """Raised when a live request fails due to network or HTTP errors."""
 
 
 def _as_int(value: Any) -> int:
@@ -46,6 +50,16 @@ def _as_int(value: Any) -> int:
         return int(value)
     except (TypeError, ValueError):
         return 0
+
+
+def require_sec_user_agent() -> None:
+    """Raise ``LiveSourceError`` when ``SEC_USER_AGENT`` is unset or default."""
+    agent = os.getenv("SEC_USER_AGENT")
+    if not agent or agent == _DEFAULT_SEC_USER_AGENT:
+        raise LiveSourceError(
+            "SEC_USER_AGENT is not set. EDGAR requires a descriptive User-Agent. "
+            "Export SEC_USER_AGENT='Your Name <your@email>' before live ingestion."
+        )
 
 
 def parse_sec_edgar_hits(payload: Dict[str, Any]) -> List[TrendItem]:
@@ -141,8 +155,21 @@ class HttpJsonTrendSource:
                 "(and set SEC_USER_AGENT for EDGAR) to enable live calls."
             )
         request = urllib.request.Request(self._request_url(), headers=self.headers)
-        with urllib.request.urlopen(request, timeout=self.timeout) as response:  # noqa: S310
-            payload = json.loads(response.read().decode("utf-8", errors="replace"))
+        try:
+            with urllib.request.urlopen(request, timeout=self.timeout) as response:  # noqa: S310
+                payload = json.loads(response.read().decode("utf-8", errors="replace"))
+        except urllib.error.HTTPError as exc:
+            raise LiveSourceNetworkError(
+                f"live source {self.name!r} HTTP error: {exc.code} {exc.reason}"
+            ) from exc
+        except urllib.error.URLError as exc:
+            raise LiveSourceNetworkError(
+                f"live source {self.name!r} network error: {exc.reason}"
+            ) from exc
+        except TimeoutError as exc:
+            raise LiveSourceNetworkError(
+                f"live source {self.name!r} timed out after {self.timeout}s"
+            ) from exc
         return self.parser(payload)[:limit]
 
 
@@ -167,3 +194,5 @@ class SecEdgarFullTextSource(HttpJsonTrendSource):
             timeout=timeout,
         )
         self.query = query
+        if allow_network:
+            require_sec_user_agent()

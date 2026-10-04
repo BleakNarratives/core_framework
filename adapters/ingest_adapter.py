@@ -19,6 +19,7 @@ import importlib.util
 import json
 import re
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
@@ -55,6 +56,68 @@ def _load_trend_scraper():
 
 
 LocalJsonSource, TrendItem = _load_trend_scraper()
+
+
+@dataclass(frozen=True)
+class _FallbackTrendItem:
+    """Stdlib stand-in with the exact ``TrendItem`` field contract.
+
+    Used ONLY when the canonical ``tools/ingest/trend_scraper.py`` scaffold is
+    unavailable (e.g. a cloud checkout of just this repo). Same fields, same
+    duck type, so ``parse_sec_edgar_hits`` and ``IngestAdapter`` behave
+    identically either way — live SEC parsing must not depend on an optional
+    outer-repo package.
+    """
+
+    source: str
+    title: str
+    url: str
+    observed: str
+    score: float
+    tags: tuple = field(default_factory=tuple)
+
+
+class _FallbackLocalJsonSource:
+    """Stdlib stand-in for the canonical ``LocalJsonSource``.
+
+    Reads a JSON array of TrendItem-shaped dicts (the same schema as
+    ``fixtures/sec_filings.json``) so offline ingestion works without the
+    outer scaffold. Canonical class is preferred whenever importable.
+    """
+
+    def __init__(self, name: str, path: str | Path):
+        self.name = name
+        self.path = Path(path)
+
+    def fetch(self, limit: int = 20) -> List[Any]:
+        payload = json.loads(self.path.read_text(encoding="utf-8"))
+        raw_items = payload if isinstance(payload, list) else (payload.get("items") or [])
+        items: List[Any] = []
+        for raw in raw_items:
+            if len(items) >= limit:
+                break
+            if not isinstance(raw, dict):
+                continue
+            items.append(
+                _FallbackTrendItem(
+                    source=self.name,
+                    title=str(raw.get("title", "") or ""),
+                    url=str(raw.get("url", "") or ""),
+                    observed=str(raw.get("observed", "") or ""),
+                    score=float(raw.get("score", 0.0) or 0.0),
+                    tags=tuple(raw.get("tags") or ()),
+                )
+            )
+        return items
+
+
+# Fill any gap the canonical scaffold left, so the ingestion contract never
+# resolves to ``None`` (which used to crash live SEC parsing with
+# "'NoneType' object is not callable" in checkouts without the outer repo).
+if TrendItem is None:
+    TrendItem = _FallbackTrendItem  # type: ignore[assignment,misc]
+if LocalJsonSource is None:
+    LocalJsonSource = _FallbackLocalJsonSource  # type: ignore[assignment,misc]
 
 # ---------------------------------------------------------------------------
 # Heuristics (deterministic; no network, no model calls)
@@ -159,12 +222,9 @@ class IngestAdapter:
 def collect_offline(local_specs: Iterable[str], limit: int = 20) -> List[Dict[str, Any]]:
     """Convenience: build `LocalJsonSource`s from ``NAME=PATH`` specs and collect.
 
-    Network-free by construction. Raises if the canonical scaffold is absent.
+    Network-free by construction; works with the canonical scaffold or the
+    stdlib fallback, so offline ingestion is portable to any checkout.
     """
-    if LocalJsonSource is None:
-        raise RuntimeError(
-            "tools.ingest.trend_scraper is not importable; offline ingestion needs it."
-        )
     findings: List[Dict[str, Any]] = []
     for spec in local_specs:
         name, _, path = spec.partition("=")

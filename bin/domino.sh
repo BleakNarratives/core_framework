@@ -10,6 +10,7 @@
 #  Stages (modular):    ./domino.sh preflight | serve | stop | restart
 #                       ./domino.sh patrol | broadcast | plan | status
 #                       ./domino.sh leaderboard | sprawl | skill | help
+#                       ./domino.sh kickoff [--track N | --custom X | --auto]
 #
 #  Safe by default: offline fixtures, localhost backend, no secrets, no network
 #  unless you pass DOMINO_LIVE=1 (which needs SEC_USER_AGENT). Nothing here is
@@ -76,6 +77,16 @@ preflight() {
   [ -f "$SEC_FIXTURE" ] || warn "missing fixture: $SEC_FIXTURE"
   say "python: $("$PY" --version 2>&1)"
   say "repo root: $ROOT"
+  # GossipBus kernel lock-in status (declarative; degrades gracefully when the
+  # canonical RootBase tree is not on this machine).
+  if kernel_json=$("$PY" "$FW/shared/kernel_bus.py" 2>/dev/null); then
+    kernel_state=$("$PY" -c 'import json, sys
+d = json.loads(sys.argv[1])
+print(("present" if d["kernel_present"] else "NOT on this machine") + ", adapters declared: " + str(d["adapters_declared"]))' "$kernel_json")
+    say "kernel bus: gossip_bus ($kernel_state)"
+  else
+    warn "kernel bus registry unavailable"
+  fi
 }
 
 serve() {
@@ -190,6 +201,13 @@ status() {
   done
 }
 
+kickoff() {
+  # CannibalContext session bootstrap: banner + menu + [SYS_INIT] handshake +
+  # auto-boot plan. Non-interactive safe (no TTY -> menu only, nothing logged).
+  say "CannibalContext session kickoff"
+  ( cd "$ROOT" && "$PY" -m core_framework.bootstrap.cannibal_context kickoff "$@" )
+}
+
 skill() {
   say "scout-driven skill"
   for sk in "$ROOT/axescout-market-twin.skill" "$HOME/.gemini/skills/axescout-market-twin"; do
@@ -230,6 +248,7 @@ Usage: ./domino.sh [command]
   status         show backend + output artifact status
   sprawl         regenerate SPRAWL_INDEX.md + SPRAWL_TRIAGE.md at the repo root
   skill          surface the axescout-market-twin skill and a CLI hint
+  kickoff        CannibalContext session bootstrap (banner/menu/handshake)
   help           this text
 
 Env: DOMINO_PORT DOMINO_HOST DOMINO_PYTHON DOMINO_QUERY DOMINO_SERVE
@@ -252,6 +271,7 @@ case "$cmd" in
   plan|adaptive)      plan ;;
   leaderboard|board)  leaderboard ;;
   skill)              skill ;;
+  kickoff|boot)       kickoff "$@" ;;
   help|-h|--help)     usage ;;
   *) die "unknown command: $cmd (try: all serve stop patrol broadcast plan status sprawl skill help)" ;;
 esac

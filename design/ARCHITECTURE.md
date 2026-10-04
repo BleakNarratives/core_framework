@@ -27,9 +27,13 @@ core_framework/
 │   ├── scout_vehicle.py # Patrol pass, asymmetric ScoutLeaderboard, exporters,
 │   │                    # WebSocket broadcast, and the scout CLI
 │   └── domino.sh        # Canonical one-shot orchestrator (~/domino.sh wraps it)
+├── bootstrap/          # CannibalContext session bootstrap (low-token kickoff)
+│   └── cannibal_context.py  # config -> banner/menu -> JSONL history -> [SYS_INIT]
 ├── fixtures/           # Offline demo findings (no network)
 ├── shared/
-│   └── config.py       # Central path resolution, venv resolution, env defaults
+│   ├── config.py       # Central path resolution, venv resolution, env defaults
+│   ├── adaptive_memory.py  # Pheromone memory (atomic persistence, corrupt quarantine)
+│   └── kernel_bus.py   # GossipBus kernel lock-in + adapter-demotion registry
 ├── output/             # Generated: market_twin.json + alpha_stream.csv (gitignored)
 ├── logs/               # Generated: detached launcher logs (gitignored)
 ├── design/             # Architecture docs, original intent preserved

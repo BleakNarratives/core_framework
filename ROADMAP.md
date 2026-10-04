@@ -70,9 +70,19 @@ Suggested export paths:
 4. ~~Backend venv blocker~~ — **FIXED.** The `websockets` import now happens after
    a pre-import `sys.path` probe; verified starting on the bare interpreter.
 5. ~~TTL/expiry for `pending_signals`~~ — **FIXED** (3-day default, tested).
-6. **Memory persistence across runs** — still open (see Track 2).
-7. **Kernel decision** — choose GossipBus as the single bus; route producer →
-   viewport through MOLT/Overseer (`DESIGN_INTENT_ASSESSMENT.md` §4/§6).
+6. ~~**Memory persistence across runs**~~ — **DONE 2026-10-04.** `AdaptiveQueryMemory.save()`
+   is now atomic (temp file + fsync + `os.replace`), so a crash mid-write can never
+   leave a torn `adaptive_memory.json`; corrupt files are quarantined as
+   `<name>.corrupt-<UTC>` instead of being silently clobbered. Proven by
+   cross-process runs (`tests/test_cli.py::test_cli_memory_persists_and_accumulates_across_runs`)
+   and 4 new atomicity/quarantine tests in `tests/test_adaptive_memory.py`.
+7. **Kernel decision** — ~~choose GossipBus as the single bus~~ **DECLARED IN CODE
+   2026-10-04**: `shared/kernel_bus.py` names GossipBus the canonical kernel and
+   catalogs `integration_bus` / `event_bus` / `outclaw_bus` / `whorl_bus_adapter`
+   as demoted adapters, with an auditable health report surfaced in
+   `./domino.sh preflight` (and `python3 -m core_framework.shared.kernel_bus`).
+   Remaining: physical demotion (import wiring) inside the home-workspace trees —
+   they live on the local machine, not in this repo.
 
 ---
 
@@ -115,13 +125,21 @@ on free-tier infrastructure without keeping the Chromebook open.
 ### Next (ordered, smallest first)
 1. ~~**Mock ingestion adapter**~~ — **DONE**, and it reuses the canonical
    `trend_scraper` scaffold rather than a parallel mock (see above).
-2. **Memory persistence** — commit-back the memory file, or mirror
-   `AdaptiveQueryMemory.to_dict()` into a managed DB (Gravity recommends a
-   forever-free managed DB; see `CLOUD_ADAPTIVE_BLUEPRINT.md` §4).
-3. **Live ingestion** — network-gated sources exist (`adapters/live_sources.py`,
-   SEC EDGAR). Next: verify **one** source end-to-end with network +
-   `SEC_USER_AGENT`, then add the Gemini/Vibe CLI path behind secrets. Do this
-   before any demo; the parser is tested but no live request has been made.
+2. ~~**Memory persistence**~~ — **DONE 2026-10-04** for local runs: the memory file
+   already lives at a stable path (`output/adaptive_memory.json`) and saves are now
+   atomic + corrupt-file-quarantining (see item 6 above). Cloud-run persistence
+   (ephemeral runners) still needs commit-back or a managed DB
+   (`CLOUD_ADAPTIVE_BLUEPRINT.md` §4).
+3. ~~**Live ingestion**~~ — **VERIFIED LIVE 2026-10-04.** First real SEC EDGAR
+   full-text call succeeded (`efts.sec.gov/LATEST/search-index`, HTTP 200): 8 real
+   filings parsed with valid archive URLs and routed through `IngestAdapter` AND
+   `MarketSignalAdapter`. Two lessons baked in: (a) EDGAR 403s generic UAs —
+   `SEC_USER_AGENT` must be `Name contact@email` format; (b) quoted phrase search
+   needs short phrases ("debt covenant default risk" as one phrase → 0 hits).
+   The live call also exposed and fixed a portability bug: `TrendItem`/`LocalJsonSource`
+   collapsed to `None` without the outer `tools/` scaffold — now stdlib fallbacks
+   with the identical contract keep live parsing working in any checkout.
+   Gemini/Vibe CLI execution path still behind secrets.
 4. **Outreach** — secret-guarded webhook step already templated; must never
    send unverified data and must not publish alpha to public artifacts.
 
@@ -180,3 +198,30 @@ Files changed in this later session:
 
 No canonical *source* tree modified. 64/64 tests pass; WebSocket transport
 verified against the live backend on an isolated localhost port.
+
+## Session Boundary — 2026-10-04 (Buffy / Freebuff, cloud checkout)
+
+Full record: **`HANDOFF_20261004.md`** (read it first). Summary of the four
+tracks, all verified in-session:
+
+1. **CannibalContext session bootstrap** — new `bootstrap/` package (config →
+   banner/menu → JSONL session history → `[SYS_INIT]` handshake), `domino.sh
+   kickoff` stage, 19 tests. Auto ring music via the documented `~/.bashrc` hook.
+2. **Adaptive memory persistence locked down** — atomic saves (temp + fsync +
+   `os.replace`), corrupt-file quarantine, saved decay/exploration config
+   restored on load; cross-process accumulation proven live; 7 new tests.
+3. **Live SEC EDGAR verified** — first real network call (HTTP 200, 8 filings
+   through `IngestAdapter` + `MarketSignalAdapter`); UA-format + phrase-search
+   lessons documented; `TrendItem`/`LocalJsonSource` `None`-collapse bug fixed
+   with stdlib fallbacks (also un-broke 6 pre-existing test failures).
+4. **GossipBus kernel lock-in declared in code** — `shared/kernel_bus.py`
+   registry (kernel + 4 demoted adapters), surfaced in `domino.sh preflight`,
+   6 tests. Physical demotion remains an on-machine task.
+
+Test baseline this checkout: **87 passed / 14 failed** — all 14 environmental
+(sandbox clone named `codebase`, canonical trees absent) except the pre-existing
+`test_zero_yield_adds_no_pheromone_then_decays` behavior mismatch. Expected on
+the home machine: **100 passed / 1 failed** — that check IS the handoff
+acceptance test. See `HANDOFF_20261004.md` §4 for the open TODO list.
+
+Working-tree changes are uncommitted; review in the Changes panel.

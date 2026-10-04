@@ -80,6 +80,46 @@ python -m core_framework.launchers.unified all --detach
 python core_framework/bin/scout_vehicle.py ws://localhost:8765
 ```
 
+## Session bootstrap (CannibalContext)
+
+One command gives every session a ring-music intro without burning tokens:
+
+```bash
+python3 -m core_framework.bootstrap.cannibal_context kickoff            # banner + menu
+python3 -m core_framework.bootstrap.cannibal_context kickoff --track 2  # pick an angle
+python3 -m core_framework.bootstrap.cannibal_context kickoff --auto     # resume last angle
+python3 -m core_framework.bootstrap.cannibal_context handshake          # [SYS_INIT] bridge line
+./domino.sh kickoff                                                     # same via domino
+```
+
+It loads the low-token operator context (`bootstrap/cannibal_context.json`),
+renders the multiple-choice session menu (Tracks 1-3, Blue Sky, Custom Angle),
+suggests the first domino command for the chosen angle, prints the auto-boot
+plan, and appends the choice to a JSONL session stream
+(`~/.config/freebuff/sessions.jsonl`) so the next `--auto` kickoff resumes
+where the last one left off. Non-TTY runs (cron/CI) render the menu and record
+nothing.
+
+Install a user-owned config (survives reboots, packaged default never clobbers
+your edits):
+
+```bash
+python3 -m core_framework.bootstrap.cannibal_context install
+```
+
+Auto ring music on every login — one line in `~/.bashrc`:
+
+```bash
+python3 -m core_framework.bootstrap.cannibal_context kickoff || true
+```
+
+The `handshake` output is the bridge primitive for pasting into any external
+agent chat (GLM, Gemini, novel web tools):
+
+```
+[SYS_INIT]: Operator=Mikey | VCS=Nat | Output=cat<<'EOF' | Arch=core_framework | Mode=Goal-Oriented / Profit-Minded / Boardroom Approved
+```
+
 ## Asymmetric scoring & exports
 
 The `scout_vehicle` module is also a CLI: `python -m core_framework.bin.scout_vehicle --ingest sec=PATH --plan`
@@ -97,7 +137,11 @@ artifacts (`output/`, `logs/`, `scout_leaderboard.json`, caches) are gitignored.
 `shared/adaptive_memory.py` is a stdlib-only, network-free pheromone memory:
 it records per-query/source yield, rewards high-alpha runs, decays with a
 configurable half-life, and plans the next queries with an epsilon-greedy
-explore/exploit step. Attach it to a `ScoutVehicle` to enable
+explore/exploit step. State persists at a stable path
+(`output/adaptive_memory.json` by default) with **atomic** writes (temp file +
+fsync + `os.replace`), so a crash mid-write never tears the file, and a corrupt
+file is quarantined as `*.corrupt-<UTC>` rather than silently overwritten —
+learned state survives across runs. Attach it to a `ScoutVehicle` to enable
 `plan_adaptive_watchlist()` and `record_adaptive_yields()`; without it, the
 vehicle behaves exactly as before.
 
@@ -107,6 +151,14 @@ See `CLOUD_ADAPTIVE_BLUEPRINT.md` for what that free-cloud plan will and will
 not do.
 
 ## Architecture
+
+**Kernel bus lock-in** — `shared/kernel_bus.py` declares GossipBus
+(`RootBase/gossip_bus.py`) as THE canonical kernel and catalogs the other buses
+(`integration_bus`, `event_bus`, `outclaw_bus`, `whorl_bus_adapter`) as demoted
+adapters with an auditable health report (`python3 -m
+core_framework.shared.kernel_bus`; also surfaced by `./domino.sh preflight`).
+Pointer-layer rules apply: the kernel file is never copied, and the registry
+degrades gracefully on machines that don't carry the home workspace.
 
 See `design/ARCHITECTURE.md` and `design/VERTICAL_AI_ORIGINAL_VISION.md`.
 See `BUFFY_ASSESSMENT.md` for the verified task status and known blockers
@@ -120,4 +172,6 @@ No files are duplicated, moved, or modified by this package.
 
 ## Handoff & Roadmap
 
-See `ROADMAP.md` for verified baseline, Freebuff task list, and session boundary.
+See `HANDOFF_20261004.md` for the current handoff record (what changed, how it
+was verified, open TODOs), and `ROADMAP.md` for the verified baseline, task
+list, and session boundaries.

@@ -1,0 +1,29 @@
+{
+  "operator": "Mikey",
+  "archetype": "Vertically Inclined System Architect",
+  "mode": "Goal-Oriented / Profit-Minded / Boardroom Approved",
+  "execution_rules": {
+    "file_write_fallback": "cat << 'EOF' >> File-Path/file_name.extension",
+    "version_control": "Nat (intent-based natural language version control snaps)",
+    "code_hygiene": "Heavy inline comments to eliminate orphan code and technical debt",
+    "terminal_nav": "Sync open/view aliases directly with Chrome browser active tabs"
+  },
+  "default_session_length": "2 to 10 hours",
+  "session_kickoff": {
+    "auto_boot": ["terminal_windows", "cron_monitors", "loom_knowledge_graph"],
+    "menu_options": [
+      "Track 1: Monetization Ledger & Signal SKU",
+      "Track 2: Core Framework Adapter Hardening",
+      "Track 3: Distributed Web UI Bridge (GLM / External Agent)",
+      "Blue Sky Meeting (Iterative Architecture)",
+      "Custom Angle"
+    ],
+    "track_hints": {
+      "Track 1": "python3 -m core_framework.bin.scout_vehicle --ingest sec=core_framework/fixtures/sec_filings.json --ingest news=core_framework/fixtures/news_feed.json --export core_framework/output --plan",
+      "Track 2": "./domino.sh preflight && python3 -m pytest tests/ -q",
+      "Track 3": "python3 -m core_framework.bootstrap.cannibal_context handshake",
+      "Blue Sky": "./domino.sh sprawl"
+    },
+    "handshake_template": "[SYS_INIT]: Operator={operator} | VCS={vcs} | Output={output} | Arch=core_framework | Mode={mode}"
+  }
+}

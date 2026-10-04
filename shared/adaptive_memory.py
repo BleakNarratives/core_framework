@@ -24,7 +24,9 @@ Model:
 from __future__ import annotations
 
 import json
+import os
 import random
+import sys
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
@@ -75,14 +77,29 @@ class AdaptiveQueryMemory:
         self,
         path: str | Path | None = None,
         *,
-        half_life_seconds: float = DEFAULT_HALF_LIFE_SECONDS,
-        exploration_rate: float = DEFAULT_EXPLORATION_RATE,
+        half_life_seconds: float | None = None,
+        exploration_rate: float | None = None,
         clock=time.time,
         rng: random.Random | None = None,
     ):
         self.path = Path(path) if path else None
-        self.half_life_seconds = half_life_seconds
-        self.exploration_rate = exploration_rate
+        # None means "caller did not pin this knob", which lets the config saved
+        # alongside the history be restored on load (so decay/exploration
+        # semantics survive process termination and can't silently drift
+        # between runs on differently-configured machines). Explicit values
+        # always win over the saved file.
+        self._half_life_explicit = half_life_seconds is not None
+        self._exploration_explicit = exploration_rate is not None
+        self.half_life_seconds = (
+            half_life_seconds
+            if self._half_life_explicit
+            else DEFAULT_HALF_LIFE_SECONDS
+        )
+        self.exploration_rate = (
+            exploration_rate
+            if self._exploration_explicit
+            else DEFAULT_EXPLORATION_RATE
+        )
         self._clock = clock
         self._rng = rng or random.Random()
         self.records: dict[str, YieldRecord] = {}
@@ -92,9 +109,40 @@ class AdaptiveQueryMemory:
     # -- persistence --------------------------------------------------------
     def _load(self) -> None:
         try:
-            data = json.loads(self.path.read_text())
-        except Exception:
-            return
+            data = json.loads(self.path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            # A torn/corrupt file must never be silently clobbered by the next
+            # save(): quarantine the broken bytes under a timestamped suffix so
+            # they survive for forensics, warn loudly, and start empty. (With
+            # atomic saves below this should never fire — it is the safety net.)
+            quarantine = self.path.with_name(
+                f"{self.path.name}.corrupt-"
+                f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+            )
+            try:
+                os.replace(self.path, quarantine)
+                print(
+                    f"[adaptive_memory] corrupt memory quarantined: "
+                    f"{self.path} -> {quarantine} ({exc})",
+                    file=sys.stderr,
+                )
+            except OSError:
+                print(
+                    f"[adaptive_memory] corrupt memory at {self.path} "
+                    f"could not be quarantined: {exc}",
+                    file=sys.stderr,
+                )
+            data = {}
+        except OSError:
+            return  # unreadable path (permissions/fs); treat as empty
+        # Restore the decay/exploration config saved with this history so
+        # run-over-run semantics hold firm across reboots and machines.
+        saved_half_life = data.get("half_life_seconds")
+        if saved_half_life is not None and not self._half_life_explicit:
+            self.half_life_seconds = float(saved_half_life)
+        saved_exploration = data.get("exploration_rate")
+        if saved_exploration is not None and not self._exploration_explicit:
+            self.exploration_rate = float(saved_exploration)
         for key, raw in (data.get("records") or {}).items():
             try:
                 self.records[key] = YieldRecord(**raw)
@@ -111,7 +159,26 @@ class AdaptiveQueryMemory:
             "exploration_rate": self.exploration_rate,
             "records": {k: asdict(v) for k, v in self.records.items()},
         }
-        self.path.write_text(json.dumps(payload, indent=2))
+        # Atomic persistence: write a sibling temp file, fsync it, then
+        # os.replace() over the live path. os.replace is atomic on POSIX and
+        # same-volume Windows, so a crash mid-write can never leave a torn
+        # adaptive_memory.json: every reader sees either the previous full
+        # state or the new full state, never a half-written one. Concurrent
+        # single-agent writers degrade to last-write-wins, which is correct
+        # for one process owning the loop.
+        tmp_path = self.path.with_name(self.path.name + ".tmp")
+        try:
+            with open(tmp_path, "w", encoding="utf-8") as fh:
+                fh.write(json.dumps(payload, indent=2))
+                fh.flush()
+                os.fsync(fh.fileno())
+            os.replace(tmp_path, self.path)
+        except OSError:
+            try:
+                tmp_path.unlink(missing_ok=True)  # never leave tmp litter
+            except OSError:
+                pass
+            raise
 
     def to_dict(self) -> dict:
         return {

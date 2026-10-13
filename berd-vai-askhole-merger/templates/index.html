@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Berdical AI · Local evidence workbench{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='control-room.css') }}">{% endblock %}
+{% block body %}
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow"><span class="eyebrow-mark">✳</span> FIELDNOTES <span>/</span> LOCAL INTELLIGENCE</p>
+    <h1>Clarity,<br><span>with receipts.</span></h1>
+    <p>Build a careful picture from sourced evidence. Keep uncertainty visible. Write drafts a human can stand behind.</p>
+  </div>
+  <aside class="hero-aside" aria-label="Workbench operating principles">
+    <div class="hero-stat"><span class="hero-stat-number">01</span><span class="hero-stat-label"><strong>Provenance stays attached</strong>Every saved field keeps its source.</span></div>
+    <div class="hero-stat"><span class="hero-stat-number">02</span><span class="hero-stat-label"><strong>Nothing sends itself</strong>Review and export stay human-controlled.</span></div>
+  </aside>
+</section>
+<section class="metrics-strip" aria-label="Current local workbench counts">
+  <div class="metric"><span class="metric-value">{{ counts.lead_records }}</span><span class="metric-label">Lead records<small>Local register</small></span></div>
+  <div class="metric"><span class="metric-value">{{ counts.unverified_evidence }}</span><span class="metric-label">Evidence items<small>Unverified source data</small></span></div>
+  <div class="metric"><span class="metric-value">{{ counts.drafts }}</span><span class="metric-label">Drafts<small>None sent</small></span></div>
+</section>
+<div class="grid two">
+  <section class="card" id="intake">
+    <p class="eyebrow">01 / INTAKE</p>
+    <h2>Add a lead</h2>
+    <form method="post" action="{{ url_for('add_lead') }}">
+      {{ csrf_field() }}
+      <label>Business name <input name="name" maxlength="200" required></label>
+      <div class="grid two compact">
+        <label>Vertical <input name="vertical" placeholder="plumber, dentist…" maxlength="100"></label>
+        <label>City <input name="city" maxlength="200"></label>
+      </div>
+      <label>Website <input name="website" type="url" maxlength="500" placeholder="your-business.example"></label>
+      <div class="grid two compact">
+        <label>Rating <input name="rating" maxlength="30"></label>
+        <label>Review count <input name="review_count" maxlength="30"></label>
+      </div>
+      <label>Notes / source details <textarea name="notes" rows="3" maxlength="4000" placeholder="Keep to business-relevant facts; state where they came from."></textarea></label>
+      <label>Source label <input name="source" maxlength="300" value="user-provided"></label>
+      <button type="submit">Save lead locally</button>
+    </form>
+  </section>
+  <section class="card">
+    <p class="eyebrow">02 / BATCH IMPORT</p>
+    <h2>Bring in your list</h2>
+    <p>Up to 500 leads / 1 MB. Required column: <code>name</code>. Optional: <code>vertical, city, website, rating, review_count, notes, source</code>.</p>
+    <form method="post" action="{{ url_for('import_leads') }}" enctype="multipart/form-data">
+      {{ csrf_field() }}
+      <label>CSV file <input type="file" name="file" accept=".csv,text/csv" required></label>
+      <button class="secondary" type="submit">Import local CSV</button>
+    </form>
+    <p class="muted">No lookup, enrichment, or network call is made during import.</p>
+    <h3 id="draft-queue">Recent drafts <span class="count">{{ drafts|length }}</span></h3>
+    {% if drafts %}
+      <ul class="ledger">{% for draft in drafts %}<li><a href="{{ url_for('draft_detail', draft_id=draft.id) }}">#{{ draft.id }} · {{ draft.lead_name }}</a><span class="status">{{ draft.status }}</span></li>{% endfor %}</ul>
+    {% else %}<p class="muted">No drafts yet.</p>{% endif %}
+  </section>
+</div>
+<section class="card list-card" id="pipeline">
+  <div class="section-heading"><div><p class="eyebrow">03 / YOUR PIPELINE</p><h2>Lead register <span class="count">{{ leads|length }}</span></h2></div><span class="muted">Stored only on this device</span></div>
+  {% if leads %}
+    <div class="table-wrap"><table><thead><tr><th>Business</th><th>Vertical</th><th>City</th><th>Source</th><th>Evidence</th><th>Drafts</th></tr></thead><tbody>
+    {% for lead in leads %}<tr><td><a href="{{ url_for('lead_detail', lead_id=lead.id) }}">{{ lead.name }}</a></td><td>{{ lead.vertical or "—" }}</td><td>{{ lead.city or "—" }}</td><td>{{ lead.source }}</td><td>{{ lead.evidence_count }} unverified</td><td>{{ lead.draft_count }}</td></tr>{% endfor %}
+    </tbody></table></div>
+  {% else %}<p class="muted">Start with a single lead or import a small CSV.</p>{% endif %}
+</section>
+{% endblock %}

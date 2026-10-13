@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ resource.name }} · Berdical wormhole{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='control-room.css') }}">{% endblock %}
+{% block body %}
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('control_room') }}">Control room</a><span aria-hidden="true">/</span><span>{{ resource.name }}</span></nav>
+<section class="wormhole-hero">
+  <div><p class="eyebrow">WORMHOLE / {{ resource.lane }} / {{ resource.slug|upper }}</p><h1>{{ resource.name }}</h1><p>{{ resource.summary }}</p><div class="source-address">{{ resource.path }}</div></div>
+  <aside class="connection-card"><span class="connection-indicator{% if resource.state.connected %} is-connected{% endif %}"></span><small>CONNECTION STATE</small><strong>{{ resource.status }}</strong><span>{{ resource.mode }}</span><a href="{{ url_for('control_room') }}">← Back to signal room</a></aside>
+</section>
+<div class="safety-ribbon"><b>READ-ONLY WORMHOLE</b><span>This page does not launch project scripts, change source databases, send messages, start models, or open remote services.</span></div>
+{% if resource.slug == "askhole" %}
+<section class="console-panel" id="askhole-scenario">
+  <div class="panel-top"><div><p class="eyebrow">ASKHOLE / SCENARIO MATH</p><h2>Put an assumption under pressure.</h2></div><span class="unverified">UNVERIFIED INPUT TABLE</span></div>
+  <p class="panel-subtitle">A transparent sensitivity calculation only: <code>missed calls × imported per-call assumption × your recovery rate</code>. This is not revenue, forecast, or a fact about any business.</p>
+  <form class="scenario-form" id="scenario-form">{{ csrf_field() }}
+    <label>Imported vertical <select name="vertical" required>{% for vertical, values in economics.items() if values.missed_call_cost is defined %}<option value="{{ vertical }}">{{ vertical|replace('_',' ')|title }}</option>{% endfor %}</select></label>
+    <label>Hypothetical missed calls / period <input type="number" name="missed_calls" min="0" max="10000" value="10" required></label>
+    <label>Hypothetical recovery rate <span class="range-row"><input type="range" name="recovery_rate" min="0" max="100" value="25"><output id="recovery-output">25%</output></span></label>
+    <button type="submit">Run local scenario <span>→</span></button>
+  </form>
+  <div class="scenario-result" id="scenario-result" aria-live="polite"><span>SCENARIO CONTEXT · NOT A FORECAST</span><strong>—</strong><p>Select assumptions, then run the local calculation.</p></div>
+  <div class="economics-ledger"><p class="eyebrow">IMPORTED ASSUMPTIONS / SOURCE LABELS AS STATED</p><div class="economics-grid">{% for vertical, values in economics.items() %}<article><b>{{ vertical|replace('_',' ')|upper }}</b><span>{{ "$%s"|format(values.missed_call_cost) if values.missed_call_cost is defined else "No missed-call value" }} / assumed missed call</span><small>{{ values.source or "Source not stated" }} · unverified legacy context</small></article>{% endfor %}</div></div>
+</section>
+{% elif resource.slug == "pytch" %}
+<section class="console-panel"><div class="panel-top"><div><p class="eyebrow">Pytch / CAMPAIGN REGISTER</p><h2>Actual local campaign rows</h2></div><span class="connection-badge">SQLITE · READ ONLY</span></div>
+  {% if records %}<div class="table-wrap"><table><thead><tr><th>Campaign</th><th>Persona</th><th>Status</th><th>Sent</th><th>Replies</th><th>Demos</th><th>Deals</th><th>Revenue</th></tr></thead><tbody>{% for row in records %}<tr><td>{{ row.wrapper_name or "—" }}</td><td>{{ row.target_persona or "—" }}</td><td>{{ row.status or "—" }}</td><td>{{ row.emails_sent or 0 }}</td><td>{{ row.replies or 0 }}</td><td>{{ row.demos_booked or 0 }}</td><td>{{ row.deals_closed or 0 }}</td><td>{{ row.revenue or 0 }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="empty-signal">No campaigns in the local database, or it could not be read.</p>{% endif %}
+  <p class="panel-subtitle">Queued {{ resource.state.counts.queued or 0 }} · outreach {{ resource.state.counts.outreach or 0 }} · leads {{ resource.state.counts.leads or 0 }} · replies {{ resource.state.counts.replies or 0 }}. Pytch is opened read-only; selected staging copies only to Berdical.</p>
+  <div class="queue-stack"><div class="panel-top"><div><p class="eyebrow">UNSENT QUEUE / STAGING DOES NOT SEND</p><h2>Choose a real item to review</h2></div><span class="connection-badge">{{ queue|length }} SHOWN · MAX 50</span></div>
+  {% if queue %}{% for item in queue %}<article class="queue-item"><div><span class="queue-id">PYTCH #{{ item.id }} · {{ item.campaign or "uncategorized" }}</span><h3>{{ item.company or "Unnamed company" }}</h3><p>{{ item.subject or "(no subject)" }} · {{ item.body|truncate(120, True) }}</p><small>recipient {{ "present (hash only on staging)" if item.email else "missing" }} · exact unsent source row rechecked at click</small></div><form class="pytch-stage-form" method="post" action="{{ url_for('stage_pytch', record_id=item.id) }}">{{ csrf_field() }}<button class="secondary" type="submit">Stage for review →</button></form></article>{% endfor %}{% else %}<p class="empty-signal">No unsent items found.</p>{% endif %}</div>
+</section>
+{% elif resource.slug == "hotseat" %}
+<section class="console-panel"><div class="panel-top"><div><p class="eyebrow">WHORL / HOTSEAT HISTORY</p><h2>Persisted three-voice sessions</h2></div><span class="connection-badge">WHORL SQLITE · READ ONLY</span></div>
+  {% if records %}<div class="table-wrap"><table><thead><tr><th>When</th><th>Topic</th><th>Vertical verdict</th><th>Score</th></tr></thead><tbody>{% for row in records %}<tr><td>{{ (row.timestamp or "")[:19] }}</td><td>{{ row.topic or "—" }}</td><td>{{ row.vertical or "—" }}</td><td>{{ row.score if row.score is not none else "—" }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="empty-signal">No persisted sessions found (or local DB is unavailable).</p>{% endif %}<p class="panel-subtitle">This wormhole inspects saved history only. A new Hotseat run calls local Ollama and is deliberately not exposed as a dashboard action.</p>
+</section>
+{% elif resource.slug in ["vertical-ai", "vertical-engine", "twoie", "meboard"] %}
+<section class="console-panel"><div class="panel-top"><div><p class="eyebrow">SOURCE / AUDIT BEFORE USE</p><h2>Project facts, not pretend connectivity.</h2></div><span class="connection-badge">{{ resource.state.available and "SOURCE PRESENT" or "SOURCE MISSING" }}</span></div>
+  <div class="audit-summary"><strong>{{ resource.status }}</strong><p>{{ resource.summary }}</p><code>{{ resource.path }}</code></div>
+  {% if resource.source_exists %}<a class="button" href="{{ url_for('wormhole_source', slug=resource.slug) }}" target="_blank" rel="noopener">Open curated source text ↗</a>{% else %}<p class="empty-signal">The catalogued source is unavailable in this checkout.</p>{% endif %}
+  {% if resource.slug == "twoie" %}<div class="safety-ribbon warning"><b>ETHICS GATE / NOT FOR OUTREACH</b><span>Source contains fabricated-proof/manufactured-urgency tactics. This workbench never imports or executes those tactics.</span></div>{% endif %}
+</section>
+{% else %}
+<section class="console-panel"><div class="panel-top"><div><p class="eyebrow">BERD / PROJECT HOST</p><h2>Real boundary. Useful handoff.</h2></div><span class="connection-badge">APP SESSION REQUIRED</span></div>
+  <div class="audit-summary"><strong>Berd is the host, not an integration badge.</strong><p>The local `berdctl project create` attempt was refused outside the Berd desktop session. This project includes persona and skill briefs; it does not imply a connected Berd session or plugin.</p></div>
+  <a class="button" href="{{ url_for('wormhole_source', slug='berd') }}" target="_blank" rel="noopener">Open project handoff instructions ↗</a>
+</section>
+{% endif %}
+<section class="source-footer"><span>FIXED LOCAL SOURCE</span><code>{{ resource.path }}</code><a href="{{ url_for('control_room') }}">Return to signal room →</a></section>
+{% if resource.slug == "askhole" or resource.slug == "pytch" %}<script src="{{ url_for('static', filename='control-room.js') }}" defer></script>{% endif %}
+{% endblock %}

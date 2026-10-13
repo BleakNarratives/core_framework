@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ record.lead.name }} · Workbench{% endblock %}
+{% block body %}
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('index') }}">Workbench</a><span aria-hidden="true">/</span><span>Lead {{ "%03d"|format(record.lead.id) }}</span></nav>
+<section class="card lead-header">
+  <div class="section-heading"><div><p class="eyebrow">LEAD {{ "%03d"|format(record.lead.id) }} <span>/</span> {{ record.lead.source }}</p>
+  <h1>{{ record.lead.name }}</h1></div><span class="unverified">UNVERIFIED INPUT</span></div>
+  <div class="facts">
+    <div><span>Vertical</span>{{ record.lead.vertical or "Unknown" }}</div>
+    <div><span>City</span>{{ record.lead.city or "Unknown" }}</div>
+    <div><span>Website</span>{% if record.lead.website %}<a href="{{ record.lead.website }}" rel="nofollow noreferrer">{{ record.lead.website }}</a>{% else %}Unknown{% endif %}</div>
+    <div><span>Rating / reviews</span>{{ record.lead.rating or "Unknown" }} / {{ record.lead.review_count or "Unknown" }}</div>
+  </div>
+  <p class="muted">Lead fields and evidence remain unverified until checked by a human.</p>
+  {% if record.lead.source_system == "pytch" %}<p class="muted">Pytch source message is carried forward verbatim to the review draft; Pytch remains read-only.</p>{% else %}<form method="post" action="{{ url_for('make_draft', lead_id=record.lead.id) }}">{{ csrf_field() }}<button type="submit">Generate a safe draft</button></form>{% endif %}
+</section>
+<details class="type3-shell">
+  <summary class="type3-trigger" title="Reveal the Type III force multiplier" aria-label="Reveal the Type III force multiplier">✳ <span>there’s a little more in here</span></summary>
+  <section class="card type3-card">
+  <p class="eyebrow">SECRET STASH · TYPE III FORCE MULTIPLIER</p>
+  <h2>Three ways to multiply the work</h2>
+  <p class="muted">Cross-use ideas, not lead scores. They don’t assume this business has a problem, and they never trigger an outside action.</p>
+  <div class="type3-grid">
+    {% for idea in type3_potentials %}
+      <article class="type3-idea">
+        <span class="type3-number">0{{ loop.index }}</span>
+        <h3>{{ idea.title }}</h3>
+        <p>{{ idea.potential }}</p>
+        <p class="type3-combination"><strong>Mix:</strong> {{ idea.combination }}</p>
+        <details>
+          <summary>First test &amp; guardrail</summary>
+          <p><strong>Try:</strong> {{ idea.first_test }}</p>
+          <p><strong>Keep it honest:</strong> {{ idea.gate }}</p>
+        </details>
+        <span class="status">{{ idea.status }}</span>
+      </article>
+    {% endfor %}
+  </div>
+  </section>
+</details>
+<section class="card">
+  <div class="section-heading"><div><p class="eyebrow">EVIDENCE / PROVENANCE</p><h2>What we know</h2></div><span class="muted">{{ record.evidence|length }} source items</span></div>
+  {% if record.evidence %}<div class="table-wrap"><table><thead><tr><th>Field</th><th>Claim / value</th><th>Source</th><th>Captured</th><th>Trust</th></tr></thead><tbody>
+    {% for item in record.evidence %}<tr><td>{{ item.field_name }}</td><td class="claim">{{ item.claim }}</td><td>{{ item.source }}</td><td>{{ item.captured_at }}</td><td><span class="unverified">{{ item.trust }}</span><br><code>{{ item.sha256[:12] }}…</code></td></tr>{% endfor %}
+  </tbody></table></div>{% else %}<p class="muted">No evidence fields were supplied.</p>{% endif %}
+</section>
+<section class="card"><p class="eyebrow">WORK PRODUCT</p><h2>Drafts</h2>
+  {% if record.drafts %}<ul class="ledger">{% for draft in record.drafts %}<li><a href="{{ url_for('draft_detail', draft_id=draft.id) }}">Draft #{{ draft.id }}</a><span class="status">{{ draft.status }}</span></li>{% endfor %}</ul>{% else %}<p class="muted">No draft yet.</p>{% endif %}
+</section>
+{% endblock %}

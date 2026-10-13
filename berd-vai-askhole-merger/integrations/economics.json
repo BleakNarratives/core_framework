@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "source": "AskHole v3 intake economics.json, inspected 2026-10-13",
+  "trust": "unverified_legacy_context",
+  "note": "These historical values and source strings have not been independently checked. Never present them as verified current market facts or as facts about a specific lead.",
+  "verticals": {
+    "plumber": {
+      "missed_call_cost": 180,
+      "comp_signal": "ServiceTitan $1.2B acquisition (2022), Avoca $125M",
+      "source": "IBISWorld 2023 (as stated in the legacy intake; unverified)"
+    },
+    "bank": {
+      "missed_call_cost": 3200,
+      "market_signal": "Chase/Wells $2.1B AI voice spend 2024",
+      "source": "S&P Global, banktech research (as stated in the legacy intake; unverified)"
+    },
+    "hvac": {
+      "missed_call_cost": 450,
+      "source": "ACCA industry data (as stated in the legacy intake; unverified)"
+    },
+    "electrician": {
+      "missed_call_cost": 280,
+      "source": "NECA industry averages (as stated in the legacy intake; unverified)"
+    },
+    "dentist": {
+      "missed_call_cost": 1200,
+      "source": "ADA practice management (as stated in the legacy intake; unverified)"
+    },
+    "auto_repair": {
+      "missed_call_cost": 380,
+      "source": "Auto Care Association (as stated in the legacy intake; unverified)"
+    }
+  }
+}

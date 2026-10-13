@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+workbench_data/*
+!workbench_data/.gitkeep
+exports/*
+!exports/.gitkeep
+*.sqlite
+*.sqlite3
+*.db
+*.log

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Draft #{{ draft.id }} · Workbench{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='control-room.css') }}">{% endblock %}
+{% block body %}
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('index') }}">Workbench</a><span aria-hidden="true">/</span><a href="{{ url_for('lead_detail', lead_id=lead.id) }}">{{ lead.name }}</a><span aria-hidden="true">/</span><span>Draft {{ "%03d"|format(draft.id) }}</span></nav>
+<section class="card lead-header">
+  <p class="eyebrow">DRAFT {{ "%03d"|format(draft.id) }} <span>/</span> LEAD {{ "%03d"|format(lead.id) }}</p>
+  <div class="section-heading"><h1>{{ lead.name }}</h1><span class="status large">{{ draft.status }}</span></div>
+  <div class="notice"><strong>No delivery exists.</strong> “Approved” only permits copying or downloading this exact draft manually. It does not authorize or trigger a message.</div>
+  {% if draft.status != "approved-for-manual-export" %}<form class="draft-editor" method="post" action="{{ url_for('edit_draft', draft_id=draft.id) }}">{{ csrf_field() }}<label>Draft text <textarea name="body" rows="14" maxlength="4000" required>{{ draft.body }}</textarea></label><button class="secondary" type="submit">Save draft · clear previous review</button></form>{% else %}<pre class="draft-body">{{ draft.body }}</pre>{% endif %}
+  <p class="muted">SHA-256: <code>{{ draft.content_sha256 }}</code></p>
+  <p class="muted">Evidence IDs: {{ draft.evidence_ids }}. Evidence is unverified; generic legacy economics are not included as business-specific facts.</p>
+  {% if lead.source_system == "pytch" %}<p class="source-body-hash">This draft starts as the exact Pytch source message. <code>{{ lead.source_body_sha256 }}</code></p>{% endif %}
+  {% if lead.source_system == "pytch" %}<div class="provenance-panel"><p class="eyebrow">SOURCE LOCK / PYTCH OUTREACH #{{ lead.source_record_id }}</p><p>Source: {{ lead.source }}</p><p>Source-body SHA-256: <code>{{ lead.source_body_sha256 }}</code></p><p>Recipient withheld. Recipient SHA-256: <code>{{ lead.source_recipient_hash or "not supplied" }}</code></p><p>Source row remains in Pytch, unchanged. Editing this copy does not change that source.</p><label>Manual review: if export is intended, verify recipient in Pytch yourself. Recipient (kept only in this review request): <input id="review-recipient" type="email" autocomplete="off" placeholder="Look up in Pytch; not prefilled"></label></div>{% endif %}
+  {% if draft.economics_snapshot and draft.economics_snapshot != "{}" %}<details class="economics"><summary>Imported legacy economics (unverified; not used as a lead-specific claim)</summary><pre>{{ draft.economics_snapshot }}</pre></details>{% endif %}
+</section>
+<section class="grid two">
+  <div class="card">
+    <p class="eyebrow">REVIEW / HUMAN GATE</p><h2>Record human review</h2>
+    <form method="post" action="{{ url_for('review', draft_id=draft.id) }}">
+      {{ csrf_field() }}
+      <label>Reviewer <input name="reviewer" required maxlength="120"></label>
+      <label>Review findings / notes <textarea name="notes" required rows="5" maxlength="4000" placeholder="Check every claim, the recipient shown above, and channel."></textarea></label>
+      <button class="secondary" type="submit">Mark reviewed</button>
+    </form>
+    {% if draft.reviewer %}<p class="muted">Last review by {{ draft.reviewer }} at {{ draft.reviewed_at }}: {{ draft.review_notes }}</p>{% endif %}
+  </div>
+  <div class="card">
+    <p class="eyebrow">EXPORT / MANUAL ONLY</p><h2>Manual export</h2>
+    {% if draft.status == "reviewed" %}
+      <form method="post" action="{{ url_for('approve', draft_id=draft.id) }}">
+        {{ csrf_field() }}
+        <label class="check"><input type="checkbox" name="confirm" value="yes" required> I reviewed the exact text above and approve manual export only.</label>
+        {% if lead.source_system == "pytch" %}<label class="check"><input type="checkbox" name="confirm_recipient" value="yes" required> I rechecked the recipient against the original Pytch record.</label>{% endif %}
+        <button type="submit">Approve this exact draft</button>
+      </form>
+    {% elif draft.status == "approved-for-manual-export" %}
+      <p class="success-note">Approved content hash matches: <code>{{ draft.approved_sha256 }}</code></p>
+      <a class="button" href="{{ url_for('export', draft_id=draft.id) }}">Download approved text</a>
+    {% else %}<p class="muted">Record a human review first. Approval is not available for an unreviewed draft.</p>{% endif %}
+  </div>
+</section>
+{% if lead.source_system == "pytch" %}<script src="{{ url_for('static', filename='draft-review.js') }}" defer></script>{% endif %}
+{% endblock %}

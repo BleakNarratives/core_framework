@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Berdical AI · Control room{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='control-room.css') }}">{% endblock %}
+{% block body %}
+<section class="command-head">
+  <div><p class="eyebrow">BERDICAL / LIVE OPERATIONS</p><h1>Move on signal.</h1><p class="muted">A local control surface over the work you actually have. Not a mirror. No outside calls.</p></div>
+  <div class="command-state"><span class="pulse-dot"></span><span>LOOPBACK ONLY</span><small>REFRESHED <time id="snapshot-time">now</time></small></div>
+</section>
+<div class="orb-layout">
+  <nav class="orb-rail" aria-label="Ring navigation">
+    <div class="ring-knob" aria-hidden="true"><span>BDL<br><b>◉</b></span></div>
+    <p class="rail-label">RING / VISOR</p>
+    <button class="ring-option is-active" type="button" data-ring="glass"><b>GLASS</b><small>All signals</small></button>
+    <button class="ring-option" type="button" data-ring="forge"><b>FORGE</b><small>Action + review</small></button>
+    <button class="ring-option" type="button" data-ring="air"><b>AIR</b><small>Action only</small></button>
+    <div class="rail-divider"></div>
+    <button class="reveal-toggle" id="reveal-toggle" type="button" aria-pressed="true">REVEAL / <b>ON</b></button>
+    <p class="rail-note">Ring is a lens over the same project state. It does not change data or permissions.</p>
+  </nav>
+  <div class="control-main">
+    <section class="signal-panel" aria-labelledby="signal-title">
+      <div class="panel-top"><div><p class="eyebrow">01 / SCRYING · GROUNDED IN LOCAL STATE</p><h2 id="signal-title">Signal → next move</h2></div><button class="refresh-button" id="refresh-signals" type="button">↻ <span>Refresh</span></button></div>
+      <p class="panel-subtitle">Every card below resolves to actual SQLite/file state. TILT filters signal levels; it never deletes, sends, or mutates another project.</p>
+      <div class="signal-list" id="signal-list" data-ring="glass" aria-live="polite">
+        {% for signal in snapshot.signals %}<article class="signal-card" data-signal-id="{{ signal.id }}" data-level="{{ signal.level }}"><span class="signal-level">{{ signal.level }}</span><div><h3>{{ signal.title }}</h3><p>{{ signal.detail }}</p></div><a class="next-move" href="{{ signal.href }}">{{ signal.next_move }} <span aria-hidden="true">↗</span></a><button class="scrub-button" type="button" aria-label="Dismiss {{ signal.title }}" data-scrub="{{ signal.id }}">×</button></article>{% else %}<div class="empty-signal">No open local signal. Intake a lead or visit a wormhole to choose the next move.</div>{% endfor %}
+      </div>
+      <div class="restore-strip" id="restore-strip" hidden><span id="restore-count"></span><button type="button" id="restore-signals">Restore dismissed signals</button></div>
+      <div class="tilt-bar"><span class="tilt-glyph">⌁</span><div><b>TILT / SCRUB</b><small>Increasing pressure hides info at 35%, review at 70%, and action at 92%. Release to restore; × dismisses until you restore.</small></div><input id="tilt-pressure" type="range" min="0" max="100" value="0" aria-label="Apply TILT pressure to reduce signal noise"><output id="tilt-output">0% SCRUB</output></div>
+    </section>
+    <section class="utility-grid" aria-label="Live local utility">
+      <article class="utility-tile"><span class="tile-index">WB / 01</span><small>BERDICAL · LOCAL</small><strong>{{ snapshot.workbench.leads }} leads / {{ snapshot.workbench.counts.unverified_evidence }} evidence</strong><span>{{ snapshot.workbench.drafts.draft }} drafts awaiting review</span><a href="{{ url_for('index') }}#intake">Open intake + queue →</a></article>
+      <article class="utility-tile"><span class="tile-index">P / 02</span><small>PYTCH · SQLITE</small><strong>{% if snapshot.services.pytch.available %}{{ snapshot.services.pytch.counts.campaigns }} campaigns / {{ snapshot.services.pytch.counts.queued }} queued{% else %}Source database not found{% endif %}</strong><span>Read-only view · never sends</span><a href="{{ url_for('wormhole', slug='pytch') }}">Inspect campaign register →</a></article>
+      <article class="utility-tile"><span class="tile-index">W / 03</span><small>WHORL · HOTSEAT</small><strong>{% if snapshot.services.hotseat.available %}{{ snapshot.services.hotseat.counts.sessions }} persisted sessions{% else %}Whorl database unavailable{% endif %}</strong><span>No model calls from this page</span><a href="{{ url_for('wormhole', slug='hotseat') }}">Inspect session history →</a></article>
+    </section>
+  </div>
+</div>
+<section class="wormhole-section" id="wormholes">
+  <div class="panel-top"><div><p class="eyebrow">02 / WORMHOLES · PROJECTS ARE NOT BADGES</p><h2>Pick a system. See what’s real.</h2></div><span class="wormhole-count">{{ snapshot.services|length }} LOCAL ASSETS MAPPED</span></div>
+  <div class="wormhole-grid">
+    {% for slug, resource in snapshot.services.items() %}{% set card = catalog[slug] %}
+    <a class="wormhole-card{% if not resource.available %} is-missing{% endif %}" href="{{ url_for('wormhole', slug=slug) }}" data-service="{{ slug }}" data-available="{{ 'yes' if resource.available else 'no' }}">
+      <span class="wormhole-glyph" aria-hidden="true">{{ loop.index|string|upper }}</span><span class="wormhole-status">{{ '● LIVE' if resource.connected else ('◌ LOCAL' if resource.available else '○ OFFLINE') }}</span><small>{{ card.lane }}</small><h3>{{ card.name }}</h3><p>{{ card.summary }}</p><span class="wormhole-link">Open console <b>↗</b></span>
+    </a>{% endfor %}
+  </div>
+</section>
+<section class="ledger-row" id="intake">
+  <div class="ledger-copy"><p class="eyebrow">03 / NEXT MOVE</p><h2>Stage an unsent Pytch item into a reviewed draft.</h2><p>The source stays untouched. Pytch recipient/body are snapshotted with hashes; editing the draft needs a new review.</p></div>
+  <div class="ledger-actions"><a class="button" href="{{ url_for('wormhole', slug='pytch') }}">Review Pytch queue <span>→</span></a><a class="text-link" href="{{ url_for('index') }}#intake">Use independent lead intake <span>↗</span></a></div>
+</section>
+<script src="{{ url_for('static', filename='control-room.js') }}" defer></script>
+{% endblock %}

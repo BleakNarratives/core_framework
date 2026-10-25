@@ -126,6 +126,11 @@ class TestRegistryAdmission(PipeCase):
         gate = RegistryGate(self.root / "PROVENANCE.md",
                             parse=lambda _p: {"Forked": {"classification": "FORK"}})
         gate.admit("Forked/module.py")  # must not raise
+        # Guard against a no-op gate: a genuinely blocked origin must still raise.
+        blocking = RegistryGate(self.root / "PROVENANCE.md",
+                                parse=lambda _p: {"Forked": {"classification": "FOREIGN"}})
+        with self.assertRaises(ForeignContentError):
+            blocking.admit("Forked/module.py")
 
     def test_empty_registry_fails_closed(self):
         with self.assertRaises(RegistryUnavailable):

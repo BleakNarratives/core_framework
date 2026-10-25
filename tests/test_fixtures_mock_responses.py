@@ -135,8 +135,9 @@ class HelperBehaviourTest(unittest.TestCase):
             with mr.UrlopenSequence(
                 [mr.make_mock_response(200, mr.GROQ_PING)],
                 target=f"{__name__}._namespace.urlopen",
-            ):
+            ) as seq:
                 _namespace.urlopen("https://example.test")
+            self.assertEqual(len(seq.calls), 1)
 
     def test_subprocess_sequence_returns_the_queued_completed_process(self):
         envelope = mr.make_bin_ai_envelope(ok=True, reply="draft text")

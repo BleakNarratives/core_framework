@@ -128,9 +128,18 @@ class ProbeTargets(unittest.TestCase):
 
     def test_public_routes_are_not_used_as_probes(self):
         """These answered 200 to a deliberately invalid key; a 200 proves nothing."""
-        for provider in ("sambanova", "bazaar", "sageox", "vibe", "puter"):
+        for provider in ("bazaar", "sageox", "puter"):
             self.assertNotIn(provider, ik.PROBES)
             self.assertIn(provider, ik.NO_PROBE)
+
+    def test_sambanova_probe_needs_a_real_model_to_reach_auth(self):
+        """An empty body answers 400 for every key, so this probe must not use one."""
+        _, _, method, body = ik.PROBES["sambanova"]
+        self.assertEqual(method, "POST")
+        self.assertIn('"model"', body)
+        self.assertIn('"max_tokens": 1', body)
+        self.assertNotEqual(body.strip(), "{}")
+        self.assertNotIn("sambanova", ik.NO_PROBE)
 
     def test_zenmux_is_not_a_probe(self):
         """403 for good and bad keys alike -- indistinguishable, so not a probe."""

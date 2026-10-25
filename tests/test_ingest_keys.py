@@ -109,5 +109,92 @@ class Masking(unittest.TestCase):
         self.assertEqual(ik.mask("abc"), "***")
 
 
+class ProbeTargets(unittest.TestCase):
+    """A probe is only trustworthy if the route actually checks the key.
+
+    These tests pin the endpoint shapes that were validated by hand against the
+    live services on 2026-10-25: unauthenticated -> 401/403, and a bogus key ->
+    401/403. A route that answers 200 to a bogus key belongs in NO_PROBE.
+    """
+
+    def test_every_probe_is_https_with_a_known_auth_style(self):
+        styles = {"bearer", "goog", "xi", "anthropic"}
+        for provider, target in ik.PROBES.items():
+            self.assertTrue(target[0].startswith("https://"), provider)
+            self.assertIn(target[1], styles, provider)
+            self.assertIn(len(target), (2, 4), provider)
+            if len(target) == 4:
+                self.assertEqual(target[2], "POST", provider)
+
+    def test_public_routes_are_not_used_as_probes(self):
+        """These answered 200 to a deliberately invalid key; a 200 proves nothing."""
+        for provider in ("sambanova", "bazaar", "sageox", "vibe", "puter"):
+            self.assertNotIn(provider, ik.PROBES)
+            self.assertIn(provider, ik.NO_PROBE)
+
+    def test_zenmux_is_not_a_probe(self):
+        """403 for good and bad keys alike -- indistinguishable, so not a probe."""
+        self.assertNotIn("zenmux", ik.PROBES)
+
+    def test_every_no_probe_entry_states_a_reason(self):
+        for provider, why in ik.NO_PROBE.items():
+            self.assertTrue(why.strip(), provider)
+        self.assertFalse(set(ik.PROBES) & set(ik.NO_PROBE))
+
+
+class ProbeSemantics(unittest.TestCase):
+    def setUp(self):
+        self.real = ik.urllib.request.urlopen
+        self.seen = {}
+
+    def tearDown(self):
+        ik.urllib.request.urlopen = self.real
+
+    def _fake(self, code=None, payload=b"{}"):
+        class Resp:
+            def __enter__(self_inner):
+                return self_inner
+
+            def __exit__(self_inner, *a):
+                return False
+
+        def urlopen(req, timeout=None):
+            self.seen["req"] = req
+            if code is None:
+                return Resp()
+            raise ik.urllib.error.HTTPError(req.full_url, code, "err", {}, None)
+
+        ik.urllib.request.urlopen = urlopen
+
+    def test_authenticated_but_malformed_post_counts_as_accepted(self):
+        """400 on a deliberate empty body means auth passed; no tokens spent."""
+        self._fake(code=400)
+        self.assertEqual(ik.probe("aimlapi", "sk-test"), "live")
+        self.assertEqual(self.seen["req"].get_method(), "POST")
+        self.assertEqual(self.seen["req"].data, b"{}")
+
+    def test_rejected_key_is_not_live(self):
+        self._fake(code=401)
+        self.assertEqual(ik.probe("aimlapi", "sk-test"), "HTTP_401")
+
+    def test_a_400_on_a_get_proves_nothing(self):
+        self._fake(code=400)
+        self.assertEqual(ik.probe("groq", "gsk_x"), "HTTP_400")
+
+    def test_elevenlabs_uses_its_own_header(self):
+        self._fake()
+        ik.probe("elevenlabs", "sk-test")
+        headers = {k.lower(): v for k, v in self.seen["req"].header_items()}
+        self.assertEqual(headers.get("xi-api-key"), "sk-test")
+        self.assertNotIn("authorization", headers)
+
+    def test_unreachable_is_not_a_verdict_about_the_key(self):
+        def boom(req, timeout=None):
+            raise ik.urllib.error.URLError("no route")
+
+        ik.urllib.request.urlopen = boom
+        self.assertEqual(ik.probe("groq", "gsk_x"), "unreachable")
+
+
 if __name__ == "__main__":
     unittest.main()

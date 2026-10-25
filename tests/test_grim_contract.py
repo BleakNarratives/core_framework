@@ -135,6 +135,24 @@ class ServerOverLoopback(unittest.TestCase):
         self.assertEqual(grim_serve.validate_contract(body), [])
         self.assertEqual(body["model_used"], "offline")
 
+    def test_simulate_reports_the_same_contract(self):
+        """Both surfaces carry model_used/routing_reason; the panel's text form
+        is its JSON, because the panel is structured, not prose."""
+        status, body = self._post("/api/simulate", {"pitch": "a local panel"})
+        self.assertEqual(status, 200)
+        contract = body.get("contract")
+        self.assertIsNotNone(contract)
+        self.assertEqual(grim_serve.validate_contract(contract), [])
+        self.assertTrue(contract["model_used"])
+        self.assertIn("answered by", contract["routing_reason"])
+
+    def test_health_publishes_the_cascade_and_contract(self):
+        with urllib.request.urlopen(
+                f"http://127.0.0.1:{self.port}/api/health", timeout=5) as resp:
+            body = json.loads(resp.read().decode())
+        self.assertEqual(body["contract"], list(grim_serve.CONTRACT_FIELDS))
+        self.assertIsInstance(body["cascade"], list)
+
     def test_empty_prompt_is_rejected(self):
         with self.assertRaises(urllib.error.HTTPError) as ctx:
             self._post("/api/ask", {"prompt": "   "})

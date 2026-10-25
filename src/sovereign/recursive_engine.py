@@ -48,6 +48,25 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 # ── Sovereign bus dirs ──────────────────────────────────────────────
+def _log_bus_availability(available: bool, detail: str = "") -> None:
+    """Record whether the Thoth bus was importable, both ways.
+
+    A silent fallback makes "optional" and "broken" indistinguishable from the
+    outside: the engine looks like it orchestrates whether or not it can. One
+    line per import answers "is Thoth actually being used" with a number.
+    Never allowed to raise: a logging failure must not break the import.
+    """
+    try:
+        path = (Path.home() / "RootBase" / "logs" / "shared"
+                / "recursive_engine" / "thoth_bus.tsv")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with path.open("a", encoding="utf-8") as f:
+            f.write(f"{stamp}\t{int(available)}\t{detail[:200]}\n")
+    except Exception:
+        pass
+
+
 try:
     from thoth_orchestrator.agent_bus import (  # type: ignore
         emit_event, read_events, current_line_count,
@@ -55,9 +74,14 @@ try:
     from thoth_orchestrator.motherbrain import MotherBrain  # type: ignore
     from thoth_orchestrator.agent_bus import courier as _courier  # type: ignore
     _HAS_THOTH_BUS = True
-except Exception:
+except Exception as _bus_exc:  # noqa: BLE001 - any failure means no bus
     _HAS_THOTH_BUS = False
     _courier = None  # type: ignore
+    _BUS_IMPORT_ERROR = f"{type(_bus_exc).__name__}: {_bus_exc}"
+else:
+    _BUS_IMPORT_ERROR = ""
+
+_log_bus_availability(_HAS_THOTH_BUS, _BUS_IMPORT_ERROR)
 
 # ── Shared state dir for recursive engine journal ────────────────────
 RECURSIVE_DIR = Path.home() / "RootBase" / "logs" / "shared" / "recursive_engine"
